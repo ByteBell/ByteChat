@@ -1,0 +1,37 @@
+{
+  "name": "grammer-extension",
+  "version": "1.0.0",
+  "main": "popup.js",
+  "scripts": {
+    "start": "webpack --watch --progress --config webpack.config.js",
+    "build": "NODE_ENV=production webpack --config webpack.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "together-ai": "^0.15.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.315",
+    "@types/firefox-webext-browser": "^120.0.4",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "autoprefixer": "^10.4.21",
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "postcss": "^8.5.3",
+    "postcss-loader": "^8.1.1",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^4.1.4",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.6",
+    "webpack-cli": "^6.0.1",
+    "webpack-extension-reloader": "^1.1.4"
+  }
+}
