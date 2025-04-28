@@ -7,7 +7,8 @@ const ExtensionReloader  = require('webpack-extension-reloader');
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
 
-  entry: { index: path.join(__dirname, 'src', 'index.tsx') },
+  entry: { 
+    index: path.join(__dirname, 'src', 'index.tsx')   },
 
   output: {
     path: path.join(__dirname, 'dist'),
@@ -43,7 +44,7 @@ module.exports = {
     process.env.NODE_ENV === 'development' &&
       new ExtensionReloader({
         reloadPage: true,
-        entries: { extensionPage: 'popup' },
+        entries: { extensionPage: 'popup'},
       }),
   ].filter(Boolean),
 
