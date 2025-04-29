@@ -19,6 +19,13 @@ const PROVIDER_MODELS: Record<Provider, string[]> = {
   together:  ['meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', 'meta-llama/Llama-4-Scout-17B-16E-Instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'],
 };
 
+// A few handy system‑prompt presets.  Add / edit as you like.
+const SYSTEM_PROMPTS: Record<string, string> = {
+  'Grammar Fix':        'Convert the following into standard English and fix any grammatical errors:',
+  'Translate > English': 'Translate the following text into English, Donnot provide any extra information just the translated text: ',
+  'Summarize':          'Provide a concise summary of the following text:',
+};
+
 const browserAPI = (globalThis as any).browser ?? (globalThis as any).chrome;
 
 /* ---------------------------------------------------------------- *
@@ -67,7 +74,9 @@ const Popup: React.FC = () => {
   });
   const [showKey, setShowKey] = useState(false);
   const [saveOK, setSaveOK] = useState(false);
-
+  /* Chat */
+  const [systemID, setSystemID] = useState<string>('Grammar Fix');
+  const systemPrompt = SYSTEM_PROMPTS[systemID];
   /* Chat state */
   const [prompt, setPrompt]   = useState('');
   const [answer, setAnswer]   = useState('');
@@ -161,10 +170,10 @@ async function execInPage<T>(fn: () => T): Promise<T | ''> {
     });
   };
 
-  /* ------------------------------------------------------------------ *
+   /* ------------------------------------------------------------------ *
    *  Chat
    * ------------------------------------------------------------------ */
-  async function runChat() {
+   async function runChat() {
     if (!prompt.trim()) return setAnswer('⚠️ Enter a prompt first.');
     if (!settings.apiKey) return setAnswer('⚠️ Add your API key in Settings.');
 
@@ -172,7 +181,7 @@ async function execInPage<T>(fn: () => T): Promise<T | ''> {
     setAnswer('…thinking…');
 
     try {
-      const text = await callLLM(settings, prompt.trim());
+      const text = await callLLM(settings, systemPrompt, prompt.trim());
       setAnswer(text);
     } catch (err: any) {
       setAnswer(`❌ ${err.message}`);
@@ -180,7 +189,6 @@ async function execInPage<T>(fn: () => T): Promise<T | ''> {
       setLoading(false);
     }
   }
-
   /* ------------------------------------------------------------------ *
    *  Render
    * ------------------------------------------------------------------ */
@@ -195,6 +203,19 @@ async function execInPage<T>(fn: () => T): Promise<T | ''> {
       {/* ── Chat panel ─────────────────────────────────────────────── */}
       {tab === 'chat' && (
         <div className="p-4 space-y-3">
+
+            {/* System prompt selector */}
+                    <label className="block text-sm">
+            <span className="mb-1 block font-medium">System prompt</span>
+            <Select value={systemID} onChange={(e) => setSystemID(e.target.value)}>
+              {Object.keys(SYSTEM_PROMPTS).map((name) => (
+                <option key={name}>{name}</option>
+              ))}
+            </Select>
+          </label>
+
+
+
           <textarea
             placeholder="Ask me anything…"
             value={prompt}
@@ -287,11 +308,11 @@ async function execInPage<T>(fn: () => T): Promise<T | ''> {
 
 export default Popup;
 
+
 /* -------------------------------------------------------------------- *
- *  Low-level fetcher (kept at bottom for clarity)
+ *  Low‑level fetcher
  * -------------------------------------------------------------------- */
-async function callLLM({ provider, model, apiKey }: Settings, prompt: string) {
-  const fixedPrompt = `Convert it into English and fix the grammar:\n\n${prompt}`;
+async function callLLM({ provider, model, apiKey }: Settings, systemPrompt: string, userPrompt: string) {
   switch (provider) {
     case 'openai': {
       const r = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -302,7 +323,10 @@ async function callLLM({ provider, model, apiKey }: Settings, prompt: string) {
         },
         body: JSON.stringify({
           model,
-          messages: [{ role: 'user', content: fixedPrompt }],
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
           max_tokens: 1000,
         }),
       });
@@ -321,7 +345,10 @@ async function callLLM({ provider, model, apiKey }: Settings, prompt: string) {
         },
         body: JSON.stringify({
           model,
-          messages: [{ role: 'user', content: fixedPrompt }],
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
           max_tokens: 1000,
         }),
       });
@@ -331,17 +358,20 @@ async function callLLM({ provider, model, apiKey }: Settings, prompt: string) {
     }
 
     case 'together': {
-      const r = await fetch('https://api.together.xyz/v1/completions', {
+      const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
+      const messages = [{"role": "user", "content": combinedPrompt}];
+      console.log(combinedPrompt);
+      const r = await fetch('https://api.together.xyz/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({ model, prompt, max_tokens: 1000 }),
+        body: JSON.stringify({ model, messages, max_tokens: 1000 }),
       });
       if (!r.ok) throw new Error(await r.text());
       const j = await r.json();
-      return j.choices[0].text.trim();
+      return j.choices[0].message.content.trim();
     }
   }
 }

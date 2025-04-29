@@ -28192,6 +28192,12 @@ var PROVIDER_MODELS = {
     anthropic: ['claude-3-sonnet', 'claude-3-haiku'],
     together: ['meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', 'meta-llama/Llama-4-Scout-17B-16E-Instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'],
 };
+// A few handy system‑prompt presets.  Add / edit as you like.
+var SYSTEM_PROMPTS = {
+    'Grammar Fix': 'Convert the following into standard English and fix any grammatical errors:',
+    'Translate > English': 'Translate the following text into English, Donnot provide any extra information just the translated text: ',
+    'Summarize': 'Provide a concise summary of the following text:',
+};
 var browserAPI = (_a = globalThis.browser) !== null && _a !== void 0 ? _a : globalThis.chrome;
 /* ---------------------------------------------------------------- *
  *  UI components
@@ -28215,10 +28221,13 @@ var Popup = function () {
     }), settings = _b[0], setSettings = _b[1];
     var _c = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), showKey = _c[0], setShowKey = _c[1];
     var _d = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), saveOK = _d[0], setSaveOK = _d[1];
+    /* Chat */
+    var _e = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)('Grammar Fix'), systemID = _e[0], setSystemID = _e[1];
+    var systemPrompt = SYSTEM_PROMPTS[systemID];
     /* Chat state */
-    var _e = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), prompt = _e[0], setPrompt = _e[1];
-    var _f = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), answer = _f[0], setAnswer = _f[1];
-    var _g = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), loading = _g[0], setLoading = _g[1];
+    var _f = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), prompt = _f[0], setPrompt = _f[1];
+    var _g = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), answer = _g[0], setAnswer = _g[1];
+    var _h = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), loading = _h[0], setLoading = _h[1];
     /* ------------------------------------------------------------------ *
      *  Load & persist settings
      * ------------------------------------------------------------------ */
@@ -28314,8 +28323,8 @@ var Popup = function () {
         });
     };
     /* ------------------------------------------------------------------ *
-     *  Chat
-     * ------------------------------------------------------------------ */
+    *  Chat
+    * ------------------------------------------------------------------ */
     function runChat() {
         return __awaiter(this, void 0, void 0, function () {
             var text, err_1;
@@ -28331,7 +28340,7 @@ var Popup = function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, 4, 5]);
-                        return [4 /*yield*/, callLLM(settings, prompt.trim())];
+                        return [4 /*yield*/, callLLM(settings, systemPrompt, prompt.trim())];
                     case 2:
                         text = _a.sent();
                         setAnswer(text);
@@ -28351,22 +28360,21 @@ var Popup = function () {
     /* ------------------------------------------------------------------ *
      *  Render
      * ------------------------------------------------------------------ */
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "w-[420px] text-slate-800 font-sans select-none", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "flex space-x-1 border-b", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "chatTab", active: tab === 'chat', onClick: function () { return setTab('chat'); }, children: "Chat" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "settingsTab", active: tab === 'settings', onClick: function () { return setTab('settings'); }, children: "Settings" })] }), tab === 'chat' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-3", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { placeholder: "Ask me anything\u2026", value: prompt, onChange: function (e) { return setPrompt(e.target.value); }, rows: 4, className: "w-full resize-none rounded-md border p-2 text-sm outline-none\n                       focus:ring-2 focus:ring-indigo-500" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { disabled: loading, onClick: runChat, className: "w-full rounded-md bg-indigo-600 py-2 text-white hover:bg-indigo-700\n                       disabled:opacity-50", children: loading ? 'Generating…' : 'Submit' }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { readOnly: true, value: answer, rows: 6, className: "w-full resize-none rounded-md border p-2 text-sm bg-slate-50" })] })), tab === 'settings' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-4 text-sm", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "Provider" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(Select, { value: settings.provider, onChange: function (e) {
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "w-[420px] text-slate-800 font-sans select-none", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "flex space-x-1 border-b", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "chatTab", active: tab === 'chat', onClick: function () { return setTab('chat'); }, children: "Chat" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "settingsTab", active: tab === 'settings', onClick: function () { return setTab('settings'); }, children: "Settings" })] }), tab === 'chat' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-3", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block text-sm", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "System prompt" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Select, { value: systemID, onChange: function (e) { return setSystemID(e.target.value); }, children: Object.keys(SYSTEM_PROMPTS).map(function (name) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { children: name }, name)); }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { placeholder: "Ask me anything\u2026", value: prompt, onChange: function (e) { return setPrompt(e.target.value); }, rows: 4, className: "w-full resize-none rounded-md border p-2 text-sm outline-none\n                       focus:ring-2 focus:ring-indigo-500" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { disabled: loading, onClick: runChat, className: "w-full rounded-md bg-indigo-600 py-2 text-white hover:bg-indigo-700\n                       disabled:opacity-50", children: loading ? 'Generating…' : 'Submit' }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { readOnly: true, value: answer, rows: 6, className: "w-full resize-none rounded-md border p-2 text-sm bg-slate-50" })] })), tab === 'settings' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-4 text-sm", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "Provider" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(Select, { value: settings.provider, onChange: function (e) {
                                     return setSettings(function (s) { return (__assign(__assign({}, s), { provider: e.target.value, model: PROVIDER_MODELS[e.target.value][0] })); });
                                 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "openai", children: "OpenAI" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "anthropic", children: "Anthropic" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "together", children: "Together AI" })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "Model" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Select, { value: settings.model, onChange: function (e) { return setSettings(function (s) { return (__assign(__assign({}, s), { model: e.target.value })); }); }, children: PROVIDER_MODELS[settings.provider].map(function (m) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { children: m }, m)); }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "API key" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "flex", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("input", { type: showKey ? 'text' : 'password', value: settings.apiKey, onChange: function (e) { return setSettings(function (s) { return (__assign(__assign({}, s), { apiKey: e.target.value })); }); }, className: "flex-1 rounded-l-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: function () { return setShowKey(function (v) { return !v; }); }, className: "rounded-r-md border-l bg-slate-200 px-3", children: showKey ? 'Hide' : 'Show' })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: function () { return persist(settings); }, className: "w-full rounded-md bg-emerald-600 py-2 text-white hover:bg-emerald-700", children: "Save" }), saveOK && (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", { className: "text-center text-emerald-600", children: "\u2714 Saved!" })] }))] }));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Popup);
 /* -------------------------------------------------------------------- *
- *  Low-level fetcher (kept at bottom for clarity)
+ *  Low‑level fetcher
  * -------------------------------------------------------------------- */
-function callLLM(_a, prompt_1) {
-    return __awaiter(this, arguments, void 0, function (_b, prompt) {
-        var fixedPrompt, _c, r, _d, j, r, _e, j, r, _f, j;
+function callLLM(_a, systemPrompt_1, userPrompt_1) {
+    return __awaiter(this, arguments, void 0, function (_b, systemPrompt, userPrompt) {
+        var _c, r, _d, j, r, _e, j, combinedPrompt, messages, r, _f, j;
         var provider = _b.provider, model = _b.model, apiKey = _b.apiKey;
         return __generator(this, function (_g) {
             switch (_g.label) {
                 case 0:
-                    fixedPrompt = "Convert it into English and fix the grammar:\n\n".concat(prompt);
                     _c = provider;
                     switch (_c) {
                         case 'openai': return [3 /*break*/, 1];
@@ -28382,7 +28390,10 @@ function callLLM(_a, prompt_1) {
                         },
                         body: JSON.stringify({
                             model: model,
-                            messages: [{ role: 'user', content: fixedPrompt }],
+                            messages: [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: userPrompt },
+                            ],
                             max_tokens: 1000,
                         }),
                     })];
@@ -28405,7 +28416,10 @@ function callLLM(_a, prompt_1) {
                         },
                         body: JSON.stringify({
                             model: model,
-                            messages: [{ role: 'user', content: fixedPrompt }],
+                            messages: [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: userPrompt },
+                            ],
                             max_tokens: 1000,
                         }),
                     })];
@@ -28419,14 +28433,18 @@ function callLLM(_a, prompt_1) {
                 case 10:
                     j = _g.sent();
                     return [2 /*return*/, j.content[0].text.trim()];
-                case 11: return [4 /*yield*/, fetch('https://api.together.xyz/v1/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: "Bearer ".concat(apiKey),
-                        },
-                        body: JSON.stringify({ model: model, prompt: prompt, max_tokens: 1000 }),
-                    })];
+                case 11:
+                    combinedPrompt = "".concat(systemPrompt, "\n\n").concat(userPrompt);
+                    messages = [{ "role": "user", "content": combinedPrompt }];
+                    console.log(combinedPrompt);
+                    return [4 /*yield*/, fetch('https://api.together.xyz/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: "Bearer ".concat(apiKey),
+                            },
+                            body: JSON.stringify({ model: model, messages: messages, max_tokens: 1000 }),
+                        })];
                 case 12:
                     r = _g.sent();
                     if (!!r.ok) return [3 /*break*/, 14];
@@ -28436,7 +28454,7 @@ function callLLM(_a, prompt_1) {
                 case 14: return [4 /*yield*/, r.json()];
                 case 15:
                     j = _g.sent();
-                    return [2 /*return*/, j.choices[0].text.trim()];
+                    return [2 /*return*/, j.choices[0].message.content.trim()];
                 case 16: return [2 /*return*/];
             }
         });
