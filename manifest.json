@@ -13,7 +13,7 @@
     "icons": {
       "48": "icons/icon-48.png"
     },
-    "permissions": ["activeTab", "scripting", "storage", "tabs", "identity"] ,
+    "permissions": ["activeTab", "scripting", "storage", "tabs"] ,
     "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
@@ -21,11 +21,6 @@
       "js": ["contentScript.js"],
       "run_at": "document_idle"
     }
-  ],
-  "oauth2": {
-    "client_id": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
-    "scopes": ["profile", "email"]
-  },
-
+  ]
   }
   

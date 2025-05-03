@@ -2,7 +2,7 @@
 const path               = require('path');
 const HtmlWebpackPlugin  = require('html-webpack-plugin');
 const CopyPlugin         = require('copy-webpack-plugin');
-const ExtensionReloader  = require('webpack-extension-reloader');
+const ExtensionReloader  = require('webpack-ext-reloader');
 
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
