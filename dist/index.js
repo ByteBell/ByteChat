@@ -29,6 +29,15 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.1.4 | MIT License |
 .flex {
   display: flex;
 }
+.inline {
+  display: inline;
+}
+.h-full {
+  height: 100%;
+}
+.w-\\[24rem\\] {
+  width: 24rem;
+}
 .w-\\[420px\\] {
   width: 420px;
 }
@@ -41,6 +50,12 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.1.4 | MIT License |
 .resize-none {
   resize: none;
 }
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
 .border {
   border-style: var(--tw-border-style);
   border-width: 1px;
@@ -49,12 +64,24 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.1.4 | MIT License |
   border-bottom-style: var(--tw-border-style);
   border-bottom-width: 1px;
 }
+.border-b-2 {
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 2px;
+}
 .border-l {
   border-left-style: var(--tw-border-style);
   border-left-width: 1px;
 }
 .text-center {
   text-align: center;
+}
+.capitalize {
+  text-transform: capitalize;
+}
+.transition-colors {
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, ease);
+  transition-duration: var(--tw-duration, 0s);
 }
 .outline-none {
   --tw-outline-style: none;
@@ -74,6 +101,11 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.1.4 | MIT License |
 .disabled\\:opacity-50 {
   &:disabled {
     opacity: 50%;
+  }
+}
+.disabled\\:opacity-60 {
+  &:disabled {
+    opacity: 60%;
   }
 }
 @property --tw-border-style {
@@ -168,7 +200,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.1.4 | MIT License |
   }
 }
 
-`, "",{"version":3,"sources":["webpack://./src/tailwind.css"],"names":[],"mappings":"AAAA,gEAIA;AAJA,iBAIA;AAJA;EAAA,cAIA;AAAA;AAJA;EAAA,aAIA;AAAA;AAJA;EAAA,YAIA;AAAA;AAJA;EAAA,WAIA;AAAA;AAJA;EAAA,OAIA;AAAA;AAJA;EAAA,YAIA;AAAA;AAJA;EAAA,oCAIA;EAJA,iBAIA;AAAA;AAJA;EAAA,2CAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,yCAIA;EAJA,sBAIA;AAAA;AAJA;EAAA,kBAIA;AAAA;AAJA;EAAA,wBAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,yBAIA;EAJA,sBAIA;OAJA,iBAIA;AAAA;AAJA;EAAA;IAAA,wHAIA;IAJA,sIAIA;EAAA;AAAA;AAJA;EAAA;IAAA,YAIA;EAAA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,oBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,sBAIA;EAJA,eAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,sBAIA;EAJA,eAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,kBAIA;EAJA,eAIA;EAJA,kBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA;IAAA;MAAA,wBAIA;MAJA,sBAIA;MAJA,0BAIA;MAJA,uBAIA;MAJA,4BAIA;MAJA,gCAIA;MAJA,6BAIA;MAJA,wBAIA;MAJA,2BAIA;MAJA,8BAIA;MAJA,iCAIA;MAJA,wBAIA;MAJA,2BAIA;MAJA,4BAIA;MAJA,kCAIA;IAAA;EAAA;AAAA","sourcesContent":["@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n"],"sourceRoot":""}]);
+`, "",{"version":3,"sources":["webpack://./src/tailwind.css"],"names":[],"mappings":"AAAA,gEAIA;AAJA,iBAIA;AAJA;EAAA,cAIA;AAAA;AAJA;EAAA,aAIA;AAAA;AAJA;EAAA,eAIA;AAAA;AAJA;EAAA,YAIA;AAAA;AAJA;EAAA,YAIA;AAAA;AAJA;EAAA,YAIA;AAAA;AAJA;EAAA,WAIA;AAAA;AAJA;EAAA,OAIA;AAAA;AAJA;EAAA,YAIA;AAAA;AAJA;EAAA,mBAIA;AAAA;AAJA;EAAA,uBAIA;AAAA;AAJA;EAAA,oCAIA;EAJA,iBAIA;AAAA;AAJA;EAAA,2CAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,2CAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,yCAIA;EAJA,sBAIA;AAAA;AAJA;EAAA,kBAIA;AAAA;AAJA;EAAA,0BAIA;AAAA;AAJA;EAAA,uKAIA;EAJA,gDAIA;EAJA,2CAIA;AAAA;AAJA;EAAA,wBAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,yBAIA;EAJA,sBAIA;OAJA,iBAIA;AAAA;AAJA;EAAA;IAAA,wHAIA;IAJA,sIAIA;EAAA;AAAA;AAJA;EAAA;IAAA,YAIA;EAAA;AAAA;AAJA;EAAA;IAAA,YAIA;EAAA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,oBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,sBAIA;EAJA,eAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,sBAIA;EAJA,eAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;AAAA;AAJA;EAAA,kBAIA;EAJA,eAIA;EAJA,kBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,mBAIA;AAAA;AAJA;EAAA,WAIA;EAJA,eAIA;EAJA,wBAIA;AAAA;AAJA;EAAA;IAAA;MAAA,wBAIA;MAJA,sBAIA;MAJA,0BAIA;MAJA,uBAIA;MAJA,4BAIA;MAJA,gCAIA;MAJA,6BAIA;MAJA,wBAIA;MAJA,2BAIA;MAJA,8BAIA;MAJA,iCAIA;MAJA,wBAIA;MAJA,2BAIA;MAJA,4BAIA;MAJA,kCAIA;IAAA;EAAA;AAAA","sourcesContent":["@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -28187,79 +28219,140 @@ var _a;
 // src/popup.tsx
 
 
+// ─── Google OAuth config ──────────────────────────────────────────
+// ⚠️  Replace these with real values in production
+var GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+var BACKEND_URL = 'https://your-backend.example.com/user';
 var PROVIDER_MODELS = {
     openai: ['gpt-4o', 'gpt-3.5-turbo'],
     anthropic: ['claude-3-sonnet', 'claude-3-haiku'],
-    together: ['meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', 'meta-llama/Llama-4-Scout-17B-16E-Instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'],
+    together: [
+        'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+        'meta-llama/Llama-4-Scout-17B-16E-Instruct',
+        'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free',
+    ],
 };
-// A few handy system‑prompt presets.  Add / edit as you like.
+// Handy system‑prompt presets
 var SYSTEM_PROMPTS = {
-    'Grammar Fix': 'Convert the following into standard English and fix any grammatical errors:',
-    'Translate > English': 'Translate the following text into English, Donnot provide any extra information just the translated text: ',
+    'Grammar\u00A0Fix': 'Convert the following into standard English and fix any grammatical errors:',
+    'Translate\u00A0>\u00A0English': 'Translate the following text into English. Don’t add anything else:',
     'Summarize': 'Provide a concise summary of the following text:',
 };
 var browserAPI = (_a = globalThis.browser) !== null && _a !== void 0 ? _a : globalThis.chrome;
 /* ---------------------------------------------------------------- *
- *  UI components
+ *  Re‑usable UI bits
  * ---------------------------------------------------------------- */
 var TabButton = function (_a) {
     var id = _a.id, active = _a.active, onClick = _a.onClick, children = _a.children;
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { id: id, className: "px-3 py-1 rounded-t-md text-sm font-semibold\n                ".concat(active ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700', "\n               "), onClick: onClick, children: children }));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { id: id, className: "px-3 py-1 rounded-t-md text-sm font-semibold transition-colors\n                ".concat(active ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'), onClick: onClick, children: children }));
 };
-var Select = function (props) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("select", __assign({}, props, { className: "w-full rounded-md border px-2 py-1 text-sm outline-none\n               focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-200\n              " }))); };
+var Select = function (props) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("select", __assign({}, props, { className: "w-full rounded-md border px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-200" }))); };
 /* ---------------------------------------------------------------- *
- *  Main component
+ *  Main popup component
  * ---------------------------------------------------------------- */
 var Popup = function () {
     /* Tabs */
     var _a = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)('chat'), tab = _a[0], setTab = _a[1];
-    /* Settings state */
-    var _b = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({
-        provider: 'openai',
-        model: 'gpt-4o',
-        apiKey: '',
-    }), settings = _b[0], setSettings = _b[1];
+    /* Settings state */
+    var _b = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({ provider: 'openai', model: 'gpt-4o', apiKey: '' }), settings = _b[0], setSettings = _b[1];
     var _c = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), showKey = _c[0], setShowKey = _c[1];
     var _d = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), saveOK = _d[0], setSaveOK = _d[1];
+    /* Google user */
+    var _e = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(null), userName = _e[0], setUserName = _e[1];
+    var _f = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(null), userEmail = _f[0], setUserEmail = _f[1];
+    var isLoggedIn = !!userEmail;
     /* Chat */
-    var _e = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)('Grammar Fix'), systemID = _e[0], setSystemID = _e[1];
+    var _g = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)('Grammar\u00A0Fix'), systemID = _g[0], setSystemID = _g[1];
     var systemPrompt = SYSTEM_PROMPTS[systemID];
     /* Chat state */
-    var _f = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), prompt = _f[0], setPrompt = _f[1];
-    var _g = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), answer = _g[0], setAnswer = _g[1];
-    var _h = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), loading = _h[0], setLoading = _h[1];
+    var _h = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), prompt = _h[0], setPrompt = _h[1];
+    var _j = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(''), answer = _j[0], setAnswer = _j[1];
+    var _k = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false), loading = _k[0], setLoading = _k[1];
     /* ------------------------------------------------------------------ *
-     *  Load & persist settings
+     *  Google OAuth sign‑in
+     * ------------------------------------------------------------------ */
+    var googleLogin = function () { return __awaiter(void 0, void 0, void 0, function () {
+        var redirectUri, scopes, authUrl, identityApi;
+        var _a, _b, _c, _d, _e;
+        return __generator(this, function (_f) {
+            try {
+                redirectUri = (_c = (_b = (_a = browserAPI.identity) === null || _a === void 0 ? void 0 : _a.getRedirectURL) === null || _b === void 0 ? void 0 : _b.call(_a)) !== null && _c !== void 0 ? _c : '';
+                scopes = ['profile', 'email'];
+                authUrl = "https://accounts.google.com/o/oauth2/v2/auth?client_id=".concat(encodeURIComponent(GOOGLE_CLIENT_ID), "&response_type=token&redirect_uri=").concat(encodeURIComponent(redirectUri), "&scope=").concat(encodeURIComponent(scopes.join(' ')));
+                identityApi = (_d = browserAPI.identity) !== null && _d !== void 0 ? _d : (_e = globalThis.chrome) === null || _e === void 0 ? void 0 : _e.identity;
+                if (!(identityApi === null || identityApi === void 0 ? void 0 : identityApi.launchWebAuthFlow)) {
+                    return [2 /*return*/, console.error('[popup] Google Sign-in not supported in this browser')];
+                }
+                browserAPI.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, function (redirectedTo) { return __awaiter(void 0, void 0, void 0, function () {
+                    var params, accessToken, r, _a, profile;
+                    var _b, _c;
+                    return __generator(this, function (_d) {
+                        switch (_d.label) {
+                            case 0:
+                                if (((_b = browserAPI.runtime) === null || _b === void 0 ? void 0 : _b.lastError) || !redirectedTo) {
+                                    console.error('[popup] Google auth failed', (_c = browserAPI.runtime) === null || _c === void 0 ? void 0 : _c.lastError);
+                                    return [2 /*return*/];
+                                }
+                                params = new URLSearchParams(redirectedTo.split('#')[1]);
+                                accessToken = params.get('access_token');
+                                if (!accessToken)
+                                    return [2 /*return*/];
+                                return [4 /*yield*/, fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers: { Authorization: "Bearer ".concat(accessToken) } })];
+                            case 1:
+                                r = _d.sent();
+                                if (!!r.ok) return [3 /*break*/, 3];
+                                _a = Error.bind;
+                                return [4 /*yield*/, r.text()];
+                            case 2: throw new (_a.apply(Error, [void 0, _d.sent()]))();
+                            case 3: return [4 /*yield*/, r.json()];
+                            case 4:
+                                profile = _d.sent();
+                                setUserName(profile.name);
+                                setUserEmail(profile.email);
+                                // Send to backend
+                                return [4 /*yield*/, fetch(BACKEND_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: profile.name, email: profile.email }) })];
+                            case 5:
+                                // Send to backend
+                                _d.sent();
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+            }
+            catch (err) {
+                console.error('[popup] googleLogin error', err);
+            }
+            return [2 /*return*/];
+        });
+    }); };
+    /* ------------------------------------------------------------------ *
+     *  Load & persist settings
      * ------------------------------------------------------------------ */
     (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(function () {
         var _a;
-        /* Load saved settings */
         (_a = browserAPI.storage) === null || _a === void 0 ? void 0 : _a.local.get(['provider', 'model', 'apiKey'], function (raw) {
             if (raw === null || raw === void 0 ? void 0 : raw.apiKey)
                 setSettings(raw);
-            console.log('[popup] settings loaded', raw);
         });
-        /* Grab text from the page */
+        // Grab highlighted text / focused input text
         (function () { return __awaiter(void 0, void 0, void 0, function () {
             var text;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, execInPage(function () {
                             var _a;
-                            /* This function runs **inside the page** */
                             var sel = (_a = window.getSelection()) === null || _a === void 0 ? void 0 : _a.toString().trim();
                             if (sel)
                                 return sel;
                             var el = document.activeElement;
                             if (el && 'value' in el)
-                                return el.value; // <input>/<textarea>
+                                return el.value;
                             if (el === null || el === void 0 ? void 0 : el.isContentEditable)
-                                return el.innerText; // contentEditable
+                                return el.innerText;
                             return '';
                         })];
                     case 1:
                         text = _a.sent();
-                        console.log('[popup] execInPage →', text);
                         if (text)
                             setPrompt(text);
                         return [2 /*return*/];
@@ -28267,54 +28360,6 @@ var Popup = function () {
             });
         }); })();
     }, []);
-    // popup.tsx  (add near the top, after browserAPI is defined)
-    function execInPage(fn) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve) {
-                        browserAPI.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                            var _a;
-                            if (!(tabs === null || tabs === void 0 ? void 0 : tabs.length)) {
-                                console.warn('[popup] no active tab');
-                                return resolve('');
-                            }
-                            var tabId = tabs[0].id;
-                            // ────── ①  Manifest V3  ──────
-                            if ((_a = browserAPI.scripting) === null || _a === void 0 ? void 0 : _a.executeScript) {
-                                browserAPI.scripting
-                                    .executeScript({ target: { tabId: tabId }, func: fn })
-                                    .then(function (r) {
-                                    var _a, _b;
-                                    console.log('[popup] scripting.executeScript result', r);
-                                    resolve((_b = (_a = r === null || r === void 0 ? void 0 : r[0]) === null || _a === void 0 ? void 0 : _a.result) !== null && _b !== void 0 ? _b : '');
-                                })
-                                    .catch(function (err) {
-                                    console.error('[popup] scripting.executeScript error', err);
-                                    resolve('');
-                                });
-                            }
-                            // ────── ②  Manifest V2  ──────
-                            else if (browserAPI.tabs.executeScript) {
-                                browserAPI.tabs.executeScript(tabId, { code: "(".concat(fn, ")();") }, function (res) {
-                                    var _a, _b;
-                                    if ((_a = browserAPI.runtime) === null || _a === void 0 ? void 0 : _a.lastError) {
-                                        console.error('[popup] tabs.executeScript error', browserAPI.runtime.lastError);
-                                        return resolve('');
-                                    }
-                                    console.log('[popup] tabs.executeScript result', res);
-                                    resolve((_b = res === null || res === void 0 ? void 0 : res[0]) !== null && _b !== void 0 ? _b : '');
-                                });
-                            }
-                            // ────── ③  No API available  ──────
-                            else {
-                                console.error('[popup] neither scripting nor executeScript present');
-                                resolve('');
-                            }
-                        });
-                    })];
-            });
-        });
-    }
     var persist = function (next) {
         var _a;
         (_a = browserAPI === null || browserAPI === void 0 ? void 0 : browserAPI.storage) === null || _a === void 0 ? void 0 : _a.local.set(next, function () {
@@ -28323,8 +28368,8 @@ var Popup = function () {
         });
     };
     /* ------------------------------------------------------------------ *
-    *  Chat
-    * ------------------------------------------------------------------ */
+     *  Chat
+     * ------------------------------------------------------------------ */
     function runChat() {
         return __awaiter(this, void 0, void 0, function () {
             var text, err_1;
@@ -28360,9 +28405,7 @@ var Popup = function () {
     /* ------------------------------------------------------------------ *
      *  Render
      * ------------------------------------------------------------------ */
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "w-[420px] text-slate-800 font-sans select-none", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "flex space-x-1 border-b", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "chatTab", active: tab === 'chat', onClick: function () { return setTab('chat'); }, children: "Chat" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "settingsTab", active: tab === 'settings', onClick: function () { return setTab('settings'); }, children: "Settings" })] }), tab === 'chat' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-3", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block text-sm", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "System prompt" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Select, { value: systemID, onChange: function (e) { return setSystemID(e.target.value); }, children: Object.keys(SYSTEM_PROMPTS).map(function (name) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { children: name }, name)); }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { placeholder: "Ask me anything\u2026", value: prompt, onChange: function (e) { return setPrompt(e.target.value); }, rows: 4, className: "w-full resize-none rounded-md border p-2 text-sm outline-none\n                       focus:ring-2 focus:ring-indigo-500" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { disabled: loading, onClick: runChat, className: "w-full rounded-md bg-indigo-600 py-2 text-white hover:bg-indigo-700\n                       disabled:opacity-50", children: loading ? 'Generating…' : 'Submit' }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { readOnly: true, value: answer, rows: 6, className: "w-full resize-none rounded-md border p-2 text-sm bg-slate-50" })] })), tab === 'settings' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-4 text-sm", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "Provider" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(Select, { value: settings.provider, onChange: function (e) {
-                                    return setSettings(function (s) { return (__assign(__assign({}, s), { provider: e.target.value, model: PROVIDER_MODELS[e.target.value][0] })); });
-                                }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "openai", children: "OpenAI" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "anthropic", children: "Anthropic" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "together", children: "Together AI" })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "Model" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Select, { value: settings.model, onChange: function (e) { return setSettings(function (s) { return (__assign(__assign({}, s), { model: e.target.value })); }); }, children: PROVIDER_MODELS[settings.provider].map(function (m) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { children: m }, m)); }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "API key" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "flex", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("input", { type: showKey ? 'text' : 'password', value: settings.apiKey, onChange: function (e) { return setSettings(function (s) { return (__assign(__assign({}, s), { apiKey: e.target.value })); }); }, className: "flex-1 rounded-l-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: function () { return setShowKey(function (v) { return !v; }); }, className: "rounded-r-md border-l bg-slate-200 px-3", children: showKey ? 'Hide' : 'Show' })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: function () { return persist(settings); }, className: "w-full rounded-md bg-emerald-600 py-2 text-white hover:bg-emerald-700", children: "Save" }), saveOK && (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", { className: "text-center text-emerald-600", children: "\u2714 Saved!" })] }))] }));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "w-[420px] text-slate-800 font-sans select-none bg-white", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "flex space-x-1 border-b", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "chatTab", active: tab === 'chat', onClick: function () { return setTab('chat'); }, children: "Chat" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(TabButton, { id: "settingsTab", active: tab === 'settings', onClick: function () { return setTab('settings'); }, children: "Settings" })] }), tab === 'chat' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-3", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block text-sm", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "System prompt" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Select, { value: systemID, onChange: function (e) { return setSystemID(e.target.value); }, children: Object.keys(SYSTEM_PROMPTS).map(function (name) { return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { children: name }, name); }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { placeholder: "Ask me anything\u2026", value: prompt, onChange: function (e) { return setPrompt(e.target.value); }, rows: 4, className: "w-full resize-none rounded-md border p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { disabled: loading, onClick: runChat, className: "w-full rounded-md bg-indigo-600 py-2 text-white hover:bg-indigo-700 disabled:opacity-50", children: loading ? 'Generating…' : 'Submit' }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("textarea", { readOnly: true, value: answer, rows: 6, className: "w-full resize-none rounded-md border p-2 text-sm bg-slate-50" })] })), tab === 'settings' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "p-4 space-y-4 text-sm", children: [!isLoggedIn ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("button", { onClick: googleLogin, className: "w-full flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white py-2 shadow-sm hover:bg-slate-50 transition-colors", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("svg", { className: "h-4 w-4", viewBox: "0 0 533.5 544.3", xmlns: "http://www.w3.org/2000/svg", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("path", { fill: "#4285F4", d: "M533.5 278.4c0-17.6-1.6-35-4.6-51.8H272v97.8h146.9c-6.4 34.7-25.6 64.2-54.6 84.2l88.2 68.4c51.5-47.4 80.6-117.3 80.6-198.6z" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("path", { fill: "#34A853", d: "M272 544.3c73.6 0 135.3-24.3 180.4-65.7l-88.2-68.4c-24.5 16.4-55.9 26.1-92.2 26.1-70.9 0-131-47.9-152.6-112.1l-90 69.5c45.3 89 136.3 150.6 242.6 150.6z" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("path", { fill: "#FBBC04", d: "M119.4 324.2c-10.6-31.4-10.6-65.4 0-96.8L29.4 157.9C-9.8 237 1.4 336.9 45.4 410.2l74-86z" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("path", { fill: "#EA4335", d: "M272 107.7c39.9 0 75.8 13.7 104 36.1l78-78C407.3 24 345.6 0 272 0 165.7 0 74.7 61.6 29.4 150.7l90 69.5C141 155.6 201.1 107.7 272 107.7z" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "font-medium text-slate-700", children: "Sign in with Google" })] })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("p", { className: "text-center", children: ["Logged in as ", (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("strong", { children: userName }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("br", {}), userEmail] })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "Provider" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(Select, { value: settings.provider, onChange: function (e) { return setSettings(function (s) { return (__assign(__assign({}, s), { provider: e.target.value, model: PROVIDER_MODELS[e.target.value][0] })); }); }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "openai", children: "OpenAI" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "anthropic", children: "Anthropic" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { value: "together", children: "Together AI" })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "Model" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Select, { value: settings.model, onChange: function (e) { return setSettings(function (s) { return (__assign(__assign({}, s), { model: e.target.value })); }); }, children: PROVIDER_MODELS[settings.provider].map(function (m) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("option", { children: m }, m)); }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("label", { className: "block", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "mb-1 block font-medium", children: "API key" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "flex", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("input", { type: showKey ? 'text' : 'password', value: settings.apiKey, onChange: function (e) { return setSettings(function (s) { return (__assign(__assign({}, s), { apiKey: e.target.value })); }); }, className: "flex-1 rounded-l-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: function () { return setShowKey(function (v) { return !v; }); }, className: "rounded-r-md border-l bg-slate-200 px-3 hover:bg-slate-300", children: showKey ? 'Hide' : 'Show' })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: function () { return persist(settings); }, className: "w-full rounded-md bg-emerald-600 py-2 text-white hover:bg-emerald-700", children: "Save" }), saveOK && (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", { className: "text-center text-emerald-600", children: "\u2714 Saved!" })] }))] }));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Popup);
 /* -------------------------------------------------------------------- *
@@ -28435,8 +28478,7 @@ function callLLM(_a, systemPrompt_1, userPrompt_1) {
                     return [2 /*return*/, j.content[0].text.trim()];
                 case 11:
                     combinedPrompt = "".concat(systemPrompt, "\n\n").concat(userPrompt);
-                    messages = [{ "role": "user", "content": combinedPrompt }];
-                    console.log(combinedPrompt);
+                    messages = [{ role: 'user', content: combinedPrompt }];
                     return [4 /*yield*/, fetch('https://api.together.xyz/v1/chat/completions', {
                             method: 'POST',
                             headers: {
@@ -28457,6 +28499,44 @@ function callLLM(_a, systemPrompt_1, userPrompt_1) {
                     return [2 /*return*/, j.choices[0].message.content.trim()];
                 case 16: return [2 /*return*/];
             }
+        });
+    });
+}
+/* -------------------------------------------------------------------- *
+ *  Execute arbitrary function in the active page context (helper)
+ * -------------------------------------------------------------------- */
+function execInPage(fn) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2 /*return*/, new Promise(function (resolve) {
+                    browserAPI.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                        var _a;
+                        if (!(tabs === null || tabs === void 0 ? void 0 : tabs.length)) {
+                            console.warn('[popup] no active tab');
+                            return resolve('');
+                        }
+                        var tabId = tabs[0].id;
+                        // ────── ① Manifest V3 ──────
+                        if ((_a = browserAPI.scripting) === null || _a === void 0 ? void 0 : _a.executeScript) {
+                            browserAPI.scripting
+                                .executeScript({ target: { tabId: tabId }, func: fn })
+                                .then(function (r) { var _a, _b; return resolve((_b = (_a = r === null || r === void 0 ? void 0 : r[0]) === null || _a === void 0 ? void 0 : _a.result) !== null && _b !== void 0 ? _b : ''); })
+                                .catch(function () { return resolve(''); });
+                        }
+                        // ────── ② Manifest V2 ──────
+                        else if (browserAPI.tabs.executeScript) {
+                            browserAPI.tabs.executeScript(tabId, { code: "(".concat(fn, ")();") }, function (res) {
+                                var _a, _b;
+                                if ((_a = browserAPI.runtime) === null || _a === void 0 ? void 0 : _a.lastError)
+                                    return resolve('');
+                                resolve((_b = res === null || res === void 0 ? void 0 : res[0]) !== null && _b !== void 0 ? _b : '');
+                            });
+                        }
+                        // ────── ③ No API ──────
+                        else
+                            resolve('');
+                    });
+                })];
         });
     });
 }
