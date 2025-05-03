@@ -22,11 +22,20 @@ const PROVIDER_MODELS: Record<Provider, string[]> = {
   ],
 };
 
+const LANGUAGES = [
+  "Hindi",
+  "English",
+  "Chinese",
+  "Spanish",
+  "Arabic",
+  "Portuguese",
+  "Russian",
+];
+
 const SYSTEM_PROMPTS: Record<string, string> = {
   "Grammar Fix":
     "Convert the following into standard English and fix any grammatical errors:",
-  "Translate > English":
-    "Translate the following text into English, Donnot provide any extra information just the translated text: ",
+  Translate: "Translate the following text between selected languages: ",
   Summarize: "Provide a concise summary of the following text:",
 };
 
@@ -66,7 +75,7 @@ const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = (
 /* ---------------------------------------------------------------- *
  *  Main component
  * ---------------------------------------------------------------- */
-export const Popup: React.FC = () => {
+const Popup: React.FC = () => {
   /* Ensure min dimensions for Firefox */
   useEffect(() => {
     document.body.style.minWidth = "420px";
@@ -74,7 +83,9 @@ export const Popup: React.FC = () => {
   }, []);
 
   /* Tabs */
-  const [tab, setTab] = useState<"chat" | "settings">("chat");
+  const [tab, setTab] = useState<"chat" | "settings" | "feedback">("chat");
+  const [fromLang, setFromLang] = useState("English");
+  const [toLang, setToLang] = useState("Hindi");
 
   /* Settings state */
   const [settings, setSettings] = useState<Settings>({
@@ -268,6 +279,13 @@ export const Popup: React.FC = () => {
         >
           Settings
         </TabButton>
+        <TabButton
+          id="feedbackTab"
+          active={tab === "feedback"}
+          onClick={() => setTab("feedback")}
+        >
+          Feedback
+        </TabButton>
       </div>
 
       {/* ── Content panels ────────────────────────────────────────── */}
@@ -280,27 +298,84 @@ export const Popup: React.FC = () => {
           <div className="p-6 bg-white rounded-b-lg shadow-lg space-y-6">
             <label className="block text-sm mb-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium text-gray-700">System Prompt</span>
+                <span className="font-medium text-gray-700">Action</span>
                 <Select
                   value={systemID}
                   onChange={(e) => setSystemID(e.target.value)}
                   className="w-48"
                 >
+                  <option value="New System Prompt">New System Prompt</option>
                   {Object.keys(SYSTEM_PROMPTS).map((name) => (
                     <option key={name}>{name}</option>
                   ))}
                 </Select>
               </div>
-              <textarea
-                value={SYSTEM_PROMPTS[systemID]}
-                onChange={(e) => {
-                  SYSTEM_PROMPTS[systemID] = e.target.value;
-                  setSystemID(systemID);
-                }}
-                rows={3}
-                className="w-full rounded-md border p-2 text-sm outline-none resize-y
-                         focus:ring-2 focus:ring-purple-500 bg-gray-50"
-              />
+              {systemID === "New System Prompt" && (
+                <div className="flex space-x-2">
+                  <textarea
+                    value={systemPrompt}
+                    onChange={(e) => {
+                      SYSTEM_PROMPTS[systemID] = e.target.value;
+                      setSystemID(systemID);
+                    }}
+                    rows={3}
+                    className="flex-1 rounded-md border p-2 text-sm outline-none resize-y
+                             focus:ring-2 focus:ring-purple-500 bg-gray-50"
+                  />
+                  <button
+                    onClick={() => {
+                      fetch('/api/save-prompt', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          promptId: systemID,
+                          promptText: systemPrompt
+                        })
+                      }).then(response => {
+                        if (response.ok) {
+                          alert('Prompt saved successfully!');
+                        } else {
+                          alert('Failed to save prompt');
+                        }
+                      }).catch(error => {
+                        alert('Error saving prompt');
+                      });
+                    }}
+                    className="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm h-fit"
+                  >
+                    Save Prompt
+                  </button>
+                </div>
+              )}
+              {systemID === "Translate" && (
+                <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md">
+                  <Select
+                    value={fromLang}
+                    onChange={(e) => setFromLang(e.target.value)}
+                    className="flex-1"
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang} value={lang}>
+                        {lang}
+                      </option>
+                    ))}
+                  </Select>
+                  <span className="text-gray-500">→</span>
+                  <Select
+                    value={toLang}
+                    onChange={(e) => setToLang(e.target.value)}
+                    className="flex-1"
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang} value={lang}>
+                        {lang}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              )}
             </label>
 
             <textarea
@@ -332,7 +407,7 @@ export const Popup: React.FC = () => {
             />
           </div>
         </div>
-      ) : (
+      ) : tab === "settings" ? (
         <div className="p-4 space-y-4 text-sm">
           <button
             onClick={() => {
@@ -418,8 +493,32 @@ export const Popup: React.FC = () => {
 
           {saveOK && <p className="text-center text-emerald-600">✔ Saved!</p>}
         </div>
-      )}
-    </div>
+      ) : tab === "feedback" ? (
+        <div className="p-4 space-y-4">
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1 block font-medium">Email</span>
+              <input
+                type="email"
+                className="w-full rounded-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="your@email.com"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block font-medium">Feedback</span>
+              <textarea
+                className="w-full rounded-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px]"
+                placeholder="Share your thoughts..."
+              />
+            </label>
+            <button className="w-full rounded-md bg-indigo-600 py-2 text-white hover:bg-indigo-700">
+              Submit Feedback
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      </div>
   );
 };
 
