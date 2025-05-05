@@ -4,8 +4,8 @@
   "main": "popup.js",
   "scripts": {
     "start": "webpack --watch --progress --config webpack.config.js",
-    "build": "NODE_ENV=production webpack --config webpack.config.js",
-    "dev": "NODE_ENV=development webpack --watch --mode development"
+  "dev":   "cross-env NODE_ENV=development webpack --watch",
+  "build": "cross-env NODE_ENV=production webpack"
   },
   "keywords": [],
   "author": "",

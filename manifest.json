@@ -1,20 +1,32 @@
-
-  {
-    "manifest_version": 3,
-    "name": "GrammerAI",
-    "version": "1.0.0",    
-    "description": "A browser extension to interact with AI providers like OpenAI, Anthropic, and Together",
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "48": "icons/icon-48.png"
-      }
-    },
-    "icons": {
+{
+  "manifest_version": 3,
+  "name": "GrammerAI",
+  "version": "1.0.0",    
+  "description": "A browser extension to interact with AI providers like OpenAI, Anthropic, and Together",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
       "48": "icons/icon-48.png"
-    },
-    "permissions": ["activeTab", "scripting", "storage", "tabs"] ,
-    "host_permissions": ["<all_urls>"],
+    }
+  },
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
+  "oauth2": {
+    "client_id": "842265721700-a7hq7miue3b6bjgrspsiak9hgc39hk4g.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
+  "permissions": [
+    "activeTab",
+    "scripting", 
+    "storage",
+    "tabs",
+    "identity"
+  ],
+  "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -22,5 +34,4 @@
       "run_at": "document_idle"
     }
   ]
-  }
-  
+}

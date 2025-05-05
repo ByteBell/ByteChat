@@ -7,8 +7,12 @@ const ExtensionReloader  = require('webpack-ext-reloader');
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
 
-  entry: { 
-    index: path.join(__dirname, 'src', 'index.tsx')   },
+    entry: {
+      /* popup UI                      → dist/index.js  (or rename to popup) */
+      index:         path.join(__dirname, 'src', 'index.tsx'),
+      /* injected page script          → dist/contentScript.js */
+      contentScript: path.join(__dirname, 'src', 'contentScript.ts'),
+    },
 
   output: {
     path: path.join(__dirname, 'dist'),
@@ -30,13 +34,14 @@ module.exports = {
       template: 'public/popup.html',      // <- source file
       filename: 'popup.html',             // <- output file
       inject: 'body',
+      chunks: ['index']  
     }),
 
     /* ②  Copies everything that isn’t bundled */
     new CopyPlugin({
       patterns: [
         { from: 'manifest.json', to: '.' }, // KEEP THIS – copies the manifest
-        { from: 'icons',         to: 'icons' },
+        { from: 'icons',         to: 'icons' }      
       ],
     }),
 

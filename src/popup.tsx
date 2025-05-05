@@ -39,7 +39,7 @@ const SYSTEM_PROMPTS: Record<string, string> = {
   Summarize: "Provide a concise summary of the following text:",
 };
 
-const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+const browserAPI = chrome;
 
 /* ---------------------------------------------------------------- *
  *  UI components
@@ -411,7 +411,54 @@ const Popup: React.FC = () => {
         <div className="p-4 space-y-4 text-sm">
           <button
             onClick={() => {
-              /* TODO: Implement Google Login */
+              const manifest = chrome.runtime.getManifest();
+              if (!manifest.oauth2?.client_id) {
+                console.error('OAuth2 client ID not configured in manifest');
+                return;
+              }
+              const clientId = manifest.oauth2.client_id;
+              const scopes     = manifest.oauth2!.scopes!.join(' ');
+              const redirectUri   = chrome.identity.getRedirectURL();   // → https://<EXT-ID>.chromiumapp.org
+              console.log(redirectUri);
+              // const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+              // authUrl.searchParams.set('client_id', clientId);
+              // authUrl.searchParams.set('response_type', 'token');      // or 'id_token token' with nonce
+              // authUrl.searchParams.set('redirect_uri', redirect);
+              // authUrl.searchParams.set('scope', scopes);
+              // authUrl.searchParams.set('include_granted_scopes', 'true');
+              
+              const authUrl =
+                `https://accounts.google.com/o/oauth2/v2/auth?` +
+                `client_id=${clientId}` +
+                `&response_type=token` +
+                `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+                `&scope=${encodeURIComponent(scopes)}`;
+
+              chrome.identity.launchWebAuthFlow({
+                interactive: true,
+                url: authUrl.toString()
+              }).then((responseUrl) => {
+                if (!responseUrl) {
+                  console.error('No response URL received');
+                  return;
+                }
+                const token = new URLSearchParams(new URL(responseUrl).hash.substr(1)).get('access_token');
+                // Store token and handle auth success
+                if (token) {
+                  chrome.storage.local.set({ googleToken: token });
+                    // Send to backend right away
+                  fetch('http://localhost:8000/api/auth/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token: token })
+                  })
+                  .then(r => r.json())
+                  .then(console.log)
+                  .catch(console.error);
+                }
+              }).catch(err => {
+                console.error('Auth error:', err);
+              });
             }}
             className="w-full flex items-center justify-center space-x-2 rounded-md bg-white border-2 border-gray-200 py-2 hover:bg-gray-50"
           >
