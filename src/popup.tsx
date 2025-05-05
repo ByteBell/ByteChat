@@ -86,6 +86,7 @@ const Popup: React.FC = () => {
   const [tab, setTab] = useState<"chat" | "settings" | "feedback">("chat");
   const [fromLang, setFromLang] = useState("English");
   const [toLang, setToLang] = useState("Hindi");
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   /* Settings state */
   const [settings, setSettings] = useState<Settings>({
@@ -115,6 +116,10 @@ const Popup: React.FC = () => {
         console.log("[popup] settings loaded", raw);
       },
     );
+
+    chrome.storage.local.get(["user"], (res) => {
+      if (res.user) setUser(res.user);
+    });
 
     /* Grab text from the page */
     (async () => {
@@ -409,66 +414,55 @@ const Popup: React.FC = () => {
         </div>
       ) : tab === "settings" ? (
         <div className="p-4 space-y-4 text-sm">
-          <button
-            onClick={() => {
-              const manifest = chrome.runtime.getManifest();
-              if (!manifest.oauth2?.client_id) {
-                console.error('OAuth2 client ID not configured in manifest');
-                return;
-              }
-              const clientId = manifest.oauth2.client_id;
-              const scopes     = manifest.oauth2!.scopes!.join(' ');
-              const redirectUri   = chrome.identity.getRedirectURL();   // → https://<EXT-ID>.chromiumapp.org
-              console.log(redirectUri);
-              // const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-              // authUrl.searchParams.set('client_id', clientId);
-              // authUrl.searchParams.set('response_type', 'token');      // or 'id_token token' with nonce
-              // authUrl.searchParams.set('redirect_uri', redirect);
-              // authUrl.searchParams.set('scope', scopes);
-              // authUrl.searchParams.set('include_granted_scopes', 'true');
-              
-              const authUrl =
-                `https://accounts.google.com/o/oauth2/v2/auth?` +
-                `client_id=${clientId}` +
-                `&response_type=token` +
-                `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-                `&scope=${encodeURIComponent(scopes)}`;
+         <button
+            onClick={async () => {
+              if (user) {
+                /* Logout: clear stored user */
+                chrome.storage.local.remove(["user"]);
+                setUser(null);
+              } else {
+                /* Login: launch OAuth flow */
+                const manifest = chrome.runtime.getManifest();
+                const clientId = manifest.oauth2?.client_id;
+                const scopes = manifest.oauth2?.scopes?.join(" ") || "";
+                const redirectUri = chrome.identity.getRedirectURL();
+                const authUrl =
+                  `https://accounts.google.com/o/oauth2/v2/auth?` +
+                  `client_id=${clientId}` +
+                  `&response_type=token` +
+                  `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+                  `&scope=${encodeURIComponent(scopes)}`;
 
-              chrome.identity.launchWebAuthFlow({
-                interactive: true,
-                url: authUrl.toString()
-              }).then((responseUrl) => {
-                if (!responseUrl) {
-                  console.error('No response URL received');
-                  return;
+                try {
+                  const responseUrl = await chrome.identity.launchWebAuthFlow({
+                    interactive: true,
+                    url: authUrl,
+                  });
+                  if (!responseUrl) return;
+
+                  const token = new URLSearchParams(new URL(responseUrl).hash.substr(1)).get("access_token");
+                  if (!token) return;
+
+                  /* Send token to backend and store returned user info */
+                  const resp = await fetch("http://localhost:8000/api/auth/google", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ access_token: token }),
+                  });
+                  const userData = await resp.json();  // { name: string; email: string }
+                  await chrome.storage.local.set({ user: userData });
+                  setUser(userData);
+                } catch (err) {
+                  console.error("Auth error:", err);
                 }
-                const token = new URLSearchParams(new URL(responseUrl).hash.substr(1)).get('access_token');
-                // Store token and handle auth success
-                if (token) {
-                  chrome.storage.local.set({ googleToken: token });
-                    // Send to backend right away
-                  fetch('http://localhost:8000/api/auth/google', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ access_token: token })
-                  })
-                  .then(r => r.json())
-                  .then(console.log)
-                  .catch(console.error);
-                }
-              }).catch(err => {
-                console.error('Auth error:', err);
-              });
+              }
             }}
             className="w-full flex items-center justify-center space-x-2 rounded-md bg-white border-2 border-gray-200 py-2 hover:bg-gray-50"
           >
-            <img
-              src="https://www.google.com/favicon.ico"
-              className="w-5 h-5"
-              alt="Google"
-            />
-            <span>Continue with Google</span>
+            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
+            <span>{user ? "Logout" : "Continue with Google"}</span>
           </button>
+
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
