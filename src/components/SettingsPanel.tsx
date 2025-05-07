@@ -108,86 +108,107 @@ const SettingsPanel: React.FC = () => {
         <span>{user ? "Logout" : "Continue with Google"}</span>
       </button>
 
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300" />
-        </div>
-        <div className="relative flex justify-center text-sm bg-white px-2">
-          Or
-        </div>
-      </div>
-
-      {/* Provider selector */}
-      <label className="block">
-        <span className="block font-medium mb-1">Provider</span>
-        <Select
-          value={settings.provider}
-          onChange={(e) => {
-            const prov = e.target.value as Provider;
-            setSettingsState((prev) => ({
-              provider: prov,
-              model: PROVIDER_MODELS[prov][0],
-              apiKey: prev.apiKey,
-            }));
-          }}
-        >
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic</option>
-          <option value="together">Together AI</option>
-        </Select>
-      </label>
-
-      {/* Model selector */}
-      <label className="block">
-        <span className="block font-medium mb-1">Model</span>
-        <Select
-          value={settings.model}
-          onChange={(e) =>
-            setSettingsState((s) => ({ ...s, model: e.target.value }))
-          }
-        >
-          {PROVIDER_MODELS[settings.provider].map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </Select>
-      </label>
-
-      {/* API key input */}
-      <label className="block">
-        <span className="block font-medium mb-1">API key</span>
-        <div className="flex">
-          <input
-            type={showKey ? "text" : "password"}
-            value={settings.apiKey}
-            onChange={(e) =>
-              setSettingsState((s) => ({ ...s, apiKey: e.target.value }))
-            }
-            className="flex-1 rounded-l-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+      {user ? (
+        <div className="space-y-4">
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-center mb-2">
+              You are now on Free plan and can translate/fix grammar up to 1,000,000 words
+            </p>
+            <p className="text-center text-sm text-blue-600">
+              You can always buy more credits - $1.2 for 1,000,000 words
+            </p>
+          </div>
           <button
-            onClick={() => setShowKey((v) => !v)}
-            className="rounded-r-md border-l bg-slate-200 px-3"
+            className="w-full rounded-md bg-indigo-600 py-2 text-white hover:bg-indigo-700"
+            onClick={() => alert("Purchase functionality coming soon!")}
           >
-            {showKey ? "Hide" : "Show"}
+            Buy Credits
           </button>
         </div>
-      </label>
+      ) : (
+        <>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm bg-white px-2">
+              Or
+            </div>
+          </div>
 
-      {/* Save button */}
-      <button
-        onClick={async () => {
-          await saveSettings(settings);
-          setSaveOK(true);
-          setTimeout(() => setSaveOK(false), 2000);
-        }}
-        className="w-full rounded-md bg-emerald-600 py-2 text-white hover:bg-emerald-700"
-      >
-        Save
-      </button>
-      {saveOK && (
-        <p className="text-center text-emerald-600">✔ Saved!</p>
+          {/* Provider selector */}
+          <label className="block">
+            <span className="block font-medium mb-1">Provider</span>
+            <Select
+              value={settings.provider}
+              onChange={(e) => {
+                const prov = e.target.value as Provider;
+                setSettingsState((prev) => ({
+                  provider: prov,
+                  model: PROVIDER_MODELS[prov][0],
+                  apiKey: prev.apiKey,
+                }));
+              }}
+            >
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="together">Together AI</option>
+            </Select>
+          </label>
+
+          {/* Model selector */}
+          <label className="block">
+            <span className="block font-medium mb-1">Model</span>
+            <Select
+              value={settings.model}
+              onChange={(e) =>
+                setSettingsState((s) => ({ ...s, model: e.target.value }))
+              }
+            >
+              {PROVIDER_MODELS[settings.provider].map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </Select>
+          </label>
+
+          {/* API key input */}
+          <label className="block">
+            <span className="block font-medium mb-1">API key</span>
+            <div className="flex">
+              <input
+                type={showKey ? "text" : "password"}
+                value={settings.apiKey}
+                onChange={(e) =>
+                  setSettingsState((s) => ({ ...s, apiKey: e.target.value }))
+                }
+                className="flex-1 rounded-l-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={() => setShowKey((v) => !v)}
+                className="rounded-r-md border-l bg-slate-200 px-3"
+              >
+                {showKey ? "Hide" : "Show"}
+              </button>
+            </div>
+          </label>
+
+          {/* Save button */}
+          <button
+            onClick={async () => {
+              await saveSettings(settings);
+              setSaveOK(true);
+              setTimeout(() => setSaveOK(false), 2000);
+            }}
+            className="w-full rounded-md bg-emerald-600 py-2 text-white hover:bg-emerald-700"
+          >
+            Save
+          </button>
+          {saveOK && (
+            <p className="text-center text-emerald-600">✔ Saved!</p>
+          )}
+        </>
       )}
     </div>
   );
