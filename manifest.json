@@ -6,11 +6,15 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "48": "icons/icon-48.png"
+      "128": "icons/logo_128.png",
+      "48": "icons/logo_128.png"
     }
   },
+  
   "icons": {
-    "48": "icons/icon-48.png"
+    "128": "icons/logo_128.png",
+    "48": "icons/logo_48.png"
+
   },
   "oauth2": {
     "client_id": "842265721700-a7hq7miue3b6bjgrspsiak9hgc39hk4g.apps.googleusercontent.com",
@@ -24,14 +28,18 @@
     "scripting", 
     "storage",
     "tabs",
-    "identity"
+    "identity",
+     "<all_urls>"
   ],
   "host_permissions": ["<all_urls>"],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["contentScript.js"],
-      "run_at": "document_idle"
-    }
-  ]
+    "content_scripts": [
+        {
+          "matches": ["<all_urls>"],
+          "js": ["contentScript.js"],
+          "run_at": "document_idle"
+        }
+      ],
+    "background": {
+        "service_worker": "background.js"
+      }
 }

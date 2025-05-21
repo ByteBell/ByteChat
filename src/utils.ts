@@ -36,28 +36,38 @@ export function setUser(user: User): Promise<void> {
   });
 }
 
+// utils.ts
 export async function execInPage(fn: () => any): Promise<any> {
   return new Promise((resolve) => {
-    browserAPI.tabs.query(
-      { active: true, currentWindow: true },
-      async (tabs) => {
-        const tabId = tabs?.[0]?.id;
-        if (!tabId || !browserAPI.scripting?.executeScript) {
-          console.warn("[execInPage] cannot inject script");
-          return resolve(undefined);
-        }
-        try {
-          const [injectionResult] = await browserAPI.scripting.executeScript({
-            target: { tabId },
-            func: fn as unknown as () => void,
-          });
-          resolve(injectionResult?.result);
-        } catch (err) {
-          console.error(err);
-          resolve(undefined);
-        }
+    browserAPI.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      const tab = tabs?.[0];
+      const tabId = tab?.id;
+
+      /* ── guard #1: tab or scripting API unavailable ───────────────── */
+      if (!tabId || !browserAPI.scripting?.executeScript) {
+        console.warn("[execInPage] cannot inject script (no tab or scripting API)");
+        return resolve(undefined);
       }
-    );
+
+      /* ── guard #2: privileged / non-HTTP(S) pages ─────────────────── */
+      // chrome-extension://, chrome://, edge://, about:blank, file://, etc.
+      if (!/^https?:\/\//i.test(tab.url || "")) {
+        console.info(`[execInPage] skip injection on privileged URL: ${tab.url}`);
+        return resolve(undefined);
+      }
+
+      /* ── safe to inject ───────────────────────────────────────────── */
+      try {
+        const [injectionResult] = await browserAPI.scripting.executeScript({
+          target: { tabId },
+          func: fn as unknown as () => void,
+        });
+        resolve(injectionResult?.result);
+      } catch (err) {
+        console.error("[execInPage] injection failed:", err);
+        resolve(undefined);
+      }
+    });
   });
 }
 

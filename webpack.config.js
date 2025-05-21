@@ -8,10 +8,9 @@ module.exports = {
   mode: process.env.NODE_ENV || 'development',
 
     entry: {
-      /* popup UI                      → dist/index.js  (or rename to popup) */
-      index:         path.join(__dirname, 'src', 'index.tsx'),
-      /* injected page script          → dist/contentScript.js */
-      contentScript: path.join(__dirname, 'src', 'contentScript.ts'),
+      popup: './src/index.tsx',
+      contentScript: './src/contentScript.ts',
+      background: './src/background.ts',
     },
 
   output: {
