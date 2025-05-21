@@ -1,22 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { execInPage, callLLM, loadStoredSettings } from "../utils";
 import { SYSTEM_PROMPTS, LANGUAGES } from "../constants";
 import { Settings } from "../types";
 import { Select } from "./Select";
 
 const ChatPanel: React.FC = () => {
-  const [fromLang, setFromLang] = useState("English");
-  const [toLang, setToLang] = useState("Hindi");
+
   const [settings, setSettings] = useState<Settings>({
     provider: "openai",
     model: "gpt-4o",
     apiKey: "",
   });
+
   const [systemID, setSystemID] = useState<string>("Grammar Fix");
-  const systemPrompt = SYSTEM_PROMPTS[systemID];
-  const [prompt, setPrompt] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [tone,      setTone]      = useState<string>("Formal");
+  const [fromLang,  setFromLang]  = useState<string>("English");
+  const [toLang,    setToLang]    = useState<string>("Hindi");
+
+  const [prompt, setPrompt]   = useState<string>("");
+  const [answer, setAnswer]   = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  /* ------------ 1.  build system prompt on the fly ------------- */
+   /* ------------------------- derived prompt ------------------------ */
+   const systemPrompt = useMemo(() => {
+    switch (systemID) {
+      case "Translate":
+        return `Translate the following text from ${fromLang} to ${toLang}:`;
+      case "Change the Tone":
+        return `Change the tone of the text to be ${tone}.`;
+      case "Summarize":
+        return SYSTEM_PROMPTS["Summarize"];
+      default:
+        return SYSTEM_PROMPTS[systemID as keyof typeof SYSTEM_PROMPTS];
+    }
+  }, [systemID, fromLang, toLang, tone]);
+
+
 
   useEffect(() => {
     loadStoredSettings().then((s) => s && setSettings(s));
@@ -63,7 +83,7 @@ const ChatPanel: React.FC = () => {
               onChange={(e) => setSystemID(e.target.value)}
               className="w-48"
             >
-              <option value="New System Prompt">New System Prompt</option>
+              <option value="Change the Tone">Change the Tone</option>
               {Object.keys(SYSTEM_PROMPTS).map((name) => (
                 <option key={name} value={name}>
                   {name}
@@ -71,27 +91,23 @@ const ChatPanel: React.FC = () => {
               ))}
             </Select>
           </div>
-          {systemID === "New System Prompt" && (
-            <div className="flex space-x-2">
-              <textarea
-                value={systemPrompt}
-                onChange={(e) => {
-                  SYSTEM_PROMPTS[systemID] = e.target.value;
-                  setSystemID(systemID);
-                }}
-                rows={3}
-                className="flex-1 rounded-md border p-2 text-sm outline-none resize-y focus:ring-2 focus:ring-purple-500 bg-gray-50"
-              />
-              <button
-                onClick={() => {
-                  /* Save prompt logic if needed */
-                }}
-                className="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm h-fit"
+          {systemID === "Change the Tone" && (
+            <div className="mt-3">
+              <span className="text-sm text-gray-600 mb-1 block">Choose Tone:</span>
+              <Select
+                className="w-full"
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
               >
-                Save Prompt
-              </button>
+                <option value="Formal">Formal</option>
+                <option value="Friendly">Friendly</option>
+                <option value="Funny">Funny</option>
+                <option value="Casual">Casual</option>
+                <option value="Normal">Normal</option>
+              </Select>
             </div>
           )}
+          {/* translate language pickers */}
           {systemID === "Translate" && (
             <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md">
               <Select
@@ -100,9 +116,7 @@ const ChatPanel: React.FC = () => {
                 className="flex-1"
               >
                 {LANGUAGES.map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
-                  </option>
+                  <option key={lang}>{lang}</option>
                 ))}
               </Select>
               <span className="text-gray-500">→</span>
@@ -112,9 +126,7 @@ const ChatPanel: React.FC = () => {
                 className="flex-1"
               >
                 {LANGUAGES.map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
-                  </option>
+                  <option key={lang}>{lang}</option>
                 ))}
               </Select>
             </div>
