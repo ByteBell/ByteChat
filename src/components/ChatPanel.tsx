@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { execInPage, callLLM, loadStoredSettings } from "../utils";
 import { SYSTEM_PROMPTS, LANGUAGES } from "../constants";
 import { Settings } from "../types";
@@ -21,6 +21,39 @@ const ChatPanel: React.FC = () => {
   const [answer, setAnswer]   = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
+
+
+  // 1️⃣ On mount, load saved values (if any) and seed state
+  useEffect(() => {
+    chrome.storage.local.get(
+      ["transformType", "fromLang", "toLang", "tone"],
+      (saved) => {
+        if (saved.transformType) setSystemID(saved.transformType);
+        if (saved.fromLang)     setFromLang(saved.fromLang);
+        if (saved.toLang)       setToLang(saved.toLang);
+        if (saved.tone)         setTone(saved.tone);
+      }
+    );
+  }, []);
+
+  // a ref so we can skip saving on that very first render
+  const isFirst = useRef(true);
+
+  // 2️⃣ On any change *after* the first load, write back to storage
+  useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false;
+      return;
+    }
+    chrome.storage.local.set({
+      transformType: systemID,
+      fromLang,
+      toLang,
+      tone,
+    });
+  }, [systemID, fromLang, toLang, tone]);
+
+
   /* ------------ 1.  build system prompt on the fly ------------- */
    /* ------------------------- derived prompt ------------------------ */
    const systemPrompt = useMemo(() => {
@@ -35,7 +68,6 @@ const ChatPanel: React.FC = () => {
         return SYSTEM_PROMPTS[systemID as keyof typeof SYSTEM_PROMPTS];
     }
   }, [systemID, fromLang, toLang, tone]);
-
 
 
   useEffect(() => {
