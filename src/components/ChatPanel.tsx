@@ -70,7 +70,7 @@ const ChatPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-6 font-['Inter',sans-serif]">
+    <div className="py-4 space-y-6 font-['Inter',sans-serif]">
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-t-lg">
         <h2 className="text-white font-bold mb-2 text-xl">AI Assistant</h2>
       </div>

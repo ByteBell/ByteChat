@@ -62,7 +62,7 @@ const Popup: React.FC = () => {
       </div>
 
       {/* Panel Content */}
-      <div className="p-4">
+      <div>
         {tab === "chat" && <ChatPanel />}
         {tab === "settings" && <SettingsPanel />}
         {tab === "feedback" && <FeedbackPanel />}
