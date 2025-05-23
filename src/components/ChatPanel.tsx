@@ -102,18 +102,16 @@ const ChatPanel: React.FC = () => {
   };
 
   return (
-    <div className="py-4 space-y-6 font-['Inter',sans-serif]">
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-t-lg">
-        <h2 className="text-white font-bold mb-2 text-xl">AI Assistant</h2>
-      </div>
-      <div className="p-6 bg-white rounded-b-lg shadow-lg space-y-6">
-        <label className="block text-sm mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-medium text-gray-700">Action</span>
+    <div className="space-y-4 font-['Inter',sans-serif]">
+      <div className="p-4 bg-mint-light border-2 border-mint-dark rounded-b-lg shadow space-y-4">
+      <label className="block text-sm font-medium text-text mb-0.5">
+        Action
+      </label>
+
             <Select
               value={systemID}
               onChange={(e) => setSystemID(e.target.value)}
-              className="w-48"
+              className="w-full mb-2 border-mint focus:ring-mint p-1.5 text-sm"
             >
               <option value="Change the Tone">Change the Tone</option>
               {Object.keys(SYSTEM_PROMPTS).map((name) => (
@@ -122,7 +120,6 @@ const ChatPanel: React.FC = () => {
                 </option>
               ))}
             </Select>
-          </div>
           {systemID === "Change the Tone" && (
             <div className="mt-3">
               <span className="text-sm text-gray-600 mb-1 block">Choose Tone:</span>
@@ -163,18 +160,18 @@ const ChatPanel: React.FC = () => {
               </Select>
             </div>
           )}
-        </label>
+        
         <textarea
           placeholder="Ask me anything…"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={4}
-          className="w-full rounded-md border p-2 text-sm outline-none resize-y focus:ring-2 focus:ring-purple-500 bg-white"
+          className="w-full rounded-md border border-mint p-1.5 text-sm outline-none resize-y focus:ring-2 focus:ring-mint bg-white"
         />
         <button
           disabled={loading}
           onClick={runChat}
-          className="w-full rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 py-3 text-white font-semibold hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 cursor-pointer firefox:focus:outline-none transform transition hover:scale-[1.02] my-4"
+          className="w-full rounded-md bg-brand-light py-2 text-text font-semibold hover:bg-brand-dark disabled:opacity-50"
         >
           {loading ? "Generating…" : "Submit"}
         </button>
@@ -182,7 +179,7 @@ const ChatPanel: React.FC = () => {
           readOnly
           value={answer}
           rows={6}
-          className="w-full resize-y rounded-md border-2 border-gray-200 p-3 text-sm bg-gray-50 focus:border-purple-500"
+          className="w-full resize-y rounded-md border-2 border-gray-200 p-2 text-sm bg-gray-50 focus:border-purple-500"
         />
       </div>
     </div>

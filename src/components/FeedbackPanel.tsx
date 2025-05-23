@@ -11,34 +11,35 @@ const FeedbackPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="h-full flex flex-col justify-between font-['Inter',sans-serif] bg-mint-light p-4 border-2 border-mint-dark rounded-md shadow">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-3">
         <label className="block">
-          <span className="mb-1 block font-medium">Email</span>
+          <span className="block text-text text-sm mb-0.5 font-medium">Email</span>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-mint px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-mint bg-white"
             placeholder="your@email.com"
           />
         </label>
-        <label className="block">
-          <span className="mb-1 block font-medium">Feedback</span>
+        <label className="block flex-1 flex flex-col">
+          <span className="block text-text text-sm mb-0.5 font-medium">Feedback</span>
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            className="w-full rounded-md border px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px]"
+            className="w-full flex-1 rounded-md border border-mint px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-mint bg-white"
             placeholder="Share your thoughts..."
           />
         </label>
-        <button
-          type="submit"
-          className="w-full rounded-md bg-indigo-600 py-2 text-white hover:bg-indigo-700"
-        >
-          Submit Feedback
-        </button>
       </form>
+      <button
+        type="submit"
+        onClick={handleSubmit}
+        className="w-full rounded-md bg-brand-light py-2 text-text font-semibold hover:bg-brand-dark"
+      >
+        Submit Feedback
+      </button>
     </div>
   );
 };

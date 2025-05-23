@@ -33,34 +33,18 @@ const Popup: React.FC = () => {
 
   return (
     <div className="w-[420px] text-slate-800 font-sans select-none">
-      {/* Tab Buttons */}
-      <div className="flex space-x-1 border-b">
-        <button
-          className={`px-3 py-1 rounded-t-md text-sm font-semibold ${
-            tab === "chat" ? "bg-slate-800 text-white" : "bg-slate-200 text-slate-700"
-          }`}
-          onClick={() => setTab("chat")}
-        >
-          Chat
-        </button>
-        <button
-          className={`px-3 py-1 rounded-t-md text-sm font-semibold ${
-            tab === "settings" ? "bg-slate-800 text-white" : "bg-slate-200 text-slate-700"
-          }`}
-          onClick={() => setTab("settings")}
-        >
-          Settings
-        </button>
-        <button
-          className={`px-3 py-1 rounded-t-md text-sm font-semibold ${
-            tab === "feedback" ? "bg-slate-800 text-white" : "bg-slate-200 text-slate-700"
-          }`}
-          onClick={() => setTab("feedback")}
-        >
-          Feedback
-        </button>
-      </div>
-
+            {/* New AISphere Header */}
+      <header className="flex items-center justify-between bg-[#134E4A] p-3">
+        <div className="flex items-center space-x-2">
+          <img   src={chrome.runtime.getURL("icons/logo_128.png")}  alt="FixGrammer" className="w-8 h-8" />
+          <span className="text-white font-bold text-lg">FixGrammer</span>
+        </div>
+        <nav className="flex items-center space-x-4 text-white text-sm font-semibold">
+  <button onClick={() => setTab("chat")} className={tab==="chat"?"opacity-100":"opacity-60"}>Chat</button>
+  <button onClick={() => setTab("settings")} className={tab==="settings"?"opacity-100":"opacity-60"}>Settings</button>
+  <button onClick={() => setTab("feedback")} className={tab==="feedback"?"opacity-100":"opacity-60"}>Feedback</button>
+</nav>
+      </header>
       {/* Panel Content */}
       <div>
         {tab === "chat" && <ChatPanel />}
