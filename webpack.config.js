@@ -12,6 +12,8 @@ module.exports = {
       index:         path.join(__dirname, 'src', 'index.tsx'),
       /* injected page script          → dist/contentScript.js */
       contentScript: path.join(__dirname, 'src', 'contentScript.ts'),
+      background:    path.join(__dirname, "src", "background.ts")
+
     },
 
   output: {
@@ -52,6 +54,16 @@ module.exports = {
         entries: { extensionPage: 'popup'},
       }),
   ].filter(Boolean),
+  //  isDev && new ExtensionReloader({
+  //      manifest: path.resolve(__dirname, 'manifest.json'),
+  //      entries: {
+  //        background: 'background',
+  //        contentScript: 'contentScript',
+  //        extensionPage: 'popup',
+  //      },
+  //      // note: omit reloadPage → true if you don’t want the page to refresh on each build
+  //    }),
+  //   ].filter(Boolean),  
 
   devtool: 'cheap-module-source-map',
 };
