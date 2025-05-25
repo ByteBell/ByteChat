@@ -6,10 +6,10 @@ import SettingsPanel from "./SettingsPanel";
 import FeedbackPanel from "./FeedbackPanel";
 
 const Popup: React.FC = () => {
-  // Ensure minimum dimensions
+  // Set fixed popup dimensions
   useEffect(() => {
-    document.body.style.minWidth = "420px";
-    document.body.style.minHeight = "500px";
+    document.body.style.width = "420px";
+    document.body.style.height = "500px";
 
     // Preload settings/user if needed by panels
     loadStoredSettings();
@@ -32,21 +32,31 @@ const Popup: React.FC = () => {
   const [tab, setTab] = useState<"chat" | "settings" | "feedback">("chat");
 
   return (
-    <div className="w-[420px] text-slate-800 font-sans select-none">
-            {/* New AISphere Header */}
+    <div className="flex flex-col  h-full text-slate-800 font-sans select-none">
+      {/* Header */}
       <header className="flex items-center justify-between bg-[#134E4A] p-3">
         <div className="flex items-center space-x-2">
-          <img   src={chrome.runtime.getURL("icons/logo_128.png")}  alt="FixGrammer" className="w-8 h-8" />
+          <img
+            src={chrome.runtime.getURL("icons/logo_128.png")}
+            alt="FixGrammer"
+            className="w-8 h-8"
+          />
           <span className="text-white font-bold text-lg">FixGrammer</span>
         </div>
         <nav className="flex items-center space-x-4 text-white text-sm font-semibold">
-  <button onClick={() => setTab("chat")} className={tab==="chat"?"opacity-100":"opacity-60"}>Chat</button>
-  <button onClick={() => setTab("settings")} className={tab==="settings"?"opacity-100":"opacity-60"}>Settings</button>
-  <button onClick={() => setTab("feedback")} className={tab==="feedback"?"opacity-100":"opacity-60"}>Feedback</button>
-</nav>
+          <button onClick={() => setTab("chat")} className={tab === "chat" ? "opacity-100" : "opacity-60"}>
+            Chat
+          </button>
+          <button onClick={() => setTab("settings")} className={tab === "settings" ? "opacity-100" : "opacity-60"}>
+            Settings
+          </button>
+          <button onClick={() => setTab("feedback")} className={tab === "feedback" ? "opacity-100" : "opacity-60"}>
+            Feedback
+          </button>
+        </nav>
       </header>
       {/* Panel Content */}
-      <div>
+      <div  className="flex-1 min-h-0 overflow-auto">
         {tab === "chat" && <ChatPanel />}
         {tab === "settings" && <SettingsPanel />}
         {tab === "feedback" && <FeedbackPanel />}

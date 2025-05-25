@@ -11,7 +11,7 @@ const FeedbackPanel: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col justify-between font-['Inter',sans-serif] bg-mint-light p-4 border-2 border-mint-dark rounded-md shadow">
+    <div className="flex-1 flex flex-col bg-mint-light border-2 border-mint-dark rounded-md shadow p-4 font-inter m-0">
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-3">
         <label className="block">
           <span className="block text-text text-sm mb-0.5 font-medium">Email</span>
