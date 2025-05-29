@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { execInPage, callLLM, loadStoredSettings } from "../utils";
+import { execInPage, callLLMStream, loadStoredSettings, loadStoredUser } from "../utils";
 import { SYSTEM_PROMPTS, LANGUAGES } from "../constants";
 import { Settings } from "../types";
 import { Select } from "./Select";
@@ -21,7 +21,26 @@ const ChatPanel: React.FC = () => {
   const [answer, setAnswer]   = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Ref to track if component is mounted (for cleanup)
+  const isMountedRef = useRef(true);
+  // Ref to track current answer for streaming
+  const currentAnswerRef = useRef<string>("");
 
+  useEffect(() => {
+    // Ensure mounted state is true on mount
+    isMountedRef.current = true;
+    console.log("Component mounted, isMountedRef set to true");
+    
+    return () => {
+      console.log("Component unmounting, setting isMountedRef to false");
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Debug effect to track answer changes
+  useEffect(() => {
+    console.log("Answer state changed to:", answer);
+  }, [answer]);
 
   // 1️⃣ On mount, load saved values (if any) and seed state
   useEffect(() => {
@@ -86,17 +105,59 @@ const ChatPanel: React.FC = () => {
   }, []);
 
   const runChat = async () => {
-    if (!prompt.trim()) return setAnswer("⚠️ Enter a prompt first.");
-    if (!settings.apiKey) return setAnswer("⚠️ Add your API key in Settings.");
+    console.log("runChat started, isMountedRef.current:", isMountedRef.current);
+    
+    if (!prompt.trim()) {
+      setAnswer("⚠️ Enter a prompt first.");
+      return;
+    }
+    
+    // Check if user is logged in, if not, require API key
+    const user = await loadStoredUser();
+    
+    if (!user?.token && !settings.apiKey) {
+      setAnswer("⚠️ Add your API key in Settings or login to use the service.");
+      return;
+    }
 
+    console.log("Starting chat request...", { isLoggedIn: !!user?.token, isMountedRef: isMountedRef.current });
     setLoading(true);
-    setAnswer("…thinking…");
+    setAnswer(""); // Clear previous answer
+    currentAnswerRef.current = ""; // Clear ref as well
+    
     try {
-      const text = await callLLM(settings, systemPrompt, prompt.trim());
-      setAnswer(text);
+      console.log("Calling LLM stream with:", {
+        systemPrompt,
+        userPrompt: prompt.trim(),
+        settings,
+        isLoggedIn: !!user?.token
+      });
+
+      // Use streaming for all providers
+      await callLLMStream(
+        settings,
+        systemPrompt,
+        prompt.trim(),
+        (chunk: string) => {
+          console.log("Received chunk in ChatPanel:", chunk);
+          console.log("isMountedRef.current:", isMountedRef.current);
+          
+          // Update ref immediately
+          currentAnswerRef.current += chunk;
+          const newAnswer = currentAnswerRef.current;
+          console.log("Updating answer to:", newAnswer);
+          
+          // Update state regardless of mounted status (React handles this safely)
+          setAnswer(newAnswer);
+        }
+      );
+      
+      console.log("Chat request completed successfully");
     } catch (err: any) {
+      console.error("Chat request failed:", err);
       setAnswer(`❌ ${err.message}`);
     } finally {
+      console.log("Setting loading to false");
       setLoading(false);
     }
   };

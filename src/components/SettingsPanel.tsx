@@ -87,6 +87,21 @@ const SettingsPanel: React.FC = () => {
     setTimeout(() => setSaveOK(false), 2000);
   };
 
+  const getProviderDisplayName = (provider: Provider): string => {
+    switch (provider) {
+      case "openai":
+        return "OpenAI";
+      case "anthropic":
+        return "Anthropic";
+      case "together":
+        return "Together AI";
+      case "openrouter":
+        return "OpenRouter";
+      default:
+        return provider;
+    }
+  };
+
   return (
       <div className="h-full flex flex-col justify-between bg-mint-light border-2 border-mint-dark rounded-md shadow p-4">
     <button
@@ -130,7 +145,7 @@ const SettingsPanel: React.FC = () => {
             >
               {Object.keys(PROVIDER_MODELS).map((p) => (
                 <option key={p} value={p}>
-                  {p}
+                  {getProviderDisplayName(p as Provider)}
                 </option>
               ))}
             </select>

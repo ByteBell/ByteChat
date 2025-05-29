@@ -36,7 +36,6 @@ export function setUser(user: User): Promise<void> {
   });
 }
 
-// utils.ts
 export async function execInPage(fn: () => any): Promise<any> {
   return new Promise((resolve) => {
     browserAPI.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
@@ -50,7 +49,6 @@ export async function execInPage(fn: () => any): Promise<any> {
       }
 
       /* ── guard #2: privileged / non-HTTP(S) pages ─────────────────── */
-      // chrome-extension://, chrome://, edge://, about:blank, file://, etc.
       if (!/^https?:\/\//i.test(tab.url || "")) {
         console.info(`[execInPage] skip injection on privileged URL: ${tab.url}`);
         return resolve(undefined);
@@ -71,14 +69,109 @@ export async function execInPage(fn: () => any): Promise<any> {
   });
 }
 
-export async function callLLM(
+// Streaming function for all providers
+export async function callLLMStream(
   { provider, model, apiKey }: Settings,
   systemPrompt: string,
-  userPrompt: string
-): Promise<string> {
+  userPrompt: string,
+  onChunk: (chunk: string) => void
+): Promise<void> {
+  // Check if user is logged in - if so, route ALL requests through backend
+  const user = await loadStoredUser();
+  if (user?.token) {
+    // For logged-in users, send only the question to backend (OpenRouter only)
+    console.log("Sending request to backend for logged-in user");
+    const response = await fetch("http://localhost:8000/api/chat/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${user.token}`,
+      },
+      body: JSON.stringify({
+        question: `${systemPrompt}\n\n${userPrompt}`,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Backend error:", errorText);
+      throw new Error(`Backend error: ${errorText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("No reader available");
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    try {
+      console.log("Starting to read stream...");
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log("Stream ended");
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process complete lines
+        while (buffer.includes('\n')) {
+          const lineEnd = buffer.indexOf('\n');
+          const line = buffer.slice(0, lineEnd).trim();
+          buffer = buffer.slice(lineEnd + 1);
+          
+          if (line === '') continue;
+          
+          console.log("Processing line:", line);
+          
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') {
+              console.log("Received [DONE], ending stream");
+              return;
+            }
+            
+            if (data === '') continue; // Skip empty data lines
+            
+            try {
+              const parsed = JSON.parse(data);
+              console.log("Parsed data:", parsed);
+              
+              // Handle error responses
+              if (parsed.error) {
+                console.error("API Error:", parsed.error);
+                throw new Error(`API Error: ${parsed.error.message}`);
+              }
+              
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                console.log("Streaming content:", content);
+                onChunk(content);
+              }
+            } catch (parseError) {
+              if (parseError instanceof SyntaxError) {
+                console.warn("Failed to parse JSON:", data, parseError);
+              } else {
+                throw parseError; // Re-throw non-JSON errors
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Stream reading error:", error);
+      throw error;
+    } finally {
+      reader.releaseLock();
+    }
+    return;
+  }
+
+  // If not logged in, use direct API calls with user's own API key
   switch (provider) {
     case "openai": {
-      const r = await fetch("https://api.openai.com/v1/chat/completions", {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,14 +184,55 @@ export async function callLLM(
             { role: "user", content: userPrompt },
           ],
           max_tokens: 1000,
+          stream: true,
         }),
       });
-      if (!r.ok) throw new Error(await r.text());
-      const j = await r.json();
-      return j.choices[0].message.content.trim();
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') return;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  onChunk(content);
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      break;
     }
+
     case "anthropic": {
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,33 +244,185 @@ export async function callLLM(
           system: systemPrompt,
           messages: [{ role: "user", content: userPrompt }],
           max_tokens: 1000,
+          stream: true,
         }),
       });
-      if (!r.ok) throw new Error(await r.text());
-      const j = await r.json();
-      return j.content[0].text.trim();
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') return;
+              
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                  onChunk(parsed.delta.text);
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      break;
     }
+
     case "together": {
       const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
-      const r = await fetch(
-        "https://api.together.xyz/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages: [{ role: "user", content: combinedPrompt }],
-            max_tokens: 1000,
-          }),
+      const response = await fetch("https://api.together.xyz/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: combinedPrompt }],
+          max_tokens: 1000,
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') return;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  onChunk(content);
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
         }
-      );
-      if (!r.ok) throw new Error(await r.text());
-      const j = await r.json();
-      return j.choices[0].message.content.trim();
+      } finally {
+        reader.releaseLock();
+      }
+      break;
     }
+
+    case "openrouter": {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') return;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  onChunk(content);
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      break;
+    }
+
+    default:
+      throw new Error("Provider not supported");
   }
-  return "Provider not supported";
+}
+
+// Legacy non-streaming function for backward compatibility
+export async function callLLM(
+  settings: Settings,
+  systemPrompt: string,
+  userPrompt: string
+): Promise<string> {
+  let result = "";
+  await callLLMStream(settings, systemPrompt, userPrompt, (chunk) => {
+    result += chunk;
+  });
+  return result;
 }

@@ -8,6 +8,8 @@ export const PROVIDER_MODELS: Record<Provider, string[]> = {
     "meta-llama/Llama-4-Scout-17B-16E-Instruct",
     "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
   ],
+  openrouter: ["mistralai/devstral-small"],
+
 };
 
 export const LANGUAGES = [

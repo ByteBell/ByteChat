@@ -1,4 +1,4 @@
-export type Provider = "openai" | "anthropic" | "together";
+export type Provider = "openai" | "anthropic" | "together" | "openrouter";
 
 export interface Settings {
   provider: Provider;
