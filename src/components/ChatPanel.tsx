@@ -78,7 +78,7 @@ const ChatPanel: React.FC = () => {
    const systemPrompt = useMemo(() => {
     switch (systemID) {
       case "Translate":
-        return `Translate the following text from ${fromLang} to ${toLang}:`;
+        return `You are a professional translator. Translate the following text from ${fromLang} to ${toLang}. Only provide the translation, no explanations or additional text:`;
       case "Change the Tone":
         return `Change the tone of the text to be ${tone}.`;
       case "Summarize":
@@ -127,8 +127,9 @@ const ChatPanel: React.FC = () => {
     
     try {
       console.log("Calling LLM stream with:", {
-        systemPrompt,
+        systemPrompt: systemPrompt,
         userPrompt: prompt.trim(),
+        fullQuestion: `${systemPrompt}\n\n${prompt.trim()}`,
         settings,
         isLoggedIn: !!user?.token
       });
