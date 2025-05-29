@@ -36,6 +36,60 @@ export function setUser(user: User): Promise<void> {
   });
 }
 
+export function saveStreamingState(state: {
+  prompt: string;
+  answer: string;
+  loading: boolean;
+  systemPrompt: string;
+  isStreaming?: boolean;
+}): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ 
+      streamingState: {
+        ...state,
+        timestamp: Date.now()
+      }
+    }, () => resolve());
+  });
+}
+
+export function updateStreamingAnswer(answer: string): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["streamingState"], (res) => {
+      if (res.streamingState) {
+        const updatedState = {
+          ...res.streamingState,
+          answer: answer,
+          timestamp: Date.now()
+        };
+        chrome.storage.local.set({ streamingState: updatedState }, () => resolve());
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+export function loadStreamingState(): Promise<any> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["streamingState"], (res) => {
+      const state = res.streamingState;
+      // Only restore if less than 5 minutes old
+      if (state && (Date.now() - state.timestamp) < 5 * 60 * 1000) {
+        resolve(state);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+export function clearStreamingState(): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.remove(["streamingState"], () => resolve());
+  });
+}
+
 export async function execInPage(fn: () => any): Promise<any> {
   return new Promise((resolve) => {
     browserAPI.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
@@ -74,13 +128,16 @@ export async function callLLMStream(
   { provider, model, apiKey }: Settings,
   systemPrompt: string,
   userPrompt: string,
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  existingAnswer: string = "" // For continuation
 ): Promise<void> {
   // Check if user is logged in - if so, route ALL requests through backend
   const user = await loadStoredUser();
   if (user?.token) {
     // For logged-in users, send only the question to backend (OpenRouter only)
     console.log("Sending request to backend for logged-in user");
+    console.log("Existing answer length:", existingAnswer.length);
+    
     const response = await fetch("http://localhost:8000/api/chat/stream", {
       method: "POST",
       headers: {
@@ -103,6 +160,7 @@ export async function callLLMStream(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let fullAnswer = existingAnswer; // Start with existing content
 
     try {
       console.log("Starting to read stream...");
@@ -147,7 +205,11 @@ export async function callLLMStream(
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 console.log("Streaming content:", content);
+                fullAnswer += content;
                 onChunk(content);
+                
+                // Save the updated answer to storage for continuation
+                await updateStreamingAnswer(fullAnswer);
               }
             } catch (parseError) {
               if (parseError instanceof SyntaxError) {
@@ -169,6 +231,8 @@ export async function callLLMStream(
   }
 
   // If not logged in, use direct API calls with user's own API key
+  let fullAnswer = existingAnswer; // Start with existing content for all providers
+  
   switch (provider) {
     case "openai": {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -217,7 +281,10 @@ export async function callLLMStream(
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
+                  fullAnswer += content;
                   onChunk(content);
+                  // Save the updated answer to storage for continuation
+                  await updateStreamingAnswer(fullAnswer);
                 }
               } catch (e) {
                 // Skip invalid JSON
@@ -276,7 +343,10 @@ export async function callLLMStream(
               try {
                 const parsed = JSON.parse(data);
                 if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                  fullAnswer += parsed.delta.text;
                   onChunk(parsed.delta.text);
+                  // Save the updated answer to storage for continuation
+                  await updateStreamingAnswer(fullAnswer);
                 }
               } catch (e) {
                 // Skip invalid JSON
@@ -335,7 +405,10 @@ export async function callLLMStream(
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
+                  fullAnswer += content;
                   onChunk(content);
+                  // Save the updated answer to storage for continuation
+                  await updateStreamingAnswer(fullAnswer);
                 }
               } catch (e) {
                 // Skip invalid JSON
@@ -395,7 +468,10 @@ export async function callLLMStream(
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
+                  fullAnswer += content;
                   onChunk(content);
+                  // Save the updated answer to storage for continuation
+                  await updateStreamingAnswer(fullAnswer);
                 }
               } catch (e) {
                 // Skip invalid JSON
@@ -423,6 +499,6 @@ export async function callLLM(
   let result = "";
   await callLLMStream(settings, systemPrompt, userPrompt, (chunk) => {
     result += chunk;
-  });
+  }, ""); // No existing answer for legacy calls
   return result;
 }
