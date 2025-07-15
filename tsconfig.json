@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "types": ["chrome", "firefox-webext-browser"],
+        "types": ["chrome", "firefox-webext-browser", "node"],
       "target": "es5",
       "lib": ["dom", "dom.iterable", "esnext"],
       "allowJs": true,

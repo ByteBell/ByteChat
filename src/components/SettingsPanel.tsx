@@ -8,6 +8,7 @@ import {
 } from "../utils";
 import { PROVIDER_MODELS } from "../constants";
 import { Provider, Settings, User } from "../types";
+import { ModelSelector } from "./ModelSelector";
 
 declare const chrome: any;
 
@@ -25,11 +26,16 @@ const SettingsPanel: React.FC = () => {
     loadStoredUser().then((u) => u && setUserState(u));
     loadStoredSettings().then((s) => {
       if (s && PROVIDER_MODELS[s.provider as Provider]) {
+        let modelToSet = s.model;
+        if (s.provider !== "openrouter") {
+          // Only validate against PROVIDER_MODELS for non-OpenRouter providers
+          modelToSet = PROVIDER_MODELS[s.provider as Provider].includes(s.model)
+            ? s.model
+            : PROVIDER_MODELS[s.provider as Provider][0];
+        }
         setSettingsState({
           provider: s.provider as Provider,
-          model: PROVIDER_MODELS[s.provider as Provider].includes(s.model)
-            ? s.model
-            : PROVIDER_MODELS[s.provider as Provider][0],
+          model: modelToSet,
           apiKey: s.apiKey || "",
         });
       }
@@ -151,22 +157,32 @@ const SettingsPanel: React.FC = () => {
             </select>
           </label>
 
-          <label className="block text-sm mb-3">
-            <span className="block mb-1 font-medium">Model</span>
-            <select
-              value={settings.model}
-              onChange={(e) =>
-                setSettingsState((s) => ({ ...s, model: e.target.value }))
+          {settings.provider === "openrouter" ? (
+            <ModelSelector
+              selectedModel={settings.model}
+              onModelChange={(model) =>
+                setSettingsState((s) => ({ ...s, model: model }))
               }
-              className="w-full rounded-md border px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {PROVIDER_MODELS[settings.provider].map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </label>
+              apiKey={settings.apiKey}
+            />
+          ) : (
+            <label className="block text-sm mb-3">
+              <span className="block mb-1 font-medium">Model</span>
+              <select
+                value={settings.model}
+                onChange={(e) =>
+                  setSettingsState((s) => ({ ...s, model: e.target.value }))
+                }
+                className="w-full rounded-md border px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {PROVIDER_MODELS[settings.provider].map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="block text-sm mb-0">
             <span className="block mb-1 font-medium">API Key</span>

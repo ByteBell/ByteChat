@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { execInPage, callLLMStream, loadStoredSettings, loadStoredUser, saveStreamingState, loadStreamingState, clearStreamingState } from "../utils";
+import { execInPage, loadStoredSettings, loadStoredUser, saveStreamingState, loadStreamingState, clearStreamingState } from "../utils";
+import { sendChatRequest, ChatMessage } from "../services/api";
+
 import { SYSTEM_PROMPTS, LANGUAGES } from "../constants";
 import { Settings } from "../types";
 import { Select } from "./Select";
@@ -118,23 +120,14 @@ const ChatPanel: React.FC = () => {
       setLoading(true);
       setWasInterrupted(false);
       
-      // Continue streaming with existing answer
-      await callLLMStream(
-        settings,
-        savedState.systemPrompt || systemPrompt,
-        savedState.prompt || prompt,
-        (chunk: string) => {
-          console.log("Received continuation chunk:", chunk);
-          
-          // Update ref immediately  
-          currentAnswerRef.current += chunk;
-          const newAnswer = currentAnswerRef.current;
-          
-          // Update state
-          setAnswer(newAnswer);
-        },
-        savedState.answer || "" // Pass existing answer for continuation
-      );
+      const messages: ChatMessage[] = [
+        { role: 'system', content: savedState.systemPrompt || systemPrompt },
+        { role: 'user', content: savedState.prompt || prompt },
+      ];
+
+      const response = await sendChatRequest(messages, settings);
+      const assistantMessage = savedState.answer + (response.choices[0]?.message?.content || 'No response received');
+      setAnswer(assistantMessage);
       
       console.log("Streaming continuation completed");
       await clearStreamingState();
@@ -225,24 +218,15 @@ const ChatPanel: React.FC = () => {
         isLoggedIn: !!user?.token
       });
 
-      // Use streaming for all providers
-      await callLLMStream(
-        settings,
-        systemPrompt,
-        prompt.trim(),
-        (chunk: string) => {
-          console.log("Received chunk in ChatPanel:", chunk);
-          console.log("isMountedRef.current:", isMountedRef.current);
-          
-          // Update ref immediately
-          currentAnswerRef.current += chunk;
-          const newAnswer = currentAnswerRef.current;
-          console.log("Updating answer to:", newAnswer);
-          
-          // Update state regardless of mounted status (React handles this safely)
-          setAnswer(newAnswer);
-        }
-      );
+      const messages: ChatMessage[] = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt.trim() },
+      ];
+
+      const response = await sendChatRequest(messages, settings);
+      
+      const assistantMessage = response.choices[0]?.message?.content || 'No response received';
+      setAnswer(assistantMessage);
       
       console.log("Chat request completed successfully");
       // Clear streaming state on successful completion

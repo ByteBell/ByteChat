@@ -1,15 +1,39 @@
-import { Settings, User } from "./types";
-import { SYSTEM_PROMPTS } from "./constants";
+import { Provider, Settings, User } from "./types";
+import { PROVIDER_MODELS } from "./constants";
 
 const browserAPI = chrome;
 
-export function loadStoredSettings(): Promise<Settings> {
-  return new Promise((resolve) => {
-    browserAPI.storage?.local.get(
-      ["provider", "model", "apiKey"],
-      (raw: any) => resolve(raw as Settings)
-    );
-  });
+
+export async function loadStoredSettings(): Promise<Settings> {
+  console.log("Load settings called")
+  const raw = await chrome.storage.local.get(["provider", "model", "apiKey"]);
+  console.log("Raw settings from storage:", raw);
+
+  const provider: Provider = (raw.provider ?? "openai") as Provider;
+  console.log("Determined provider:", provider);
+
+  const availableModels = PROVIDER_MODELS[provider];
+  console.log("Available models for provider:", availableModels);
+
+  let model: string;
+  if (provider === "openrouter") {
+    // For OpenRouter, we don't validate against PROVIDER_MODELS as they are fetched dynamically.
+    // We trust the stored model for now, and ModelSelector will handle defaulting if invalid.
+    model = raw.model ?? ""; // Use empty string if no model is stored
+  } else {
+    model =
+      raw.model && availableModels.includes(raw.model)
+        ? raw.model
+        : availableModels[0];
+  }
+
+  console.log(`Final model selected: ${model}`);
+  
+  return {
+    provider,
+    model,
+    apiKey: raw.apiKey ?? "",
+  };
 }
 
 export function loadStoredUser(): Promise<User | null> {
@@ -18,10 +42,15 @@ export function loadStoredUser(): Promise<User | null> {
   });
 }
 
+
 export function saveSettings(next: Settings): Promise<void> {
-  return new Promise((resolve) => {
-    browserAPI.storage.local.set(next, () => resolve());
-  });
+  console.log("saved settings called")
+  return new Promise(res =>
+    browserAPI.storage.local.set(
+      { provider: next.provider, model: next.model, apiKey: next.apiKey },
+      () => res()
+    )
+  );
 }
 
 export function removeUser(): Promise<void> {
