@@ -16,8 +16,8 @@ export async function loadStoredSettings(): Promise<Settings> {
   console.log("Available models for provider:", availableModels);
 
   let model: string;
-  if (provider === "openrouter") {
-    // For OpenRouter, we don't validate against PROVIDER_MODELS as they are fetched dynamically.
+  if (provider === "openrouter" || provider === "together") {
+    // For OpenRouter and Together, we don't validate against PROVIDER_MODELS as they are fetched dynamically.
     // We trust the stored model for now, and ModelSelector will handle defaulting if invalid.
     model = raw.model ?? ""; // Use empty string if no model is stored
   } else {
@@ -35,7 +35,6 @@ export async function loadStoredSettings(): Promise<Settings> {
     apiKey: raw.apiKey ?? "",
   };
 }
-
 export function loadStoredUser(): Promise<User | null> {
   return new Promise((resolve) => {
     chrome.storage.local.get(["user"], (res) => resolve(res.user || null));

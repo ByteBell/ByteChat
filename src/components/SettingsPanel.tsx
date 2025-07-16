@@ -27,8 +27,8 @@ const SettingsPanel: React.FC = () => {
     loadStoredSettings().then((s) => {
       if (s && PROVIDER_MODELS[s.provider as Provider]) {
         let modelToSet = s.model;
-        if (s.provider !== "openrouter") {
-          // Only validate against PROVIDER_MODELS for non-OpenRouter providers
+        if (s.provider !== "openrouter" && s.provider !== "together") {
+          // Only validate against PROVIDER_MODELS for providers that don't fetch models dynamically
           modelToSet = PROVIDER_MODELS[s.provider as Provider].includes(s.model)
             ? s.model
             : PROVIDER_MODELS[s.provider as Provider][0];
@@ -108,6 +108,10 @@ const SettingsPanel: React.FC = () => {
     }
   };
 
+  const shouldUseDynamicModelSelector = (provider: Provider): boolean => {
+    return provider === "openrouter" || provider === "together";
+  };
+
   return (
       <div className="h-full flex flex-col justify-between bg-mint-light border-2 border-mint-dark rounded-md shadow p-4">
     <button
@@ -143,7 +147,7 @@ const SettingsPanel: React.FC = () => {
                 const prov = e.target.value as Provider;
                 setSettingsState((prev) => ({
                   provider: prov,
-                  model: PROVIDER_MODELS[prov][0],
+                  model: shouldUseDynamicModelSelector(prov) ? "" : PROVIDER_MODELS[prov][0],
                   apiKey: prev.apiKey,
                 }));
               }}
@@ -157,13 +161,14 @@ const SettingsPanel: React.FC = () => {
             </select>
           </label>
 
-          {settings.provider === "openrouter" ? (
+          {shouldUseDynamicModelSelector(settings.provider) ? (
             <ModelSelector
               selectedModel={settings.model}
               onModelChange={(model) =>
                 setSettingsState((s) => ({ ...s, model: model }))
               }
               apiKey={settings.apiKey}
+              provider={settings.provider}
             />
           ) : (
             <label className="block text-sm mb-3">
