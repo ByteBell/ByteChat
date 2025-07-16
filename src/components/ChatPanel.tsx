@@ -1,13 +1,10 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { execInPage, loadStoredSettings, loadStoredUser, saveStreamingState, loadStreamingState, clearStreamingState } from "../utils";
 import { sendChatRequest, ChatMessage } from "../services/api";
-
 import { SYSTEM_PROMPTS, LANGUAGES } from "../constants";
 import { Settings } from "../types";
-import { Select } from "./Select";
 
 const ChatPanel: React.FC = () => {
-
   const [settings, setSettings] = useState<Settings>({
     provider: "openai",
     model: "gpt-4o",
@@ -15,35 +12,27 @@ const ChatPanel: React.FC = () => {
   });
 
   const [systemID, setSystemID] = useState<string>("Grammar Fix");
-  const [tone,      setTone]      = useState<string>("Formal");
-  const [fromLang,  setFromLang]  = useState<string>("English");
-  const [toLang,    setToLang]    = useState<string>("Hindi");
+  const [tone, setTone] = useState<string>("Formal");
+  const [fromLang, setFromLang] = useState<string>("English");
+  const [toLang, setToLang] = useState<string>("Hindi");
 
-  const [prompt, setPrompt]   = useState<string>("");
-  const [answer, setAnswer]   = useState<string>("");
+  const [prompt, setPrompt] = useState<string>("");
+  const [answer, setAnswer] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [restoredSession, setRestoredSession] = useState<boolean>(false);
   const [wasInterrupted, setWasInterrupted] = useState<boolean>(false);
 
-  // Ref to track if component is mounted (for cleanup)
   const isMountedRef = useRef(true);
-  // Ref to track current answer for streaming
   const currentAnswerRef = useRef<string>("");
 
   useEffect(() => {
-    // Ensure mounted state is true on mount
     isMountedRef.current = true;
-    console.log("Component mounted, isMountedRef set to true");
-    
     return () => {
-      console.log("Component unmounting, setting isMountedRef to false");
       isMountedRef.current = false;
     };
   }, []);
 
-  /* ------------ 1.  build system prompt on the fly ------------- */
-   /* ------------------------- derived prompt ------------------------ */
-   const systemPrompt = useMemo(() => {
+  const systemPrompt = useMemo(() => {
     switch (systemID) {
       case "Translate":
         return `You are a professional translator. Translate the following text from ${fromLang} to ${toLang}. Only provide the translation, no explanations or additional text:`;
@@ -56,12 +45,6 @@ const ChatPanel: React.FC = () => {
     }
   }, [systemID, fromLang, toLang, tone]);
 
-  // Debug effect to track answer changes
-  useEffect(() => {
-    console.log("Answer state changed to:", answer);
-  }, [answer]);
-
-  // Save streaming state whenever it changes
   useEffect(() => {
     if (loading || answer) {
       saveStreamingState({
@@ -74,29 +57,23 @@ const ChatPanel: React.FC = () => {
     }
   }, [prompt, answer, loading, systemPrompt]);
 
-  // Load previous streaming state on mount
   useEffect(() => {
     const restoreSession = async () => {
       const savedState = await loadStreamingState();
       if (savedState) {
-        console.log("Restoring previous session:", savedState);
         setPrompt(savedState.prompt || "");
         setAnswer(savedState.answer || "");
         currentAnswerRef.current = savedState.answer || "";
         
-        // If the session was interrupted during streaming
         if (savedState.isStreaming) {
-          console.log("Session was interrupted during streaming - auto-continuing...");
           setWasInterrupted(true);
           setRestoredSession(true);
           
-          // Auto-continue streaming after restoration
           setTimeout(async () => {
             await continueStreamingFromStorage(savedState);
           }, 500);
         } else {
           setRestoredSession(true);
-          // Clear the restored session indicator after 3 seconds
           setTimeout(() => setRestoredSession(false), 3000);
         }
       }
@@ -114,9 +91,6 @@ const ChatPanel: React.FC = () => {
         return;
       }
 
-      console.log("Continuing streaming from saved state...");
-      console.log("Existing answer length:", savedState.answer?.length || 0);
-      
       setLoading(true);
       setWasInterrupted(false);
       
@@ -129,10 +103,8 @@ const ChatPanel: React.FC = () => {
       const assistantMessage = savedState.answer + (response.choices[0]?.message?.content || 'No response received');
       setAnswer(assistantMessage);
       
-      console.log("Streaming continuation completed");
       await clearStreamingState();
     } catch (err: any) {
-      console.error("Failed to continue streaming:", err);
       setAnswer(prev => prev + `\n❌ Failed to continue: ${err.message}`);
     } finally {
       setLoading(false);
@@ -140,23 +112,20 @@ const ChatPanel: React.FC = () => {
     }
   };
 
-  // 1️⃣ On mount, load saved values (if any) and seed state
   useEffect(() => {
     chrome.storage.local.get(
       ["transformType", "fromLang", "toLang", "tone"],
       (saved) => {
         if (saved.transformType) setSystemID(saved.transformType);
-        if (saved.fromLang)     setFromLang(saved.fromLang);
-        if (saved.toLang)       setToLang(saved.toLang);
-        if (saved.tone)         setTone(saved.tone);
+        if (saved.fromLang) setFromLang(saved.fromLang);
+        if (saved.toLang) setToLang(saved.toLang);
+        if (saved.tone) setTone(saved.tone);
       }
     );
   }, []);
 
-  // a ref so we can skip saving on that very first render
   const isFirst = useRef(true);
 
-  // 2️⃣ On any change *after* the first load, write back to storage
   useEffect(() => {
     if (isFirst.current) {
       isFirst.current = false;
@@ -169,7 +138,6 @@ const ChatPanel: React.FC = () => {
       tone,
     });
   }, [systemID, fromLang, toLang, tone]);
-
 
   useEffect(() => {
     loadStoredSettings().then((s) => s && setSettings(s));
@@ -187,14 +155,11 @@ const ChatPanel: React.FC = () => {
   }, []);
 
   const runChat = async () => {
-    console.log("runChat started, isMountedRef.current:", isMountedRef.current);
-    
     if (!prompt.trim()) {
       setAnswer("⚠️ Enter a prompt first.");
       return;
     }
     
-    // Check if user is logged in, if not, require API key
     const user = await loadStoredUser();
     
     if (!user?.token && !settings.apiKey) {
@@ -202,165 +167,262 @@ const ChatPanel: React.FC = () => {
       return;
     }
 
-    console.log("Starting chat request...", { isLoggedIn: !!user?.token, isMountedRef: isMountedRef.current });
     setLoading(true);
-    setAnswer(""); // Clear previous answer
-    currentAnswerRef.current = ""; // Clear ref as well
-    setWasInterrupted(false); // Clear interrupted state
-    setRestoredSession(false); // Clear restored state
+    setAnswer("");
+    currentAnswerRef.current = "";
+    setWasInterrupted(false);
+    setRestoredSession(false);
     
     try {
-      console.log("Calling LLM stream with:", {
-        systemPrompt: systemPrompt,
-        userPrompt: prompt.trim(),
-        fullQuestion: `${systemPrompt}\n\n${prompt.trim()}`,
-        settings,
-        isLoggedIn: !!user?.token
-      });
-
       const messages: ChatMessage[] = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt.trim() },
       ];
 
       const response = await sendChatRequest(messages, settings);
-      
       const assistantMessage = response.choices[0]?.message?.content || 'No response received';
       setAnswer(assistantMessage);
       
-      console.log("Chat request completed successfully");
-      // Clear streaming state on successful completion
       await clearStreamingState();
     } catch (err: any) {
-      console.error("Chat request failed:", err);
       setAnswer(`❌ ${err.message}`);
-      // Clear streaming state on error too
       await clearStreamingState();
     } finally {
-      console.log("Setting loading to false");
       setLoading(false);
     }
   };
 
+  const handleClear = async () => {
+    setAnswer("");
+    setPrompt("");
+    setLoading(false);
+    setWasInterrupted(false);
+    currentAnswerRef.current = "";
+    await clearStreamingState();
+    setRestoredSession(false);
+  };
+
+  const actionOptions = [
+    { value: "Grammar Fix", label: "Grammar Fix", icon: "📝" },
+    { value: "Change the Tone", label: "Change Tone", icon: "🎭" },
+    { value: "Translate", label: "Translate", icon: "🌍" },
+    { value: "Summarize", label: "Summarize", icon: "📋" },
+  ];
+
+  const toneOptions = [
+    { value: "Formal", label: "Formal", icon: "🎩" },
+    { value: "Friendly", label: "Friendly", icon: "😊" },
+    { value: "Funny", label: "Funny", icon: "😄" },
+    { value: "Casual", label: "Casual", icon: "👕" },
+    { value: "Normal", label: "Normal", icon: "💬" },
+  ];
+
   return (
-    <div className="space-y-4 font-['Inter',sans-serif]">
-      <div className="p-4 bg-mint-light border-2 border-mint-dark rounded-b-lg shadow space-y-4">
-      
-      {/* Restored Session Indicator */}
-      {restoredSession && !wasInterrupted && (
-        <div className="p-2 bg-blue-100 border border-blue-300 rounded-md text-sm text-blue-800">
-          ✨ Previous session restored - you can continue where you left off
-        </div>
-      )}
-
-      {/* Interrupted Session Indicator */}
-      {wasInterrupted && (
-        <div className="p-3 bg-green-100 border border-green-300 rounded-md text-sm">
-          <div className="text-green-800 mb-1">
-            🔄 Continuing interrupted streaming session...
+    <div className="h-full flex flex-col bg-white">
+      {/* Status Cards */}
+      <div className="p-4 space-y-3">
+        {restoredSession && !wasInterrupted && (
+          <div className="card glass p-3 border-blue-200 bg-blue-50/50 animate-slide-up">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-blue-800">
+                ✨ Previous session restored
+              </span>
+            </div>
           </div>
-          <div className="text-green-600 text-xs">
-            Your previous response has been restored and streaming will continue automatically
+        )}
+
+        {wasInterrupted && (
+          <div className="card glass p-3 border-green-200 bg-green-50/50 animate-slide-up">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-green-800">
+                🔄 Continuing interrupted session...
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <label className="block text-sm font-medium text-text mb-0.5">
-        Action
-      </label>
-
-            <Select
-              value={systemID}
-              onChange={(e) => setSystemID(e.target.value)}
-              className="w-full mb-2 border-mint focus:ring-mint p-1.5 text-sm"
-            >
-              <option value="Change the Tone">Change the Tone</option>
-              {Object.keys(SYSTEM_PROMPTS).map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
+        {/* Action Selection */}
+        <div className="card p-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+              <span>🎯</span>
+              <span>Action</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {actionOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSystemID(option.value)}
+                  className={`
+                    flex items-center space-x-2 p-3 rounded-lg border transition-all duration-200 text-left
+                    ${systemID === option.value
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105"
+                      : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200 hover:border-blue-500/50"
+                    }
+                  `}
+                >
+                  <span className="text-lg">{option.icon}</span>
+                  <span className="text-sm font-medium">{option.label}</span>
+                </button>
               ))}
-            </Select>
+            </div>
+          </div>
+
+          {/* Tone Selection */}
           {systemID === "Change the Tone" && (
-            <div className="mt-3">
-              <span className="text-sm text-gray-600 mb-1 block">Choose Tone:</span>
-              <Select
-                className="w-full"
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-              >
-                <option value="Formal">Formal</option>
-                <option value="Friendly">Friendly</option>
-                <option value="Funny">Funny</option>
-                <option value="Casual">Casual</option>
-                <option value="Normal">Normal</option>
-              </Select>
+            <div className="space-y-2 animate-slide-up">
+              <label className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                <span>🎭</span>
+                <span>Tone</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {toneOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setTone(option.value)}
+                    className={`
+                      flex items-center space-x-2 p-2 rounded-lg border transition-all duration-200 text-left
+                      ${tone === option.value
+                        ? "bg-gray-200 text-gray-900 border-gray-300 shadow-sm"
+                        : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200"
+                      }
+                    `}
+                  >
+                    <span>{option.icon}</span>
+                    <span className="text-sm">{option.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
-          {/* translate language pickers */}
+
+          {/* Language Selection */}
           {systemID === "Translate" && (
-            <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md">
-              <Select
-                value={fromLang}
-                onChange={(e) => setFromLang(e.target.value)}
-                className="flex-1"
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang}>{lang}</option>
-                ))}
-              </Select>
-              <span className="text-gray-500">→</span>
-              <Select
-                value={toLang}
-                onChange={(e) => setToLang(e.target.value)}
-                className="flex-1"
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang}>{lang}</option>
-                ))}
-              </Select>
+            <div className="space-y-2 animate-slide-up">
+              <label className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                <span>🌍</span>
+                <span>Languages</span>
+              </label>
+              <div className="flex items-center space-x-2 p-3 bg-gray-100/50 rounded-lg">
+                <select
+                  value={fromLang}
+                  onChange={(e) => setFromLang(e.target.value)}
+                  className="select flex-1 bg-white"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang} value={lang}>{lang}</option>
+                  ))}
+                </select>
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <select
+                  value={toLang}
+                  onChange={(e) => setToLang(e.target.value)}
+                  className="select flex-1 bg-white"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang} value={lang}>{lang}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          )}
-        
-        <textarea
-          placeholder="Ask me anything…"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          rows={4}
-          className="w-full rounded-md border border-mint p-1.5 text-sm outline-none resize-y focus:ring-2 focus:ring-mint bg-white"
-        />
-        <div className="flex space-x-2">
-          <button
-            disabled={loading}
-            onClick={runChat}
-            className="flex-1 rounded-md bg-brand-light py-2 text-text font-semibold hover:bg-brand-dark disabled:opacity-50"
-          >
-            {loading ? "Generating…" : "Submit"}
-          </button>
-          {(answer || loading || wasInterrupted) && (
-            <button
-              onClick={async () => {
-                setAnswer("");
-                setPrompt("");
-                setLoading(false);
-                setWasInterrupted(false);
-                currentAnswerRef.current = "";
-                await clearStreamingState();
-                setRestoredSession(false);
-              }}
-              className="px-4 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium"
-              title="Clear current session"
-            >
-              Clear
-            </button>
           )}
         </div>
-        <textarea
-          readOnly
-          value={answer}
-          rows={6}
-          className="w-full resize-y rounded-md border-2 border-gray-200 p-2 text-sm bg-gray-50 focus:border-purple-500"
-        />
+
+        {/* Input Section */}
+        <div className="card p-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+              <span>✍️</span>
+              <span>Your Text</span>
+            </label>
+            <textarea
+              placeholder="Enter your text here..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+              className="textarea resize-none custom-scrollbar"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-2">
+            <button
+              disabled={loading}
+              onClick={runChat}
+              className="btn btn-primary btn-md flex-1 disabled:opacity-50"
+            >
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 spinner border-white" />
+                  <span>Generating...</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <span>✨</span>
+                  <span>Generate</span>
+                </div>
+              )}
+            </button>
+            
+            {(answer || loading || wasInterrupted) && (
+              <button
+                onClick={handleClear}
+                className="btn btn-outline btn-md px-4"
+                title="Clear session"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Result Section */}
+        {(answer || loading) && (
+          <div className="card p-4 space-y-3 animate-slide-up">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                <span>🎯</span>
+                <span>Result</span>
+              </label>
+              {answer && (
+                <button
+                  onClick={() => navigator.clipboard.writeText(answer)}
+                  className="btn btn-ghost btn-sm"
+                  title="Copy to clipboard"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <div className="relative">
+              <textarea
+                readOnly
+                value={answer}
+                rows={4}
+                className="textarea bg-gray-50/50 custom-scrollbar resize-none"
+                placeholder={loading ? "AI is thinking..." : "Your result will appear here..."}
+              />
+              {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm rounded-md">
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <div className="w-4 h-4 spinner border-current" />
+                    <span className="text-sm">Generating response...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
