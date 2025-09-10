@@ -4,6 +4,7 @@ export interface Settings {
   provider: Provider;
   model: string;
   apiKey: string;
+  temperature?: number;
 }
 
 export interface User {

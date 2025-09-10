@@ -9,17 +9,18 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/logo_48.png",
-      "32": "icons/logo_48.png",
+      "16": "icons/logo_16.png",
+      "32": "icons/logo_32.png",
       "48": "icons/logo_48.png",
       "128": "icons/logo_128.png"
     }
   },
   
   "icons": {
-    "128": "icons/logo_128.png",
-    "48": "icons/logo_48.png"
-
+    "16":  "icons/logo_16.png",
+    "32":  "icons/logo_32.png",
+    "48":  "icons/logo_48.png",
+    "128": "icons/logo_128.png"
   },
   "oauth2": {
     "client_id": "842265721700-a7hq7miue3b6bjgrspsiak9hgc39hk4g.apps.googleusercontent.com",

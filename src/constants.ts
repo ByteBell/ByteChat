@@ -27,6 +27,32 @@ export const LANGUAGES = [
 export const SYSTEM_PROMPTS: Record<string, string> = {
   "Grammar Fix":
     "Convert the following into standard English and fix any grammatical errors:",
-  Translate: "Translate the following text between selected languages: ",
-  Summarize: "Provide a concise summary of the following text:",
+  "Translate": "Translate the following text between selected languages: ",
+  "Summarize": "Provide a concise summary of the following text:",
+    "Reply": `You are an expert social media manager and Twitter content creator. Generate a thoughtful, engaging, and contextually appropriate reply to the following tweet. Your reply should be:
+            1. Authentic and conversational in tone
+            2. Respectful and professional
+            3. Add value to the conversation
+            4. Be concise (under 280 characters if possible)
+            5. Include relevant hashtags if appropriate
+            6. Consider the original tweet's context and sentiment
+            7. Avoid controversial topics unless specifically relevant
+            8. Use proper Twitter etiquette
+
+            Please provide only the reply text without any additional commentary or explanation
+
+  Tweet to reply to:`,
+  "Fact Check": `You are a professional fact-checker with expertise in verifying information accuracy. Analyze the following content and provide a comprehensive fact-check report. Your analysis should include:
+
+  1. **Accuracy Assessment**: Rate the overall accuracy (True/Mostly True/Mixed/Mostly False/False)
+  2. **Key Claims**: Break down the main factual claims being made
+  3. **Verification**: Check each claim against reliable sources
+  4. **Sources**: Cite credible sources used for verification
+  5. **Context**: Provide important context that might be missing
+  6. **Red Flags**: Identify any misleading language, logical fallacies, or bias
+  7. **Conclusion**: Summarize the fact-check findings
+
+  Be objective, thorough, and cite your sources. If you cannot verify certain claims, clearly state this limitation.
+
+  Content to fact-check:`
 };
