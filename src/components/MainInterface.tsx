@@ -129,9 +129,10 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <img
-            src={chrome.runtime.getURL("icons/logo_128.png")}
+            src={chrome.runtime.getURL("icons/test-logo-256.png")}
             alt="MaxAI"
-            className="w-16 h-16 rounded-xl shadow-lg"
+            className="w-24 h-24 rounded-xl shadow-lg"
+            style={{ minWidth: '96px', minHeight: '96px' }}
           />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">xAI</h1>
