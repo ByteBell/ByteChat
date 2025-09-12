@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { OpenRouterModel, fetchOpenRouterModels } from '../services/openrouter';
+import { OpenRouterModel, fetchOpenRouterModels, refreshModelsCache, getModelPrice, getModelContextLength, getModelFeatures } from '../services/openrouter';
 import { SYSTEM_PROMPTS } from '../constants';
 import { sendChatRequest } from '../services/api';
 import { Settings } from '../types';
@@ -79,18 +79,64 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showModelDropdown]);
 
-  const loadModels = async () => {
+  const loadModels = async (forceRefresh = false) => {
+    setLoadingModels(true);
     try {
-      const fetchedModels = await fetchOpenRouterModels(apiKey);
+      const fetchedModels = forceRefresh 
+        ? await refreshModelsCache(apiKey)
+        : await fetchOpenRouterModels(apiKey);
+        
       setModels(fetchedModels);
-      if (fetchedModels.length > 0) {
+      console.log(`[MainInterface] Loaded ${fetchedModels.length} models`);
+      
+      // Check if we have a saved model preference
+      const savedModel = await getSavedSelectedModel();
+      const modelExists = fetchedModels.some(m => m.id === savedModel);
+      
+      if (savedModel && modelExists) {
+        setSelectedModel(savedModel);
+        console.log(`[MainInterface] Restored saved model: ${savedModel}`);
+      } else if (fetchedModels.length > 0) {
         setSelectedModel(fetchedModels[0].id);
+        // Save the default model selection
+        await saveSelectedModel(fetchedModels[0].id);
       }
     } catch (error) {
       console.error('Error loading models:', error);
     } finally {
       setLoadingModels(false);
     }
+  };
+
+  const handleRefreshModels = () => {
+    loadModels(true);
+  };
+
+  // Helper functions for saving/loading selected model
+  const saveSelectedModel = async (modelId: string) => {
+    try {
+      await chrome.storage.local.set({ 'selected_model': modelId });
+      console.log(`[MainInterface] Saved selected model: ${modelId}`);
+    } catch (error) {
+      console.error('[MainInterface] Failed to save selected model:', error);
+    }
+  };
+
+  const getSavedSelectedModel = async (): Promise<string | null> => {
+    try {
+      const result = await chrome.storage.local.get(['selected_model']);
+      return result.selected_model || null;
+    } catch (error) {
+      console.error('[MainInterface] Failed to get saved model:', error);
+      return null;
+    }
+  };
+
+  const handleModelChange = async (modelId: string) => {
+    setSelectedModel(modelId);
+    await saveSelectedModel(modelId);
+    setShowModelDropdown(false);
+    setModelSearch('');
   };
 
   const handleToolSelect = (tool: Tool) => {
@@ -187,23 +233,35 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           </div>
         </div>
         
-        {/* Searchable Model Selector */}
-        <div className="relative model-dropdown">
+        {/* Model Selector and Refresh */}
+        <div className="flex items-center space-x-2">
           <button
-            onClick={() => setShowModelDropdown(!showModelDropdown)}
+            onClick={handleRefreshModels}
             disabled={loadingModels}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-0 max-w-48 flex items-center justify-between"
+            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            title="Refresh models"
           >
-            <span className="truncate">
-              {loadingModels 
-                ? 'Loading...' 
-                : models.find(m => m.id === selectedModel)?.name || selectedModel || 'Select Model'
-              }
-            </span>
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
+          
+          <div className="relative model-dropdown">
+            <button
+              onClick={() => setShowModelDropdown(!showModelDropdown)}
+              disabled={loadingModels}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-0 max-w-44 flex items-center justify-between"
+            >
+              <span className="truncate">
+                {loadingModels 
+                  ? 'Loading...' 
+                  : models.find(m => m.id === selectedModel)?.name || selectedModel || 'Select Model'
+                }
+              </span>
+              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
 
           {showModelDropdown && (
             <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
@@ -222,22 +280,39 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                     (model.name ?? model.id).toLowerCase().includes(modelSearch.toLowerCase()) ||
                     model.id.toLowerCase().includes(modelSearch.toLowerCase())
                   )
-                  .map((model) => (
-                    <button
-                      key={model.id}
-                      onClick={() => {
-                        setSelectedModel(model.id);
-                        setShowModelDropdown(false);
-                        setModelSearch('');
-                      }}
-                      className={`w-full text-left px-3 py-2 hover:bg-gray-100 text-sm ${
-                        selectedModel === model.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                      }`}
-                    >
-                      <div className="font-medium truncate">{model.name ?? model.id}</div>
-                      <div className="text-xs text-gray-500 truncate">{model.id}</div>
-                    </button>
-                  ))
+                  .map((model) => {
+                    const features = getModelFeatures(model);
+                    const price = getModelPrice(model);
+                    const contextLength = getModelContextLength(model);
+                    
+                    return (
+                      <button
+                        key={model.id}
+                        onClick={() => handleModelChange(model.id)}
+                        className={`w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b border-gray-100 last:border-b-0 ${
+                          selectedModel === model.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        }`}
+                      >
+                        <div className="font-medium truncate">{model.name ?? model.id}</div>
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="text-xs text-gray-500 truncate flex-1">{contextLength}</div>
+                          <div className="text-xs text-green-600 font-medium ml-2">{price}</div>
+                        </div>
+                        {features.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {features.slice(0, 3).map(feature => (
+                              <span 
+                                key={feature}
+                                className="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
+                              >
+                                {feature}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })
                 }
                 {models.filter(model =>
                   (model.name ?? model.id).toLowerCase().includes(modelSearch.toLowerCase()) ||
@@ -248,6 +323,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
