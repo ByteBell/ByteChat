@@ -7,15 +7,26 @@ import MainInterface from "./MainInterface";
 const Popup: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-
+  const mode = new URLSearchParams(location.search).get('mode') || 'popup';
+  const inIframe = window.top !== window;
   // Set fixed popup dimensions for full height
   useEffect(() => {
-    document.body.style.width = "420px";
-    document.body.style.height = "100vh";
-    document.body.style.minHeight = "700px";
-    document.body.style.margin = "0";
-    document.body.style.padding = "0";
-
+    if (mode === 'popup' && !inIframe) {
+            document.body.style.width = "420px";
+            document.body.style.height = "700px";
+            document.body.style.minHeight = "700px";
+            document.body.style.margin = "0";
+            document.body.style.padding = "0";
+            document.body.style.overflow = "auto";
+          } else {
+            // Sidebar or any embedded panel
+            document.documentElement.style.height = "100%";
+            document.body.style.height = "100%";
+            document.body.style.margin = "0";
+            document.body.style.padding = "0";
+            document.body.style.overflow = "auto";
+          }
+      
     // Check for stored API key
     chrome.storage.local.get(['openRouterApiKey'], (result) => {
       if (result.openRouterApiKey) {
@@ -54,7 +65,7 @@ const Popup: React.FC = () => {
   }
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="min-h-screen overflow-auto">
       {!apiKey ? (
         <ApiKeySetup onApiKeySet={handleApiKeySet} />
       ) : (

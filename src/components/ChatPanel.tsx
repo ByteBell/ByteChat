@@ -6,8 +6,8 @@ import { Settings } from "../types";
 
 const ChatPanel: React.FC = () => {
   const [settings, setSettings] = useState<Settings>({
-    provider: "openai",
-    model: "gpt-4o",
+    provider: "openrouter",           // was "openai"
+    model: "openai/gpt-4o-mini",      // was "gpt-4o"
     apiKey: "",
   });
 
@@ -98,8 +98,8 @@ const ChatPanel: React.FC = () => {
         { role: 'system', content: savedState.systemPrompt || systemPrompt },
         { role: 'user', content: savedState.prompt || prompt },
       ];
-
       const response = await sendChatRequest(messages, settings);
+      console.log("[UI] continueStreamingFromStorage response:", response);
       const assistantMessage = savedState.answer + (response.choices[0]?.message?.content || 'No response received');
       setAnswer(assistantMessage);
       
@@ -180,7 +180,8 @@ const ChatPanel: React.FC = () => {
       ];
 
       const response = await sendChatRequest(messages, settings);
-      const assistantMessage = response.choices[0]?.message?.content || 'No response received';
+      console.log("[UI] runChat response:", response);
+      const assistantMessage = response.choices?.[0]?.message?.content || "No response received";
       setAnswer(assistantMessage);
       
       await clearStreamingState();

@@ -57,10 +57,27 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingModels, setLoadingModels] = useState(true);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [modelSearch, setModelSearch] = useState('');
 
   useEffect(() => {
     loadModels();
   }, [apiKey]);
+
+  // Close model dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showModelDropdown) {
+        const target = event.target as Element;
+        if (!target.closest('.model-dropdown')) {
+          setShowModelDropdown(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showModelDropdown]);
 
   const loadModels = async () => {
     try {
@@ -84,9 +101,22 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   };
 
   const handleSubmit = async () => {
-    if (!input.trim() || !selectedModel) return;
+    if (!input.trim()) {
+      setOutput('Please enter some text before submitting.');
+      return;
+    }
+    
+    if (!selectedModel) {
+      setOutput('Please select a model before submitting.');
+      return;
+    }
 
+    console.log('Starting request with input:', input);
+    console.log('Selected model:', selectedModel);
+    
     setIsLoading(true);
+    setOutput(''); // Clear previous output
+    
     try {
       const settings: Settings = {
         provider: 'openrouter',
@@ -99,23 +129,41 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       if (selectedTool) {
         // Tool-based request with system prompt
         const systemPrompt = SYSTEM_PROMPTS[selectedTool.id];
+        console.log('Using tool:', selectedTool.name, 'with system prompt');
         messages = [
           { role: 'system' as const, content: systemPrompt },
           { role: 'user' as const, content: input }
         ];
       } else {
         // Direct chat request without system prompt
+        console.log('Using direct chat without system prompt');
         messages = [
           { role: 'user' as const, content: input }
         ];
       }
 
+      console.log('Sending request with messages:', messages);
       const response = await sendChatRequest(messages, settings);
-      setOutput(response.choices[0]?.message?.content || 'No response received');
+      console.log('Full response received:', response);
+      
+      const content = response.choices?.[0]?.message?.content;
+      console.log('Extracted content:', content);
+      
+      if (content) {
+        setOutput(content);
+        console.log('Output set successfully');
+      } else {
+        setOutput('No response content received');
+        console.log('No content in response');
+      }
     } catch (error) {
-      setOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      console.error('Request failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setOutput(`Error: ${errorMessage}`);
+      console.log('Error output set:', errorMessage);
     } finally {
       setIsLoading(false);
+      console.log('Request completed, loading set to false');
     }
   };
 
@@ -124,45 +172,87 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between p-3 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
           <img
             src={chrome.runtime.getURL("icons/test-logo-256.png")}
             alt="MaxAI"
-            className="w-24 h-24 rounded-xl shadow-lg"
-            style={{ minWidth: '96px', minHeight: '96px' }}
+            className="w-10 h-10 rounded-lg shadow-lg"
           />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">xAI</h1>
-            <p className="text-sm text-gray-500">AI Writing Assistant</p>
+            <h1 className="text-lg font-bold text-gray-900">xAI</h1>
+            <p className="text-xs text-gray-500">AI Writing Assistant</p>
           </div>
         </div>
         
-        {/* Model Selector */}
-        <div className="flex items-center space-x-2">
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
+        {/* Searchable Model Selector */}
+        <div className="relative model-dropdown">
+          <button
+            onClick={() => setShowModelDropdown(!showModelDropdown)}
             disabled={loadingModels}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-0 max-w-48"
+            className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-0 max-w-48 flex items-center justify-between"
           >
-            {loadingModels ? (
-              <option>Loading models...</option>
-            ) : (
-              models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name || model.id}
-                </option>
-              ))
-            )}
-          </select>
+            <span className="truncate">
+              {loadingModels 
+                ? 'Loading...' 
+                : models.find(m => m.id === selectedModel)?.name || selectedModel || 'Select Model'
+              }
+            </span>
+            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showModelDropdown && (
+            <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+              <div className="p-2">
+                <input
+                  type="text"
+                  placeholder="Search models..."
+                  value={modelSearch}
+                  onChange={(e) => setModelSearch(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div className="max-h-60 overflow-y-auto">
+                {models
+                  .filter(model =>
+                    (model.name ?? model.id).toLowerCase().includes(modelSearch.toLowerCase()) ||
+                    model.id.toLowerCase().includes(modelSearch.toLowerCase())
+                  )
+                  .map((model) => (
+                    <button
+                      key={model.id}
+                      onClick={() => {
+                        setSelectedModel(model.id);
+                        setShowModelDropdown(false);
+                        setModelSearch('');
+                      }}
+                      className={`w-full text-left px-3 py-2 hover:bg-gray-100 text-sm ${
+                        selectedModel === model.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="font-medium truncate">{model.name ?? model.id}</div>
+                      <div className="text-xs text-gray-500 truncate">{model.id}</div>
+                    </button>
+                  ))
+                }
+                {models.filter(model =>
+                  (model.name ?? model.id).toLowerCase().includes(modelSearch.toLowerCase()) ||
+                  model.id.toLowerCase().includes(modelSearch.toLowerCase())
+                ).length === 0 && (
+                  <div className="px-3 py-2 text-sm text-gray-500">No models found</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Chat and Tools Section */}
-      <div className="p-4 border-b border-gray-200 space-y-3">
+      <div className="p-2 border-b border-gray-200 space-y-2">
         {/* Direct Chat Option */}
         <button
           onClick={() => {
@@ -226,8 +316,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {selectedTool || (!selectedTool && !showTools && (input || output)) ? (
+      <div className="flex-1 flex flex-col">
+        {selectedTool || (!selectedTool && !showTools) ? (
           <div className="flex flex-col h-full">
             {/* Header */}
             {selectedTool && (
@@ -249,68 +339,123 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
             )}
 
             {/* Input Section */}
-            <div className="flex-1 flex flex-col p-4 space-y-4">
-              <div className="flex-1 min-h-0">
+            <div className="flex flex-col p-4 space-y-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {selectedTool ? 'Input' : 'Message'}
                 </label>
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
                   placeholder={
                     selectedTool 
-                      ? `Enter text to ${selectedTool.name.toLowerCase()}...`
-                      : "Ask me anything..."
+                      ? `Enter text to ${selectedTool.name.toLowerCase()}... (Ctrl+Enter to submit)`
+                      : "Ask me anything... (Ctrl+Enter to submit)"
                   }
-                  className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
               </div>
 
               {/* Action Button */}
               <button
                 onClick={handleSubmit}
-                disabled={!input.trim() || isLoading}
+                disabled={isLoading}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium py-3 rounded-lg transition-colors"
               >
                 {isLoading ? 'Processing...' : (selectedTool ? selectedTool.name : 'Send')}
               </button>
 
               {/* Output Section */}
-              {(output || isLoading) && (
-                <div className="flex-1 min-h-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {selectedTool ? 'Output' : 'Response'}
-                    </label>
-                    {output && (
-                      <button
-                        onClick={copyToClipboard}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Copy
-                      </button>
-                    )}
-                  </div>
-                  <div className="h-40 p-3 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
-                    {isLoading ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                        <span className="text-gray-600">Processing...</span>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-800 whitespace-pre-wrap">{output}</div>
-                    )}
-                  </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {selectedTool ? 'Output' : 'Response'}
+                  </label>
+                  {output && (
+                    <button
+                      onClick={copyToClipboard}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Copy
+                    </button>
+                  )}
                 </div>
-              )}
+                <div className="min-h-[200px] max-h-96 p-3 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span className="text-gray-600">Processing...</span>
+                    </div>
+                  ) : output ? (
+                    <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{output}</div>
+                  ) : (
+                    <div className="text-sm text-gray-500">Response will appear here...</div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center">
-              <div className="text-6xl mb-6">🤖</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Welcome to xAI</h3>
-              <p className="text-gray-600">Choose "Chat" for direct conversation or "Tools" for specialized tasks</p>
+          <div className="flex flex-col p-4 space-y-4">
+            {/* Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Message
+              </label>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder="Type your message here... (Ctrl+Enter to submit)"
+                className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium py-3 rounded-lg transition-colors"
+            >
+              {isLoading ? 'Processing...' : 'Send Message'}
+            </button>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Response
+                </label>
+                {output && (
+                  <button
+                    onClick={copyToClipboard}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Copy
+                  </button>
+                )}
+              </div>
+              <div className="min-h-[200px] max-h-96 p-3 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span className="text-gray-600">Processing...</span>
+                  </div>
+                ) : output ? (
+                  <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{output}</div>
+                ) : (
+                  <div className="text-sm text-gray-500">Response will appear here...</div>
+                )}
+              </div>
             </div>
           </div>
         )}

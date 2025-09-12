@@ -4,7 +4,9 @@
   "version": "1.0.0",    
   "description": "A browser extension to interact with AI providers like OpenAI, Anthropic, and Together",
   "background": {
-        "service_worker": "background.js"
+        "service_worker": "background.js",
+        "type": "module"
+
       },
   "action": {
     "default_popup": "popup.html",
@@ -31,19 +33,28 @@
   },
   "permissions": [
     "activeTab",
+    "permissions",
     "scripting", 
     "storage",
     "tabs",
     "identity",
-     "<all_urls>"
+    "<all_urls>"
+  ],
+  "optional_host_permissions": [
   ],
   "host_permissions": ["<all_urls>"],
-    "content_scripts": [
-        {
-          "matches": ["<all_urls>"],
-          "js": ["contentScript.js"],
-          "run_at": "document_idle"
-        }
-      ]
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["panel.html", "panel.js", "index.js", "icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
     
 }
