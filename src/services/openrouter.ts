@@ -1,6 +1,8 @@
 /* src/services/openrouter.ts */
+import type { MessageContent } from "../types";
+
 export type ORole = "system" | "user" | "assistant";
-export type ChatMessage = { role: ORole; content: string };
+export type ChatMessage = { role: ORole; content: string | MessageContent[] };
 
 export type OpenRouterArgs = {
   apiKey: string;
@@ -167,76 +169,21 @@ export async function fetchAllModelsFromAPI(apiKey: string): Promise<OpenRouterM
   return sortAndFilterTopModels(allModels);
 }
 
-/** Sort models by premium/expensive first and filter to show only the best ones */
+/** Sort models by cost (highest first) and show all models */
 function sortAndFilterTopModels(models: OpenRouterModel[]): OpenRouterModel[] {
-  // Create a scoring system prioritizing expensive/premium models
-  const scoredModels = models.map(model => {
-    let score = 0;
+  // Sort by total cost (prompt + completion price) - highest first
+  return models.sort((a, b) => {
+    const aPricePrompt = parseFloat(a.pricing?.prompt || "0");
+    const aPriceCompletion = parseFloat(a.pricing?.completion || "0");
+    const aTotalPrice = aPricePrompt + aPriceCompletion;
     
-    // Premium providers get highest priority (Anthropic, OpenAI, xAI first)
-    const provider = model.id.split('/')[0].toLowerCase();
-    const premiumProviders: Record<string, number> = {
-      'anthropic': 1000,      // Claude models - highest priority
-      'openai': 900,          // GPT models
-      'x-ai': 850,           // Grok models  
-      'xai': 850,            // Alternative xAI naming
-      'google': 800,         // Gemini models
-      'meta-llama': 750,     // Meta Llama models
-      'meta': 750,           // Alternative Meta naming
-      'qwen': 700,           // Qwen models
-      'deepseek': 650,       // DeepSeek models
-      'openrouter': 600,     // OpenRouter's own models
-    };
+    const bPricePrompt = parseFloat(b.pricing?.prompt || "0");
+    const bPriceCompletion = parseFloat(b.pricing?.completion || "0");
+    const bTotalPrice = bPricePrompt + bPriceCompletion;
     
-    if (premiumProviders[provider]) {
-      score += premiumProviders[provider];
-    } else {
-      score += 100; // Other providers get base score
-    }
-    
-    // Higher pricing gets higher scores (expensive models first)
-    const promptPrice = parseFloat(model.pricing?.prompt || "0");
-    const completionPrice = parseFloat(model.pricing?.completion || "0");
-    if (!isNaN(promptPrice) && !isNaN(completionPrice)) {
-      const totalPrice = promptPrice + completionPrice;
-      // Higher price = higher score (reverse of previous logic)
-      score += totalPrice * 10000; // Scale up pricing impact
-    }
-    
-    // Recent models get bonus points
-    if (model.created) {
-      const daysSinceCreation = (Date.now() / 1000 - model.created) / (24 * 60 * 60);
-      score += Math.max(0, 365 - daysSinceCreation) / 365 * 100;
-    }
-    
-    // Larger context length gets bonus points  
-    if (model.context_length && model.context_length > 32000) {
-      score += Math.min((model.context_length - 32000) / 1000, 100);
-    }
-    
-    // Multimodal models get bonus points
-    if (model.architecture?.input_modalities?.includes('image')) {
-      score += 50;
-    }
-    
-    // Tool use support gets bonus points
-    if (model.supported_parameters?.includes('tools') || model.supported_parameters?.includes('tool_choice')) {
-      score += 50;
-    }
-    
-    // Reasoning models get bonus points
-    if (model.supported_parameters?.includes('reasoning') || model.supported_parameters?.includes('include_reasoning')) {
-      score += 75;
-    }
-
-    return { ...model, score };
+    // Sort by highest cost first
+    return bTotalPrice - aTotalPrice;
   });
-
-  // Sort by score (highest first) and return top 50 models
-  return scoredModels
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 50) // Return only top 50 models
-    .map(({ score, ...model }) => model); // Remove score from final result
 }
 
 /** Cache models in Chrome storage */
@@ -358,4 +305,104 @@ export function getModelFeatures(model: OpenRouterModel): string[] {
   }
   
   return features;
+}
+
+/** Get model capabilities */
+import type { ModelCapability } from "../types";
+
+export function getModelCapabilities(model: OpenRouterModel): ModelCapability[] {
+  const capabilities: ModelCapability[] = [];
+  
+  // Get input and output modalities
+  const inputModalities = model.architecture?.input_modalities || [];
+  const outputModalities = model.architecture?.output_modalities || [];
+  
+  // Text capabilities - check input modalities for text
+  if (inputModalities.includes('text')) {
+    capabilities.push("text");
+  }
+  
+  // Image capabilities - check both input (vision) and output (generation)
+  if (inputModalities.includes('image') || outputModalities.includes('image')) {
+    capabilities.push("image");
+  }
+  
+  // File processing capabilities - check input modalities for file
+  if (inputModalities.includes('file')) {
+    capabilities.push("file");
+  }
+  
+  // Audio capabilities - check input modalities for audio
+  if (inputModalities.includes('audio')) {
+    capabilities.push("audio");
+  }
+  
+  // If no modalities are specified, assume it's a text model
+  if (capabilities.length === 0) {
+    capabilities.push("text");
+  }
+  
+  // Remove duplicates manually
+  const uniqueCapabilities: ModelCapability[] = [];
+  capabilities.forEach(cap => {
+    if (!uniqueCapabilities.includes(cap)) {
+      uniqueCapabilities.push(cap);
+    }
+  });
+  
+  return uniqueCapabilities;
+}
+
+/** OpenRouter Key Info Response */
+export interface OpenRouterKeyInfo {
+  data: {
+    label: string;
+    usage: number;          // Number of credits used
+    limit: number | null;   // Credit limit for the key, or null if unlimited
+    is_free_tier: boolean;  // Whether the user has paid for credits before
+  };
+}
+
+/** Check API key info and balance */
+export async function checkKeyInfo(apiKey: string): Promise<OpenRouterKeyInfo> {
+  try {
+    const res = await fetch(`${OR_API}/key`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://grammerai.local",
+        "X-Title": "GrammerAI Extension",
+      },
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Failed to check key info: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("[OpenRouter] Failed to check key info:", error);
+    throw error;
+  }
+}
+
+/** Legacy function for backward compatibility - returns remaining credits */
+export async function checkBalance(apiKey: string): Promise<number> {
+  try {
+    const keyInfo = await checkKeyInfo(apiKey);
+    const usage = keyInfo.data.usage || 0;
+    const limit = keyInfo.data.limit;
+    
+    // If unlimited, return a high number to indicate good balance
+    if (limit === null) {
+      return 999999; // Unlimited
+    }
+    
+    // Return remaining credits
+    return Math.max(0, limit - usage);
+  } catch (error) {
+    console.error("[OpenRouter] Failed to check balance:", error);
+    return 0;
+  }
 }

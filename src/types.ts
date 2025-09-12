@@ -1,5 +1,7 @@
 export type Provider = "openai" | "anthropic" | "together" | "openrouter";
 
+export type ModelCapability = "text" | "image" | "file" | "audio";
+
 export interface Settings {
   provider: Provider;
   model: string;
@@ -12,4 +14,47 @@ export interface User {
   email: string;
   token: string;
   expires: string;
+}
+
+// Multimodal content types for OpenRouter API
+export interface TextContent {
+  type: 'text';
+  text: string;
+}
+
+export interface ImageContent {
+  type: 'image_url';
+  image_url: {
+    url: string;
+  };
+}
+
+export interface FileContent {
+  type: 'file';
+  file: {
+    data: string;
+    format: string;
+  };
+}
+
+export interface AudioContent {
+  type: 'input_audio';
+  input_audio: {
+    data: string;
+    format: string;
+  };
+}
+
+export type MessageContent = TextContent | ImageContent | FileContent | AudioContent;
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string | MessageContent[];
+}
+
+// API Balance response
+export interface BalanceResponse {
+  data: {
+    credits: number;
+  };
 }

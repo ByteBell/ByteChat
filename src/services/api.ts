@@ -1,8 +1,8 @@
 /* src/services/api.ts */
-import type { Settings } from "../types";
-import { chatOpenRouter, type ChatMessage } from "./openrouter";
+import type { Settings, ChatMessage } from "../types";
+import { chatOpenRouter } from "./openrouter";
 
-export type { ChatMessage } from "./openrouter";
+export type { ChatMessage };
 
 /**
  * Unified chat request across providers.
