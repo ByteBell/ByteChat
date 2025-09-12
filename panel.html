@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%; margin: 0; padding: 0;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,27 +11,46 @@
             box-sizing: border-box;
         }
         
-        html, body {
+        html {
             height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: white;
             overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
         
-        #app {
+        #root {
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid #e5e7eb;
-            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+            width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
         
-        /* Loading state */
+        /* Override any potential conflicting styles */
+        #root > div {
+            height: 100% !important;
+        }
+        
         .loading {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            height: 100vh;
             background: white;
         }
         
@@ -48,10 +67,36 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* NUCLEAR OPTION - Override everything with !important */
+        html, body {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+        }
+        
+        #root {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+        }
+        
+        #root > div {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+        
+        /* Force all major containers to use full height */
+        .flex.flex-col:first-child {
+            height: 100vh !important;
+            max-height: 100vh !important;
+        }
     </style>
 </head>
-<body>
-    <div id="root">
+<body style="height: 100%; margin: 0; padding: 0; overflow: hidden;">
+    <div id="root" style="height: 100vh; width: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
         <div class="loading">
             <div class="spinner"></div>
         </div>

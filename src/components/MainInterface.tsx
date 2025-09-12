@@ -269,7 +269,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col bg-white" style={{ height: '100%', position: 'relative' }}>
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div className="flex items-center space-x-3">

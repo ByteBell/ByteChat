@@ -102,92 +102,38 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       return; // Unknown menu item
   }
 
-  // Send the selected text to the extension popup/sidebar
-  try {
-    // First try to send to content script to open sidebar with text
-    await chrome.tabs.sendMessage(tab.id, {
-      action: 'openWithText',
-      text: info.selectionText,
-      tool: toolName,
-      isCustomPrompt: isCustomPrompt
-    });
-  } catch (error) {
-    console.error('Failed to send text to content script:', error);
-    
-    // Fallback: store the text and open popup
-    await chrome.storage.local.set({
-      'pending_text': info.selectionText,
-      'pending_tool': toolName,
-      'pending_is_custom_prompt': isCustomPrompt,
-      'pending_timestamp': Date.now()
-    });
-    
-    // Open the extension popup
-    chrome.action.openPopup();
-  }
+  // Store the selected text and tool selection for the side panel
+  await chrome.storage.local.set({
+    'pending_text': info.selectionText,
+    'pending_tool': toolName,
+    'pending_is_custom_prompt': isCustomPrompt,
+    'pending_timestamp': Date.now()
+  });
+
+  // Open the side panel
+  await chrome.sidePanel.open({ tabId: tab.id });
 });
 
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
   console.log('Extension icon clicked!', tab);
   
-  // Check if we can inject on this tab
-  if (!tab.id || !tab.url) {
-    console.log('No tab ID or URL available');
+  if (!tab.id) {
+    console.log('No tab ID available');
     return;
   }
-  
-  // Skip chrome:// and other restricted URLs
-  if (tab.url.startsWith('chrome://') || 
-      tab.url.startsWith('chrome-extension://') || 
-      tab.url.startsWith('edge://') || 
-      tab.url.startsWith('about:')) {
-    console.log('Cannot inject on restricted URL:', tab.url);
-        chrome.notifications?.create({
-            type: 'basic',
-            iconUrl: 'icons/new_logo_32.png',
-            title: 'xAI',
-            message: 'Open a normal site like google dot com to use the sidebar'
-          });
-    return;
-  }
-  
+
   try {
-    console.log('Sending toggleSidebar message to tab:', tab.id);
-    const response = await chrome.tabs.sendMessage(tab.id, { action: 'toggleSidebar' });
-    console.log('Toggle response:', response);
+    // Open the side panel
+    await chrome.sidePanel.open({ tabId: tab.id });
   } catch (error) {
-    console.log('Content script not ready, injecting...', error);
-    // If content script isn't ready, inject it
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['contentScript.js']
-      });
-      console.log('Content script injected, trying again...');
-      // Try again after injection
-      setTimeout(async () => {
-        try {
-          await chrome.tabs.sendMessage(tab.id!, { action: 'toggleSidebar' });
-        } catch (e) {
-          console.log('Still failed after injection:', e);
-        }
-      }, 100);
-    } catch (injectError) {
-      console.log('Failed to inject content script:', injectError);
-      // Show reload notification
-      chrome.tabs.sendMessage(tab.id, { 
-        action: 'showReloadNotification' 
-      }).catch(() => {
-        // If we can't even send a message, show browser alert
-        chrome.notifications?.create({
-                    type: 'basic',
-                    iconUrl: 'icons/new_logo_32.png',
-                    title: 'xAI',
-                    message: 'Please reload this page and try again to use the sidebar'
-                  });;
-      });
-    }
+    console.error('Failed to open side panel:', error);
+    chrome.notifications?.create({
+      type: 'basic',
+      iconUrl: 'icons/new_logo_32.png',
+      title: 'xAI',
+      message: 'Failed to open side panel. Please try again.'
+    });
   }
 });
 

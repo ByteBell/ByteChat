@@ -19,12 +19,9 @@ const Popup: React.FC = () => {
             document.body.style.padding = "0";
             document.body.style.overflow = "auto";
           } else {
-            // Sidebar or any embedded panel
-            document.documentElement.style.height = "100%";
-            document.body.style.height = "100%";
+            // Sidebar or any embedded panel - minimal styling, rely on CSS
             document.body.style.margin = "0";
             document.body.style.padding = "0";
-            document.body.style.overflow = "auto";
           }
       
     // Check for stored API key
@@ -58,14 +55,14 @@ const Popup: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
+      <div className={`flex items-center justify-center bg-white ${mode === 'popup' ? 'h-screen' : 'h-full'}`}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen overflow-auto">
+    <div className={`overflow-auto ${mode === 'popup' ? 'min-h-screen' : ''}`} style={mode !== 'popup' ? { height: '100vh', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } : {}}>
       {!apiKey ? (
         <ApiKeySetup onApiKeySet={handleApiKeySet} />
       ) : (

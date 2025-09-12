@@ -10,6 +10,8 @@ module.exports = {
     entry: {
       /* popup UI                      → dist/index.js  (or rename to popup) */
       index:         path.join(__dirname, 'src', 'index.tsx'),
+      /* side panel UI                 → dist/panel.js */
+      panel:         path.join(__dirname, 'src', 'index.tsx'),
       /* injected page script          → dist/contentScript.js */
       contentScript: path.join(__dirname, 'src', 'contentScript.ts'),
       background:    path.join(__dirname, "src", "background.ts")
@@ -39,10 +41,11 @@ module.exports = {
       chunks: ['index']  
     }),
 
-    /* ②  Copies everything that isn’t bundled */
+    /* ②  Copies everything that isn't bundled */
     new CopyPlugin({
       patterns: [
         { from: 'manifest.json', to: '.' }, // KEEP THIS – copies the manifest
+        { from: 'panel.html', to: '.' },    // Copy side panel HTML
         { from: 'icons',         to: 'icons' }      
       ],
     }),
