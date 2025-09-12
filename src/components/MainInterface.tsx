@@ -418,7 +418,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         </div>
 
         {/* Input Area - Centered in bottom section */}
-        <div className="border-t border-gray-200 p-8 bg-white flex flex-col justify-center min-h-[200px]">
+        <div className="border-t border-gray-200 p-4 sm:p-8 bg-white flex flex-col justify-center min-h-[160px] sm:min-h-[200px]">
           {/* Selected Tool Indicator */}
           {selectedTool && (
             <div className="flex items-center justify-between mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -454,7 +454,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                   ? `Enter text for ${selectedTool.name.toLowerCase()}... (Press Enter to send)`
                   : "Type your message here... (Press Enter to send, Shift+Enter for new line)"
               }
-              className="w-full min-h-[120px] max-h-[300px] p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base leading-relaxed"
+              className="w-full min-h-[100px] sm:min-h-[120px] max-h-[200px] sm:max-h-[300px] p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base leading-relaxed"
               style={{ fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
               disabled={isLoading}
             />
@@ -524,14 +524,127 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                 </div>
               )}
             
-            {/* Send Button on Right - Properly Aligned and Sized */}
+            {/* File Upload Buttons - Properly Spaced */}
+            {/* Image Upload */}
+            <button
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const content = e.target?.result as string;
+                      console.log('Image file:', file.name, 'Size:', file.size);
+                      console.log('Image content (base64):', content);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                };
+                input.click();
+              }}
+              className="absolute left-14 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
+              title="Upload Image (JPG, PNG, GIF)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+
+            {/* Excel Upload */}
+            <button
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.xlsx,.xls,.csv';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const content = e.target?.result;
+                      console.log('Excel file:', file.name, 'Size:', file.size);
+                      console.log('Excel content:', content);
+                    };
+                    reader.readAsArrayBuffer(file);
+                  }
+                };
+                input.click();
+              }}
+              className="absolute left-24 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
+              title="Upload Excel/CSV Spreadsheet"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </button>
+
+            {/* PDF Upload */}
+            <button
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const content = e.target?.result;
+                      console.log('PDF file:', file.name, 'Size:', file.size);
+                      console.log('PDF content:', content);
+                    };
+                    reader.readAsArrayBuffer(file);
+                  }
+                };
+                input.click();
+              }}
+              className="absolute left-34 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
+              title="Upload PDF Document"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </button>
+
+            {/* Word Upload */}
+            <button
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.docx,.doc';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const content = e.target?.result;
+                      console.log('Word file:', file.name, 'Size:', file.size);
+                      console.log('Word content:', content);
+                    };
+                    reader.readAsArrayBuffer(file);
+                  }
+                };
+                input.click();
+              }}
+              className="absolute left-44 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
+              title="Upload Word Document"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </button>
+
+            {/* Send Button on Right - Same size as tool icon */}
             <button
               onClick={handleSubmit}
               disabled={isLoading || !input.trim()}
               className="absolute right-3 bottom-3 flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>
           </div>
