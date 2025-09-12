@@ -9,20 +9,18 @@ const Popup: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const mode = new URLSearchParams(location.search).get('mode') || 'popup';
   const inIframe = window.top !== window;
-  // Set fixed popup dimensions for full height
+  // Set styling based on mode
   useEffect(() => {
     if (mode === 'popup' && !inIframe) {
-            document.body.style.width = "420px";
-            document.body.style.height = "700px";
-            document.body.style.minHeight = "700px";
-            document.body.style.margin = "0";
-            document.body.style.padding = "0";
-            document.body.style.overflow = "auto";
-          } else {
-            // Sidebar or any embedded panel - minimal styling, rely on CSS
-            document.body.style.margin = "0";
-            document.body.style.padding = "0";
-          }
+      // Popup mode - fixed dimensions
+      document.body.style.width = "420px";
+      document.body.style.height = "700px";
+      document.body.style.minHeight = "700px";
+      document.body.style.overflow = "auto";
+    }
+    // Side panel mode uses CSS from panel.html
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
       
     // Check for stored API key
     chrome.storage.local.get(['openRouterApiKey'], (result) => {
@@ -62,7 +60,7 @@ const Popup: React.FC = () => {
   }
 
   return (
-    <div className={`overflow-auto ${mode === 'popup' ? 'min-h-screen' : ''}`} style={mode !== 'popup' ? { height: '100vh', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } : {}}>
+    <div className={`overflow-auto ${mode === 'popup' ? 'min-h-screen' : 'h-full'}`}>
       {!apiKey ? (
         <ApiKeySetup onApiKeySet={handleApiKeySet} />
       ) : (

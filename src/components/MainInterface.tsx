@@ -269,22 +269,23 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col bg-white" style={{ height: '100%', position: 'relative' }}>
+    <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
+      <div className="p-3 border-b border-gray-200">
+        {/* Logo and Title Row */}
+        <div className="flex items-center space-x-3 mb-3">
           <img
-            src={chrome.runtime.getURL("icons/test-logo-256.png")}
-            alt="MaxAI"
+            src={chrome.runtime.getURL("icons/ByteBellLogo.png")}
+            alt="BB Chat"
             className="w-10 h-10 rounded-lg shadow-lg"
           />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">xAI</h1>
+            <h1 className="text-lg font-bold text-gray-900">BB Chat</h1>
             <p className="text-xs text-gray-500">AI Writing Assistant</p>
           </div>
         </div>
         
-        {/* Model Selector and Refresh */}
+        {/* Model Selector Row */}
         <div className="flex items-center space-x-2">
           <button
             onClick={handleRefreshModels}
@@ -297,11 +298,11 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
             </svg>
           </button>
           
-          <div className="relative model-dropdown">
+          <div className="relative model-dropdown flex-1">
             <button
               onClick={() => setShowModelDropdown(!showModelDropdown)}
               disabled={loadingModels}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-0 max-w-44 flex items-center justify-between"
+              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white flex items-center justify-between"
             >
               <span className="truncate">
                 {loadingModels 
@@ -315,7 +316,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
             </button>
 
           {showModelDropdown && (
-            <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+            <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50">
               <div className="p-2">
                 <input
                   type="text"
@@ -378,214 +379,163 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         </div>
       </div>
 
-      {/* Chat and Tools Section */}
-      <div className="p-2 border-b border-gray-200 space-y-2">
-        {/* Direct Chat Option */}
-        <button
-          onClick={() => {
-            setSelectedTool(null);
-            setShowTools(false);
-          }}
-          className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-            selectedTool === null && !showTools
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">💬 Chat</span>
-            {selectedTool === null && !showTools && <span className="text-blue-500">✓</span>}
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Ask anything directly to the AI</p>
-        </button>
-
-        {/* Tools Option */}
-        {!showTools ? (
-          <button
-            onClick={() => setShowTools(true)} 
-            className="w-full text-left p-3 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">🛠️ Tools</span>
-              <span className="text-gray-400">→</span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Grammar Fix, Translate, Summarize, Reply, Fact Check</p>
-          </button>
-        ) : (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-medium text-gray-700">🛠️ Tools</h2>
-              <button
-                onClick={() => setShowTools(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {tools.map((tool) => (
-                <button
-                  key={tool.id}
-                  onClick={() => handleToolSelect(tool)}
-                  className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all text-xs ${
-                    selectedTool?.id === tool.id
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600'
-                  }`}
-                >
-                  <span className="text-lg mb-1">{tool.icon}</span>
-                  <span className="font-medium leading-tight text-center">{tool.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Main Content */}
+      {/* Main Content - ChatGPT Style */}
       <div className="flex-1 flex flex-col">
-        {selectedTool || (!selectedTool && !showTools) ? (
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            {selectedTool && (
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">{selectedTool.name}</h3>
-                  <button
-                    onClick={() => {
-                      setSelectedTool(null);
-                      setShowTools(false);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">{selectedTool.description}</p>
-              </div>
-            )}
-
-            {/* Input Section */}
-            <div className="flex flex-col p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {selectedTool ? 'Input' : 'Message'}
-                </label>
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  placeholder={
-                    selectedTool 
-                      ? `Enter text to ${selectedTool.name.toLowerCase()}... (Ctrl+Enter to submit)`
-                      : "Ask me anything... (Ctrl+Enter to submit)"
-                  }
-                  className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              {/* Action Button */}
-              <button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium py-3 rounded-lg transition-colors"
-              >
-                {isLoading ? 'Processing...' : (selectedTool ? selectedTool.name : 'Send')}
-              </button>
-
-              {/* Output Section */}
-              <div>
+        {/* Response Area */}
+        <div className="flex-1 p-4 overflow-y-auto">
+          <div className="max-w-full">
+            {output ? (
+              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {selectedTool ? 'Output' : 'Response'}
-                  </label>
-                  {output && (
-                    <button
-                      onClick={copyToClipboard}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      Copy
-                    </button>
-                  )}
-                </div>
-                <div className="min-h-[200px] max-h-96 p-3 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      <span className="text-gray-600">Processing...</span>
-                    </div>
-                  ) : output ? (
-                    <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{output}</div>
-                  ) : (
-                    <div className="text-sm text-gray-500">Response will appear here...</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col p-4 space-y-4">
-            {/* Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message
-              </label>
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder="Type your message here... (Ctrl+Enter to submit)"
-                className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              />
-            </div>
-
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium py-3 rounded-lg transition-colors"
-            >
-              {isLoading ? 'Processing...' : 'Send Message'}
-            </button>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Response
-                </label>
-                {output && (
+                  <span className="text-sm font-medium text-gray-700">
+                    {selectedTool ? `${selectedTool.name} Result` : 'AI Response'}
+                  </span>
                   <button
                     onClick={copyToClipboard}
                     className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Copy
                   </button>
-                )}
+                </div>
+                <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+                  {output}
+                </div>
               </div>
-              <div className="min-h-[200px] max-h-96 p-3 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span className="text-gray-600">Processing...</span>
-                  </div>
-                ) : output ? (
-                  <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{output}</div>
-                ) : (
-                  <div className="text-sm text-gray-500">Response will appear here...</div>
-                )}
+            ) : isLoading ? (
+              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-4">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span className="text-gray-600">Processing...</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center text-gray-500 mt-8">
+                <h3 className="text-lg font-medium mb-2">Welcome to BB Chat</h3>
+                <p className="text-sm">Start a conversation or choose a tool to get started</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Input Area - Centered in bottom section */}
+        <div className="border-t border-gray-200 p-8 bg-white flex flex-col justify-center min-h-[200px]">
+          {/* Selected Tool Indicator */}
+          {selectedTool && (
+            <div className="flex items-center justify-between mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">{selectedTool.icon}</span>
+                <span className="text-sm font-medium text-blue-700">{selectedTool.name}</span>
+                <span className="text-xs text-blue-600">• {selectedTool.description}</span>
+              </div>
+              <button
+                onClick={() => setSelectedTool(null)}
+                className="text-blue-400 hover:text-blue-600"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Input Box with Tool Selector */}
+          <div className="relative">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (input.trim()) {
+                    handleSubmit();
+                  }
+                }
+              }}
+              placeholder={
+                selectedTool 
+                  ? `Enter text for ${selectedTool.name.toLowerCase()}... (Press Enter to send)`
+                  : "Type your message here... (Press Enter to send, Shift+Enter for new line)"
+              }
+              className="w-full min-h-[120px] max-h-[300px] p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base leading-relaxed"
+              style={{ fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+              disabled={isLoading}
+            />
+            
+            {/* Tools Button on Left - Outside textarea */}
+            <button
+              onMouseEnter={() => setShowTools(true)}
+              onMouseLeave={() => setShowTools(false)}
+              className="absolute left-3 bottom-3 flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-10"
+              title="Select Tool"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            {/* Tools Dropdown */}
+            {showTools && (
+              <div 
+                className="absolute bottom-12 left-3 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
+                onMouseEnter={() => setShowTools(true)}
+                onMouseLeave={() => setShowTools(false)}
+              >
+                  <div className="p-3">
+                    <div className="text-xs font-semibold text-gray-400 mb-3 px-2">SELECT TOOL</div>
+                    
+                    <button
+                      onClick={() => {
+                        setSelectedTool(null);
+                        setShowTools(false);
+                      }}
+                      className={`w-full text-left px-3 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors ${
+                        !selectedTool ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">💬</span>
+                        <div>
+                          <div className="font-medium">Chat</div>
+                          <div className="text-xs text-gray-500 mt-0.5">Ask anything directly</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {tools.map((tool) => (
+                      <button
+                        key={tool.id}
+                        onClick={() => {
+                          handleToolSelect(tool);
+                          setShowTools(false);
+                        }}
+                        className={`w-full text-left px-3 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors ${
+                          selectedTool?.id === tool.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-lg">{tool.icon}</span>
+                          <div>
+                            <div className="font-medium">{tool.name}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{tool.description}</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            
+            {/* Send Button on Right - Properly Aligned and Sized */}
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading || !input.trim()}
+              className="absolute right-3 bottom-3 flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

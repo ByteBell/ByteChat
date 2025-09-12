@@ -39,17 +39,17 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet }) => {
   };
 
   return (
-    <div className="flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6" style={{ height: '100%', position: 'relative' }}>
+    <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img
-              src={chrome.runtime.getURL("icons/logo_128.png")}
-              alt="GrammerAI"
+              src={chrome.runtime.getURL("icons/ByteBellLogo.png")}
+              alt="BB Chat"
               className="w-16 h-16 rounded-xl shadow-lg"
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Kaali</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to BB Chat</h1>
           <p className="text-gray-600">Enter your OpenRouter API key to get started</p>
         </div>
 
