@@ -238,6 +238,22 @@ function injectSidebar() {
       }
       sendResponse({ success: true });
     }
+    
+    if (request.action === 'openWithText') {
+      console.log('Opening sidebar with text:', request.text);
+      
+      // Store the text and tool selection for the sidebar
+      chrome.storage.local.set({
+        'pending_text': request.text,
+        'pending_tool': request.tool,
+        'pending_is_custom_prompt': request.isCustomPrompt || false,
+        'pending_timestamp': Date.now()
+      });
+      
+      // Show the sidebar
+      showSidebar();
+      sendResponse({ success: true });
+    }
   });
 
   console.log('xAI sidebar injected successfully');

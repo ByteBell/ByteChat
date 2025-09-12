@@ -62,7 +62,58 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
   useEffect(() => {
     loadModels();
+    checkForPendingText();
   }, [apiKey]);
+
+  // Check for text sent from context menu
+  const checkForPendingText = async () => {
+    try {
+      const result = await chrome.storage.local.get([
+        'pending_text', 
+        'pending_tool', 
+        'pending_is_custom_prompt', 
+        'pending_timestamp'
+      ]);
+      
+      if (result.pending_text && result.pending_timestamp) {
+        // Check if the pending text is recent (within 30 seconds)
+        const isRecent = Date.now() - result.pending_timestamp < 30000;
+        
+        if (isRecent) {
+          console.log('[MainInterface] Found pending text:', result.pending_text);
+          
+          // Set the text
+          setInput(result.pending_text);
+          
+          // Handle custom prompt vs tool selection
+          if (result.pending_is_custom_prompt) {
+            // For custom prompt, clear any selected tool and show chat mode
+            setSelectedTool(null);
+            setShowTools(false);
+            console.log('[MainInterface] Set up for custom prompt mode');
+          } else if (result.pending_tool) {
+            // Select the appropriate tool if specified
+            const tool = tools.find(t => t.name === result.pending_tool);
+            if (tool) {
+              setSelectedTool(tool);
+              setShowTools(false);
+              console.log('[MainInterface] Selected tool:', result.pending_tool);
+            }
+          }
+          
+          // Clear the pending data
+          chrome.storage.local.remove([
+            'pending_text', 
+            'pending_tool', 
+            'pending_is_custom_prompt', 
+            'pending_timestamp'
+          ]);
+        }
+      }
+    } catch (error) {
+      console.error('[MainInterface] Failed to check pending text:', error);
+    }
+  };
 
   // Close model dropdown when clicking outside
   useEffect(() => {

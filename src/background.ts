@@ -2,6 +2,131 @@
 import { callLLM, loadStoredSettings } from "./utils";
 console.log("Background.ts loaded")
 
+// Create context menu on extension install/startup
+chrome.runtime.onInstalled.addListener(() => {
+  // Main parent menu
+  chrome.contextMenus.create({
+    id: "xai-tools",
+    title: "xAI Tools",
+    contexts: ["selection"]
+  });
+
+  // Grammar Fix submenu
+  chrome.contextMenus.create({
+    id: "tool-grammar-fix",
+    title: "✏️ Grammar Fix",
+    parentId: "xai-tools",
+    contexts: ["selection"]
+  });
+
+  // Translate submenu
+  chrome.contextMenus.create({
+    id: "tool-translate",
+    title: "🌐 Translate",
+    parentId: "xai-tools",
+    contexts: ["selection"]
+  });
+
+  // Summarize submenu
+  chrome.contextMenus.create({
+    id: "tool-summarize",
+    title: "📝 Summarize",
+    parentId: "xai-tools",
+    contexts: ["selection"]
+  });
+
+  // Reply submenu
+  chrome.contextMenus.create({
+    id: "tool-reply",
+    title: "💬 Reply",
+    parentId: "xai-tools",
+    contexts: ["selection"]
+  });
+
+  // Fact Check submenu
+  chrome.contextMenus.create({
+    id: "tool-fact-check",
+    title: "🔍 Fact Check",
+    parentId: "xai-tools",
+    contexts: ["selection"]
+  });
+
+  // Separator
+  chrome.contextMenus.create({
+    id: "separator-1",
+    type: "separator",
+    parentId: "xai-tools",
+    contexts: ["selection"]
+  });
+
+  // Custom Prompt option
+  chrome.contextMenus.create({
+    id: "custom-prompt",
+    title: "💭 Custom Prompt",
+    parentId: "xai-tools",
+    contexts: ["selection"]
+  });
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (!info.selectionText || !tab?.id) return;
+
+  const menuItemId = info.menuItemId as string;
+  console.log(`Context menu clicked: ${menuItemId} with text:`, info.selectionText);
+
+  let toolName = null;
+  let isCustomPrompt = false;
+
+  // Map menu item IDs to tool names
+  switch (menuItemId) {
+    case 'tool-grammar-fix':
+      toolName = 'Grammar Fix';
+      break;
+    case 'tool-translate':
+      toolName = 'Translate';
+      break;
+    case 'tool-summarize':
+      toolName = 'Summarize';
+      break;
+    case 'tool-reply':
+      toolName = 'Reply';
+      break;
+    case 'tool-fact-check':
+      toolName = 'Fact Check';
+      break;
+    case 'custom-prompt':
+      isCustomPrompt = true;
+      break;
+    default:
+      return; // Unknown menu item
+  }
+
+  // Send the selected text to the extension popup/sidebar
+  try {
+    // First try to send to content script to open sidebar with text
+    await chrome.tabs.sendMessage(tab.id, {
+      action: 'openWithText',
+      text: info.selectionText,
+      tool: toolName,
+      isCustomPrompt: isCustomPrompt
+    });
+  } catch (error) {
+    console.error('Failed to send text to content script:', error);
+    
+    // Fallback: store the text and open popup
+    await chrome.storage.local.set({
+      'pending_text': info.selectionText,
+      'pending_tool': toolName,
+      'pending_is_custom_prompt': isCustomPrompt,
+      'pending_timestamp': Date.now()
+    });
+    
+    // Open the extension popup
+    chrome.action.openPopup();
+  }
+});
+
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
   console.log('Extension icon clicked!', tab);

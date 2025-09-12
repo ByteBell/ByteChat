@@ -38,6 +38,7 @@
     "storage",
     "tabs",
     "identity",
+    "contextMenus",
     "<all_urls>"
   ],
   "optional_host_permissions": [
