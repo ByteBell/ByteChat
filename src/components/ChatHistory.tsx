@@ -4,15 +4,16 @@ import { SessionMessage, MessageContent } from '../types';
 interface ChatHistoryProps {
   messages: SessionMessage[];
   isLoading?: boolean;
+  streamingResponse?: string;
 }
 
-const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false }) => {
+const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, streamingResponse = '' }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages are added
+  // Auto-scroll to bottom when new messages are added or streaming response updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, streamingResponse]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -155,8 +156,27 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false }
         </div>
       ))}
 
+      {/* Streaming Response */}
+      {streamingResponse && (
+        <div className="flex justify-start">
+          <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 text-gray-900 mr-12">
+            <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+              {streamingResponse}
+            </div>
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+              <div className="flex items-center space-x-2 text-xs opacity-70">
+                <div className="flex items-center space-x-1">
+                  <div className="animate-pulse w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Streaming...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading indicator */}
-      {isLoading && (
+      {isLoading && !streamingResponse && (
         <div className="flex justify-start">
           <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 text-gray-900 mr-12">
             <div className="flex items-center space-x-2">

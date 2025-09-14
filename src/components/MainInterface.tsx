@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { OpenRouterModel, fetchOpenRouterModels, refreshModelsCache, getModelPrice, isImageGenerationModel } from '../services/openrouter';
 import { categorizeModels, getAllModelPreferences, getBestModelForCapability, saveModelPreference, type ModelsByCategory } from '../services/modelCategories';
 import { getCachedBalanceInfo, type BalanceInfo } from '../services/balance';
 import { SYSTEM_PROMPTS } from '../constants';
 import { sendChatRequest } from '../services/api';
+import { callLLMStream } from '../utils';
 import { Settings, ModelCapability, MessageContent, ChatSession } from '../types';
 import SessionSelector from './SessionSelector';
 import ChatHistory from './ChatHistory';
@@ -68,6 +69,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentSession, setCurrentSessionState] = useState<ChatSession | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [streamingResponse, setStreamingResponse] = useState('');
+  const streamingResponseRef = useRef('');
   const [loadingModels, setLoadingModels] = useState(true);
   const [balance, setBalance] = useState<BalanceInfo | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -300,16 +303,19 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       return;
     }
 
-    console.log('Starting request with input:', input);
+    console.log('Starting streaming request with input:', input);
     console.log('Selected model:', modelToUse, 'for capability:', capabilityNeeded);
 
     // Add user message to session
     addMessageToCurrentSession('user', input, modelToUse, attachedFiles.length > 0 ? attachedFiles : undefined);
+    const userInput = input; // Store input before clearing
 
     setIsLoading(true);
+    setStreamingResponse(''); // Clear any previous streaming response
+    streamingResponseRef.current = ''; // Clear ref
     setInput(''); // Clear input immediately
     clearAllAttachments(); // Clear attachments immediately
-    
+
     try {
       const settings: Settings = {
         provider: 'openrouter',
@@ -318,9 +324,17 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         temperature: 0.1
       };
 
-      // Prepare multimodal content
-      let textPrompt = input;
-      
+      // Prepare system prompt
+      let systemPrompt = '';
+      if (selectedTool) {
+        systemPrompt = SYSTEM_PROMPTS[selectedTool.id];
+        console.log('Using tool:', selectedTool.name, 'with system prompt');
+      }
+
+      // For now, we'll use the simple streaming function.
+      // If we need multimodal support with streaming, we'll need to extend callLLMStream
+      let textPrompt = userInput;
+
       // If audio is attached and no specific instruction, add transcription request
       if (attachedFiles.some(file => file.type === 'input_audio') && !selectedTool) {
         textPrompt = textPrompt || 'Please transcribe this audio.';
@@ -328,82 +342,48 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           textPrompt += '\n\nPlease also transcribe any audio provided.';
         }
       }
-      
-      const userContent: MessageContent[] = [
-        { type: 'text', text: textPrompt }
-      ];
-      
-      // Add attached files/media to content
-      userContent.push(...attachedFiles);
-      
-      let messages;
-      if (selectedTool) {
-        // Tool-based request with system prompt
-        const systemPrompt = SYSTEM_PROMPTS[selectedTool.id];
-        console.log('Using tool:', selectedTool.name, 'with system prompt');
-        messages = [
-          { role: 'system' as const, content: systemPrompt },
-          { role: 'user' as const, content: userContent }
-        ];
-      } else {
-        // Direct chat request without system prompt
-        console.log('Using direct chat without system prompt');
-        messages = [
-          { role: 'user' as const, content: userContent }
-        ];
-      }
-      
-      console.log('Multimodal content:', userContent);
 
-      // Set max_tokens based on capability
-      let maxTokens: number | undefined = undefined; // No limit for text
-      if (capabilityNeeded === 'image' || capabilityNeeded === 'file' || capabilityNeeded === 'audio') {
-        maxTokens = 100000; // 100k limit for multimodal
-      }
+      console.log('Starting streaming with system prompt:', systemPrompt);
+      console.log('User prompt:', textPrompt);
 
-      // Check if this is an image generation model and set modalities
-      const selectedModel = allModels.find(model => model.id === modelToUse);
-      let modalities: string[] | undefined = undefined;
-      if (selectedModel && isImageGenerationModel(selectedModel)) {
-        modalities = ["image", "text"];
-        console.log('Image generation model detected, adding modalities:', modalities);
-      }
+      // Stream the response
+      await callLLMStream(
+        settings,
+        systemPrompt,
+        textPrompt,
+        (chunk: string) => {
+          console.log('Received chunk:', chunk);
+          // Update both state and ref
+          streamingResponseRef.current += chunk;
+          setStreamingResponse(streamingResponseRef.current);
+        }
+      );
 
-      console.log('Sending request with messages:', messages);
-      console.log('Max tokens:', maxTokens);
-      console.log('Modalities:', modalities);
-      console.log('Attached files being sent:', attachedFiles);
-      console.log('User content being sent:', JSON.stringify(userContent, null, 2));
-      console.log('Selected model for this request:', modelToUse);
-      console.log('Request settings:', settings);
-      const response = await sendChatRequest(messages, settings, maxTokens, modalities);
-      console.log('Full response received:', response);
-      
-      const content = response.choices?.[0]?.message?.content;
-      console.log('Extracted content:', content);
-      
-      if (content) {
-        // Add AI response to session
-        addMessageToCurrentSession('assistant', content, modelToUse);
+      // After streaming is complete, add the full response to session
+      const finalResponse = streamingResponseRef.current;
+      console.log('Streaming completed, final response:', finalResponse);
 
-        // Refresh current session state to show new message
+      if (finalResponse.trim()) {
+        addMessageToCurrentSession('assistant', finalResponse, modelToUse);
         const updatedSession = getCurrentSession();
         if (updatedSession) {
           setCurrentSessionState(updatedSession);
         }
-
-        console.log('Response added to session successfully');
+        console.log('Streaming response added to session successfully');
       } else {
-        console.log('No content in response');
-        // Still add empty response to session for consistency
         addMessageToCurrentSession('assistant', 'No response received', modelToUse);
         const updatedSession = getCurrentSession();
         if (updatedSession) {
           setCurrentSessionState(updatedSession);
         }
       }
+
+      // Clear streaming response after adding to session
+      setStreamingResponse('');
+      streamingResponseRef.current = '';
+
     } catch (error) {
-      console.error('Request failed:', error);
+      console.error('Streaming request failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 
       // Add error message to session
@@ -415,7 +395,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       console.log('Error added to session:', errorMessage);
     } finally {
       setIsLoading(false);
-      console.log('Request completed, loading set to false');
+      console.log('Streaming request completed');
     }
   };
 
@@ -819,6 +799,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         <ChatHistory
           messages={currentSession?.messages || []}
           isLoading={isLoading}
+          streamingResponse={streamingResponse}
         />
 
         {/* Input Area - Centered in bottom section */}
