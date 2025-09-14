@@ -4,7 +4,16 @@ import { categorizeModels, getAllModelPreferences, getBestModelForCapability, sa
 import { getCachedBalanceInfo, type BalanceInfo } from '../services/balance';
 import { SYSTEM_PROMPTS } from '../constants';
 import { sendChatRequest } from '../services/api';
-import { Settings, ModelCapability, MessageContent } from '../types';
+import { Settings, ModelCapability, MessageContent, ChatSession } from '../types';
+import SessionSelector from './SessionSelector';
+import ChatHistory from './ChatHistory';
+import {
+  handleAppRefresh,
+  getOrCreateCurrentSession,
+  addMessageToCurrentSession,
+  getCurrentSession,
+  setCurrentSession
+} from '../utils/sessionManager';
 
 interface MainInterfaceProps {
   apiKey: string;
@@ -57,6 +66,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentSession, setCurrentSessionState] = useState<ChatSession | null>(null);
   const [loadingModels, setLoadingModels] = useState(true);
   const [balance, setBalance] = useState<BalanceInfo | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -87,7 +97,15 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     loadModels();
     checkForPendingText();
     loadBalance();
+    initializeSession();
   }, [apiKey]);
+
+  // Initialize session on app start
+  const initializeSession = () => {
+    // Create a new session on app refresh as per requirements
+    const session = handleAppRefresh();
+    setCurrentSessionState(session);
+  };
 
   // Close audio menu when clicking outside
   useEffect(() => {
@@ -222,8 +240,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
   const handleSubmit = async () => {
     if (!input.trim()) {
-      setOutput('Please enter some text before submitting.');
       return;
+    }
+
+    // Ensure we have a current session
+    const session = getOrCreateCurrentSession(input.trim());
+    if (!currentSession || currentSession.id !== session.id) {
+      setCurrentSessionState(session);
     }
     
     // Determine which model to use based on attached content
@@ -255,9 +278,14 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
     console.log('Starting request with input:', input);
     console.log('Selected model:', modelToUse, 'for capability:', capabilityNeeded);
-    
+
+    // Add user message to session
+    addMessageToCurrentSession('user', input, modelToUse, attachedFiles.length > 0 ? attachedFiles : undefined);
+
     setIsLoading(true);
-    setOutput(''); // Clear previous output
+    const userInput = input;
+    setInput(''); // Clear input immediately
+    clearAllAttachments(); // Clear attachments immediately
     
     try {
       const settings: Settings = {
@@ -332,26 +360,52 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       console.log('Extracted content:', content);
       
       if (content) {
-        setOutput(content);
-        clearAllAttachments(); // Clear attachments after successful submission
-        console.log('Output set successfully');
+        // Add AI response to session
+        addMessageToCurrentSession('assistant', content, modelToUse);
+
+        // Refresh current session state to show new message
+        const updatedSession = getCurrentSession();
+        if (updatedSession) {
+          setCurrentSessionState(updatedSession);
+        }
+
+        console.log('Response added to session successfully');
       } else {
-        setOutput('No response content received');
         console.log('No content in response');
+        // Still add empty response to session for consistency
+        addMessageToCurrentSession('assistant', 'No response received', modelToUse);
+        const updatedSession = getCurrentSession();
+        if (updatedSession) {
+          setCurrentSessionState(updatedSession);
+        }
       }
     } catch (error) {
       console.error('Request failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setOutput(`Error: ${errorMessage}`);
-      console.log('Error output set:', errorMessage);
+
+      // Add error message to session
+      addMessageToCurrentSession('assistant', `Error: ${errorMessage}`, modelToUse);
+      const updatedSession = getCurrentSession();
+      if (updatedSession) {
+        setCurrentSessionState(updatedSession);
+      }
+      console.log('Error added to session:', errorMessage);
     } finally {
       setIsLoading(false);
       console.log('Request completed, loading set to false');
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(output);
+  // Handle session change from dropdown
+  const handleSessionChange = (session: ChatSession) => {
+    setCurrentSession(session.id);
+    setCurrentSessionState(session);
+
+    // Clear current input and output when switching sessions
+    setInput('');
+    setOutput('');
+    setSelectedTool(null);
+    clearAllAttachments();
   };
 
   // Voice recording functions with improved Chrome extension support
@@ -713,48 +767,31 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
             </div>
           </div>
         </div>
+
+        {/* Session Selector Row */}
+        <div className="px-2 sm:px-3 pb-2">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-gray-600 flex-shrink-0">Session:</span>
+            <div className="flex-1">
+              <SessionSelector
+                currentSession={currentSession}
+                onSessionChange={handleSessionChange}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Content - ChatGPT Style */}
       <div className="flex-1 flex flex-col">
-        {/* Response Area */}
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div className="max-w-full">
-            {output ? (
-              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {selectedTool ? `${selectedTool.name} Result` : 'AI Response'}
-                  </span>
-                  <button
-                    onClick={copyToClipboard}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
-                  {output}
-                </div>
-              </div>
-            ) : isLoading ? (
-              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span className="text-gray-600">Processing...</span>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 mt-8">
-                <h3 className="text-lg font-medium mb-2">Welcome to Byte Chat</h3>
-                <p className="text-sm">Start a conversation or choose a tool to get started</p>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Chat History Area */}
+        <ChatHistory
+          messages={currentSession?.messages || []}
+          isLoading={isLoading}
+        />
 
         {/* Input Area - Centered in bottom section */}
-        <div className="border-t border-gray-200 p-3 sm:p-4 bg-white flex flex-col justify-center min-h-[140px] sm:min-h-[160px] flex-shrink-0">
+        <div className="border-t border-gray-200 p-3 sm:p-4 bg-white flex flex-col justify-center min-h-[120px] sm:min-h-[140px] flex-shrink-0">
           {/* Selected Tool Indicator */}
           {selectedTool && (
             <div className="flex items-center justify-between mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -893,7 +930,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  if (input.trim()) {
+                  if (input.trim() && !isLoading) {
                     handleSubmit();
                   }
                 }
@@ -903,7 +940,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                   ? `Enter text for ${selectedTool.name.toLowerCase()}... (Press Enter to send)`
                   : "Type your message here... (Press Enter to send, Shift+Enter for new line)"
               }
-              className="w-full min-h-[100px] max-h-[240px] px-1 pt-2 pb-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm leading-relaxed overflow-y-auto"
+              className="w-full min-h-[80px] max-h-[200px] px-1 pt-2 pb-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm leading-relaxed overflow-y-auto"
               style={{
                 fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}
@@ -1128,10 +1165,15 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                 onClick={handleSubmit}
                 disabled={isLoading || !input.trim()}
                 className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
+                title={isLoading ? "Processing..." : "Send message"}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
               </button>
             </div>
 

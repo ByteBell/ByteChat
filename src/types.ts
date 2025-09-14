@@ -56,3 +56,27 @@ export interface BalanceResponse {
     credits: number;
   };
 }
+
+// Session Management Types
+export interface ChatSession {
+  id: string;
+  name: string;
+  messages: SessionMessage[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SessionMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string | MessageContent[];
+  timestamp: number;
+  model?: string;
+  attachments?: MessageContent[];
+}
+
+export interface SessionStorage {
+  sessions: ChatSession[];
+  currentSessionId: string | null;
+  lastSessionId: string | null;
+}
