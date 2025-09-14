@@ -42,7 +42,10 @@
     "identity",
     "contextMenus",
     "sidePanel",
-    "<all_urls>"
+    "<all_urls>",
+    "tabCapture",
+    "desktopCapture",
+    "microphone"
   ],
   "optional_host_permissions": [
   ],

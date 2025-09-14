@@ -9,6 +9,8 @@ export type OpenRouterArgs = {
   model: string;
   messages: ChatMessage[];
   metadata?: Record<string, any>;
+  max_tokens?: number;
+  modalities?: string[];
 };
 
 export type OpenRouterChoice = {
@@ -52,7 +54,12 @@ const OR_API = "https://openrouter.ai/api/v1";
 
 /** Chat completion */
 export async function chatOpenRouter(args: OpenRouterArgs): Promise<OpenRouterResponse> {
-  const { apiKey, model, messages, metadata } = args;
+  const { apiKey, model, messages, metadata, max_tokens, modalities } = args;
+
+  const requestBody: any = { model, messages };
+  if (metadata) requestBody.metadata = metadata;
+  if (max_tokens) requestBody.max_tokens = max_tokens;
+  if (modalities) requestBody.modalities = modalities;
 
   const res = await fetch(`${OR_API}/chat/completions`, {
     method: "POST",
@@ -62,7 +69,7 @@ export async function chatOpenRouter(args: OpenRouterArgs): Promise<OpenRouterRe
       "HTTP-Referer": "https://grammerai.local",
       "X-Title": "GrammerAI Extension",
     },
-    body: JSON.stringify({ model, messages, metadata }),
+    body: JSON.stringify(requestBody),
   });
 
   let data: any = null;
@@ -305,6 +312,12 @@ export function getModelFeatures(model: OpenRouterModel): string[] {
   }
   
   return features;
+}
+
+/** Check if model supports image generation */
+export function isImageGenerationModel(model: OpenRouterModel): boolean {
+  const outputModalities = model.architecture?.output_modalities || [];
+  return outputModalities.includes('image');
 }
 
 /** Get model capabilities */

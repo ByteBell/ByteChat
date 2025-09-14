@@ -31,10 +31,8 @@ export interface ImageContent {
 
 export interface FileContent {
   type: 'file';
-  file: {
-    data: string;
-    format: string;
-  };
+  filename: string;
+  file_data: string;
 }
 
 export interface AudioContent {

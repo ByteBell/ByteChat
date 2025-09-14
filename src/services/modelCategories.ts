@@ -33,6 +33,12 @@ export function categorizeModels(models: OpenRouterModel[]): ModelsByCategory {
     
     // Add to each category the model supports
     capabilities.forEach(capability => {
+      // Skip GPT-4o models for audio as they don't support it properly
+      if (capability === 'audio' && model.id.toLowerCase().includes('gpt-4o')) {
+        console.log(`[ModelCategories] Excluding ${model.id} from audio category (GPT-4o models don't support audio)`);
+        return;
+      }
+      
       if (categories[capability]) {
         categories[capability].push(model);
       }

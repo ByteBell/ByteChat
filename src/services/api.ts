@@ -8,7 +8,12 @@ export type { ChatMessage };
  * Unified chat request across providers.
  * Must return an object with `.choices[0].message.content`.
  */
-export async function sendChatRequest(messages: ChatMessage[], settings: Settings): Promise<any> {
+export async function sendChatRequest(
+  messages: ChatMessage[], 
+  settings: Settings, 
+  maxTokens?: number,
+  modalities?: string[]
+): Promise<any> {
   const provider = settings.provider || "openai";
   console.log("[Chat] Provider:", provider, "Model:", settings.model);
 
@@ -18,6 +23,8 @@ export async function sendChatRequest(messages: ChatMessage[], settings: Setting
       apiKey: settings.apiKey,
       model: settings.model || "openai/gpt-4o-mini",
       messages,
+      max_tokens: maxTokens,
+      modalities,
     });
     console.log("[Chat] OpenRouter normalized response:", resp);
     return resp;
