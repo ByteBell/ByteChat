@@ -176,18 +176,27 @@ export async function fetchAllModelsFromAPI(apiKey: string): Promise<OpenRouterM
   return sortAndFilterTopModels(allModels);
 }
 
-/** Sort models by cost (highest first) and show all models */
+/** Sort models by cost (highest first) and filter out o1 models */
 function sortAndFilterTopModels(models: OpenRouterModel[]): OpenRouterModel[] {
+  // Filter out o1 models
+  const filteredModels = models.filter(model => {
+    const modelId = model.id.toLowerCase();
+    const modelName = (model.name || '').toLowerCase();
+
+    // Remove models with "o1" in their ID or name
+    return !modelId.includes('o1') && !modelName.includes('o1');
+  });
+
   // Sort by total cost (prompt + completion price) - highest first
-  return models.sort((a, b) => {
+  return filteredModels.sort((a, b) => {
     const aPricePrompt = parseFloat(a.pricing?.prompt || "0");
     const aPriceCompletion = parseFloat(a.pricing?.completion || "0");
     const aTotalPrice = aPricePrompt + aPriceCompletion;
-    
+
     const bPricePrompt = parseFloat(b.pricing?.prompt || "0");
     const bPriceCompletion = parseFloat(b.pricing?.completion || "0");
     const bTotalPrice = bPricePrompt + bPriceCompletion;
-    
+
     // Sort by highest cost first
     return bTotalPrice - aTotalPrice;
   });

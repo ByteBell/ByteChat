@@ -66,6 +66,23 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const [playingAudioIndex, setPlayingAudioIndex] = useState<number | null>(null);
   const [recordingStatus, setRecordingStatus] = useState<string>('');
 
+  // Auto-resize textarea based on content
+  const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target;
+    setInput(textarea.value);
+
+    // Reset height to calculate scrollHeight properly
+    textarea.style.height = '100px';
+
+    // Calculate new height based on content (max 10 lines = ~240px)
+    const lineHeight = 24; // ~1.5rem line height
+    const minHeight = 100;
+    const maxHeight = lineHeight * 10; // 10 lines
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+
+    textarea.style.height = `${newHeight}px`;
+  };
+
   useEffect(() => {
     loadModels();
     checkForPendingText();
@@ -566,34 +583,34 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white min-w-0 max-w-full">
       {/* Header */}
-      <div className="p-3 border-b border-gray-200">
+      <div className="p-2 sm:p-3 border-b border-gray-200 flex-shrink-0">
         {/* Logo and Title Row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <img
               src={chrome.runtime.getURL("icons/ByteBellLogo.png")}
               alt="Byte Chat"
-              className="w-10 h-10 rounded-lg shadow-lg"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg shadow-lg flex-shrink-0"
             />
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Byte Chat</h1>
-              <p className="text-xs text-gray-500">All-purpose context copilot for independent users</p>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-lg font-bold text-gray-900 truncate">Byte Chat</h1>
+              <p className="text-xs text-gray-500 truncate hidden sm:block">All-purpose context copilot for independent users</p>
             </div>
           </div>
           
           {/* Balance Display */}
           {balance && (
-            <div className="space-y-1">
-              <div className={`text-sm font-medium ${
-                balance.color === 'red' ? 'text-red-500' : 
-                balance.color === 'yellow' ? 'text-yellow-600' : 
+            <div className="space-y-1 flex-shrink-0 min-w-0">
+              <div className={`text-xs sm:text-sm font-medium truncate ${
+                balance.color === 'red' ? 'text-red-500' :
+                balance.color === 'yellow' ? 'text-yellow-600' :
                 'text-green-600'
               }`}>
                 💰 {balance.display}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 truncate">
                 {balance.usageDisplay}
               </div>
               {balance.isFreeAccount && (
@@ -605,8 +622,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           )}
         </div>
         
-        {/* 4 Model Selectors - Inline Layout */}
-        <div className="space-y-3">
+        {/* 4 Model Selectors - Responsive Grid Layout */}
+        <div className="space-y-2">
           {/* Refresh Button */}
           <div className="flex justify-end">
             <button
@@ -621,76 +638,79 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
             </button>
           </div>
 
-          {/* Text Model Selector */}
-          <div className="flex items-center space-x-3">
-            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">Text</label>
-            <select
-              value={selectedModels.text}
-              onChange={(e) => handleModelChange('text', e.target.value)}
-              disabled={loadingModels}
-              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="">Select text model</option>
-              {categorizedModels.text.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name || model.id} - {getModelPrice(model)}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Model Selectors - Responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+            {/* Text Model Selector */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">Text</label>
+              <select
+                value={selectedModels.text}
+                onChange={(e) => handleModelChange('text', e.target.value)}
+                disabled={loadingModels}
+                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                <option value="">Select text model</option>
+                {categorizedModels.text.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name || model.id} - {getModelPrice(model)}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Image Model Selector */}
-          <div className="flex items-center space-x-3">
-            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">Image</label>
-            <select
-              value={selectedModels.image}
-              onChange={(e) => handleModelChange('image', e.target.value)}
-              disabled={loadingModels}
-              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="">Select image model</option>
-              {categorizedModels.image.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name || model.id} - {getModelPrice(model)}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Image Model Selector */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">Image</label>
+              <select
+                value={selectedModels.image}
+                onChange={(e) => handleModelChange('image', e.target.value)}
+                disabled={loadingModels}
+                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                <option value="">Select image model</option>
+                {categorizedModels.image.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name || model.id} - {getModelPrice(model)}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* File Model Selector */}
-          <div className="flex items-center space-x-3">
-            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">File</label>
-            <select
-              value={selectedModels.file}
-              onChange={(e) => handleModelChange('file', e.target.value)}
-              disabled={loadingModels}
-              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="">Select file model</option>
-              {categorizedModels.file.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name || model.id} - {getModelPrice(model)}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* File Model Selector */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">File</label>
+              <select
+                value={selectedModels.file}
+                onChange={(e) => handleModelChange('file', e.target.value)}
+                disabled={loadingModels}
+                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                <option value="">Select file model</option>
+                {categorizedModels.file.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name || model.id} - {getModelPrice(model)}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Audio Model Selector */}
-          <div className="flex items-center space-x-3">
-            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">Audio</label>
-            <select
-              value={selectedModels.audio}
-              onChange={(e) => handleModelChange('audio', e.target.value)}
-              disabled={loadingModels}
-              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="">Select audio model</option>
-              {categorizedModels.audio.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name || model.id} - {getModelPrice(model)}
-                </option>
-              ))}
-            </select>
+            {/* Audio Model Selector */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">Audio</label>
+              <select
+                value={selectedModels.audio}
+                onChange={(e) => handleModelChange('audio', e.target.value)}
+                disabled={loadingModels}
+                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                <option value="">Select audio model</option>
+                {categorizedModels.audio.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name || model.id} - {getModelPrice(model)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -734,7 +754,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         </div>
 
         {/* Input Area - Centered in bottom section */}
-        <div className="border-t border-gray-200 p-4 sm:p-8 bg-white flex flex-col justify-center min-h-[160px] sm:min-h-[200px]">
+        <div className="border-t border-gray-200 p-3 sm:p-4 bg-white flex flex-col justify-center min-h-[140px] sm:min-h-[160px] flex-shrink-0">
           {/* Selected Tool Indicator */}
           {selectedTool && (
             <div className="flex items-center justify-between mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -869,7 +889,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           <div className="relative">
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleTextareaResize}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -879,38 +899,252 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                 }
               }}
               placeholder={
-                selectedTool 
+                selectedTool
                   ? `Enter text for ${selectedTool.name.toLowerCase()}... (Press Enter to send)`
                   : "Type your message here... (Press Enter to send, Shift+Enter for new line)"
               }
-              className="w-full min-h-[100px] sm:min-h-[120px] max-h-[200px] sm:max-h-[300px] p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base leading-relaxed"
-              style={{ fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+              className="w-full min-h-[100px] max-h-[240px] px-1 pt-2 pb-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm leading-relaxed overflow-y-auto"
+              style={{
+                fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              }}
               disabled={isLoading}
             />
-            
-            {/* Tools Button on Left - Outside textarea */}
-            <button
-              onMouseEnter={() => setShowTools(true)}
-              onMouseLeave={() => setShowTools(false)}
-              className="absolute left-3 bottom-3 flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-10"
-              title="Select Tool"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
+
+            {/* Action Buttons Container - Responsive Layout */}
+            <div className="absolute inset-x-0 bottom-2 sm:bottom-3 flex items-center justify-between px-2 sm:px-3">
+              {/* Left Side Icons */}
+              <div className="flex items-center space-x-0.5 sm:space-x-1 overflow-x-auto">
+                {/* Tools Button */}
+                <button
+                  onMouseEnter={() => setShowTools(true)}
+                  onMouseLeave={() => setShowTools(false)}
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-10 flex-shrink-0"
+                  title="Select Tool"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+
+                {/* Image Upload */}
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const content = e.target?.result as string;
+                          console.log('Image file:', file.name, 'Size:', file.size);
+
+                          const imageContent: MessageContent = {
+                            type: 'image_url',
+                            image_url: {
+                              url: content
+                            }
+                          };
+
+                          addFileAttachment(imageContent);
+                          console.log('Image attached for multimodal request');
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                  title="Upload Image (JPG, PNG, GIF)"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </button>
+
+                {/* Excel Upload */}
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.xlsx,.xls,.csv';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const arrayBuffer = e.target?.result as ArrayBuffer;
+                          const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
+                          console.log('Excel file:', file.name, 'Size:', file.size);
+
+                          const fileContent: MessageContent = {
+                            type: 'file',
+                            filename: file.name,
+                            file_data: base64
+                          };
+
+                          addFileAttachment(fileContent);
+                          console.log('Excel/CSV attached for multimodal request');
+                        };
+                        reader.readAsArrayBuffer(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                  title="Upload Excel/CSV Spreadsheet"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+
+                {/* PDF Upload */}
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.pdf';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const arrayBuffer = e.target?.result as ArrayBuffer;
+                          const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
+                          console.log('PDF file:', file.name, 'Size:', file.size);
+
+                          const fileContent: MessageContent = {
+                            type: 'file',
+                            filename: file.name,
+                            file_data: base64
+                          };
+
+                          addFileAttachment(fileContent);
+                          console.log('PDF attached for multimodal request');
+                        };
+                        reader.readAsArrayBuffer(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                  title="Upload PDF Document"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+
+                {/* Word Upload */}
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.docx,.doc';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const arrayBuffer = e.target?.result as ArrayBuffer;
+                          const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
+                          console.log('Word file:', file.name, 'Size:', file.size);
+
+                          const fileContent: MessageContent = {
+                            type: 'file',
+                            filename: file.name,
+                            file_data: base64
+                          };
+
+                          addFileAttachment(fileContent);
+                          console.log('Word document attached for multimodal request');
+                        };
+                        reader.readAsArrayBuffer(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                  title="Upload Word Document"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+
+                {/* Voice Recording Button with Dropdown */}
+                <div className="relative audio-menu-container">
+                  {isRecording ? (
+                    // Stop Recording Button
+                    <button
+                      onClick={toggleRecording}
+                      className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-red-500 text-white animate-pulse rounded-lg transition-colors z-10 flex-shrink-0"
+                      title="Click to Stop Recording"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 6h12v12H6z"/>
+                      </svg>
+                    </button>
+                  ) : (
+                    // Audio Options Button
+                    <button
+                      onClick={() => setShowAudioMenu(!showAudioMenu)}
+                      className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                      title="Audio Options"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Audio Options Dropdown */}
+                  {showAudioMenu && !isRecording && (
+                    <div className="absolute bottom-10 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[160px]">
+                      <button
+                        onClick={handleAudioRecord}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 rounded-t-lg"
+                      >
+                        <span>🎙️</span>
+                        <span className="text-sm">Record Audio</span>
+                      </button>
+                      <button
+                        onClick={handleAudioUpload}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 rounded-b-lg"
+                      >
+                        <span>📁</span>
+                        <span className="text-sm">Upload Audio</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Side - Send Button */}
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading || !input.trim()}
+                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
 
             {/* Tools Dropdown */}
             {showTools && (
-              <div 
+              <div
                 className="absolute bottom-12 left-3 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
                 onMouseEnter={() => setShowTools(true)}
                 onMouseLeave={() => setShowTools(false)}
               >
                   <div className="p-3">
                     <div className="text-xs font-semibold text-gray-400 mb-3 px-2">SELECT TOOL</div>
-                    
+
                     <button
                       onClick={() => {
                         setSelectedTool(null);
@@ -952,213 +1186,6 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                   </div>
                 </div>
               )}
-            
-            {/* File Upload Buttons - Properly Spaced */}
-            {/* Image Upload */}
-            <button
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                      const content = e.target?.result as string;
-                      console.log('Image file:', file.name, 'Size:', file.size);
-                      
-                      const imageContent: MessageContent = {
-                        type: 'image_url',
-                        image_url: {
-                          url: content
-                        }
-                      };
-                      
-                      addFileAttachment(imageContent);
-                      console.log('Image attached for multimodal request');
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                };
-                input.click();
-              }}
-              className="absolute left-14 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
-              title="Upload Image (JPG, PNG, GIF)"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </button>
-
-            {/* Excel Upload */}
-            <button
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.xlsx,.xls,.csv';
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                      const arrayBuffer = e.target?.result as ArrayBuffer;
-                      const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
-                      console.log('Excel file:', file.name, 'Size:', file.size);
-                      
-                      const fileContent: MessageContent = {
-                        type: 'file',
-                        filename: file.name,
-                        file_data: base64
-                      };
-                      
-                      addFileAttachment(fileContent);
-                      console.log('Excel/CSV attached for multimodal request');
-                    };
-                    reader.readAsArrayBuffer(file);
-                  }
-                };
-                input.click();
-              }}
-              className="absolute left-24 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
-              title="Upload Excel/CSV Spreadsheet"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </button>
-
-            {/* PDF Upload */}
-            <button
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf';
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                      const arrayBuffer = e.target?.result as ArrayBuffer;
-                      const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
-                      console.log('PDF file:', file.name, 'Size:', file.size);
-                      
-                      const fileContent: MessageContent = {
-                        type: 'file',
-                        filename: file.name,
-                        file_data: base64
-                      };
-                      
-                      addFileAttachment(fileContent);
-                      console.log('PDF attached for multimodal request');
-                    };
-                    reader.readAsArrayBuffer(file);
-                  }
-                };
-                input.click();
-              }}
-              className="absolute left-34 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
-              title="Upload PDF Document"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </button>
-
-            {/* Word Upload */}
-            <button
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.docx,.doc';
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                      const arrayBuffer = e.target?.result as ArrayBuffer;
-                      const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
-                      console.log('Word file:', file.name, 'Size:', file.size);
-                      
-                      const fileContent: MessageContent = {
-                        type: 'file',
-                        filename: file.name,
-                        file_data: base64
-                      };
-                      
-                      addFileAttachment(fileContent);
-                      console.log('Word document attached for multimodal request');
-                    };
-                    reader.readAsArrayBuffer(file);
-                  }
-                };
-                input.click();
-              }}
-              className="absolute left-44 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
-              title="Upload Word Document"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </button>
-
-            {/* Voice Recording Button with Dropdown */}
-            <div className="relative audio-menu-container">
-              {isRecording ? (
-                // Stop Recording Button
-                <button
-                  onClick={toggleRecording}
-                  className="absolute left-54 bottom-3 flex items-center justify-center w-8 h-8 bg-red-500 text-white animate-pulse rounded-lg transition-colors z-10"
-                  title="Click to Stop Recording"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 6h12v12H6z"/>
-                  </svg>
-                </button>
-              ) : (
-                // Audio Options Button
-                <button
-                  onClick={() => setShowAudioMenu(!showAudioMenu)}
-                  className="absolute left-54 bottom-3 flex items-center justify-center w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10"
-                  title="Audio Options"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Audio Options Dropdown */}
-              {showAudioMenu && !isRecording && (
-                <div className="absolute left-54 bottom-12 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[160px]">
-                  <button
-                    onClick={handleAudioRecord}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 rounded-t-lg"
-                  >
-                    <span>🎙️</span>
-                    <span className="text-sm">Record Audio</span>
-                  </button>
-                  <button
-                    onClick={handleAudioUpload}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 rounded-b-lg"
-                  >
-                    <span>📁</span>
-                    <span className="text-sm">Upload Audio</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Send Button on Right - Same size as tool icon */}
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading || !input.trim()}
-              className="absolute right-3 bottom-3 flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </button>
           </div>
         </div>
       </div>
