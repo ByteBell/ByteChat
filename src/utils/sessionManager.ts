@@ -144,10 +144,12 @@ export function deleteSession(sessionId: string): void {
   saveAllSessions(storage);
 }
 
-// Get all sessions sorted by updatedAt
+// Get all sessions sorted by updatedAt - only return sessions with messages
 export function getAllSessions(): ChatSession[] {
   const storage = loadAllSessions();
-  return storage.sessions.sort((a, b) => b.updatedAt - a.updatedAt);
+  return storage.sessions
+    .filter(session => session.messages.length > 0) // Only sessions with messages
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 // Clear all sessions
@@ -173,10 +175,7 @@ export function getOrCreateCurrentSession(firstMessage?: string): ChatSession {
 
 // Create new session on app refresh/restart
 export function handleAppRefresh(): ChatSession {
-  const storage = loadAllSessions();
-
   // Always create new session on refresh as per requirements
   const newSession = createNewSession();
-
   return newSession;
 }

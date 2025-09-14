@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { OpenRouterModel, fetchOpenRouterModels, refreshModelsCache, getModelPrice, getModelContextLength, getModelFeatures, isImageGenerationModel } from '../services/openrouter';
+import { OpenRouterModel, fetchOpenRouterModels, refreshModelsCache, getModelPrice, isImageGenerationModel } from '../services/openrouter';
 import { categorizeModels, getAllModelPreferences, getBestModelForCapability, saveModelPreference, type ModelsByCategory } from '../services/modelCategories';
 import { getCachedBalanceInfo, type BalanceInfo } from '../services/balance';
 import { SYSTEM_PROMPTS } from '../constants';
@@ -12,7 +12,8 @@ import {
   getOrCreateCurrentSession,
   addMessageToCurrentSession,
   getCurrentSession,
-  setCurrentSession
+  setCurrentSession,
+  getAllSessions
 } from '../utils/sessionManager';
 
 interface MainInterfaceProps {
@@ -64,9 +65,9 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [showTools, setShowTools] = useState(false);
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentSession, setCurrentSessionState] = useState<ChatSession | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [loadingModels, setLoadingModels] = useState(true);
   const [balance, setBalance] = useState<BalanceInfo | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -102,9 +103,14 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
   // Initialize session on app start
   const initializeSession = () => {
-    // Create a new session on app refresh as per requirements
-    const session = handleAppRefresh();
-    setCurrentSessionState(session);
+    // Don't create a session immediately - wait until user sends first message
+    // Just check if there are existing sessions to load
+    const sessions = getAllSessions();
+    if (sessions.length > 0) {
+      // Load the most recent session
+      setCurrentSessionState(sessions[0]);
+    }
+    // If no sessions exist, currentSession will be null until first message
   };
 
   // Close audio menu when clicking outside
@@ -185,20 +191,34 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       const categorized = categorizeModels(fetchedModels);
       setCategorizedModels(categorized);
       
-      // Load saved model preferences
-      const preferences = await getAllModelPreferences();
+      // Set Gemini 2.5 Flash as default for all model types
       const newSelectedModels: Record<ModelCapability, string> = {
         text: '',
         image: '',
         file: '',
         audio: ''
       };
-      
-      // Set models for each capability
+
+      // Try to find Gemini 2.5 Flash in each category, otherwise use the best available
       for (const capability of (['text', 'image', 'file', 'audio'] as ModelCapability[])) {
-        const bestModel = await getBestModelForCapability(capability, categorized);
-        if (bestModel) {
-          newSelectedModels[capability] = bestModel;
+        const modelsInCategory = categorized[capability];
+
+        // First try to find Gemini 2.5 Flash
+        const geminiModel = modelsInCategory.find(model =>
+          model.id.toLowerCase().includes('gemini-2.0-flash') ||
+          model.id.toLowerCase().includes('google/gemini-2.0-flash') ||
+          model.id.toLowerCase().includes('gemini-pro-vision') ||
+          model.id.toLowerCase().includes('google/gemini-pro-vision')
+        );
+
+        if (geminiModel) {
+          newSelectedModels[capability] = geminiModel.id;
+        } else {
+          // Fallback to best available model
+          const bestModel = await getBestModelForCapability(capability, categorized);
+          if (bestModel) {
+            newSelectedModels[capability] = bestModel;
+          }
         }
       }
       
@@ -234,7 +254,6 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const handleToolSelect = (tool: Tool) => {
     setSelectedTool(tool);
     setShowTools(false);
-    setOutput('');
     setInput('');
   };
 
@@ -248,11 +267,11 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     if (!currentSession || currentSession.id !== session.id) {
       setCurrentSessionState(session);
     }
-    
+
     // Determine which model to use based on attached content
     let modelToUse = '';
     let capabilityNeeded: ModelCapability = 'text';
-    
+
     if (attachedFiles.some(file => file.type === 'image_url')) {
       capabilityNeeded = 'image';
       modelToUse = selectedModels.image;
@@ -266,12 +285,17 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       capabilityNeeded = 'text';
       modelToUse = selectedModels.text;
     }
-    
+
     if (!modelToUse) {
-      if (capabilityNeeded === 'audio') {
-        setOutput(`Please select an audio model that supports transcription (e.g., Whisper models) before submitting audio.`);
-      } else {
-        setOutput(`Please select a ${capabilityNeeded} model before submitting.`);
+      // Add an error message to the chat instead of setting output
+      const errorMessage = capabilityNeeded === 'audio'
+        ? 'Please select an audio model that supports transcription (e.g., Whisper models) before submitting audio.'
+        : `Please select a ${capabilityNeeded} model before submitting.`;
+
+      addMessageToCurrentSession('assistant', errorMessage, 'system');
+      const updatedSession = getCurrentSession();
+      if (updatedSession) {
+        setCurrentSessionState(updatedSession);
       }
       return;
     }
@@ -283,7 +307,6 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     addMessageToCurrentSession('user', input, modelToUse, attachedFiles.length > 0 ? attachedFiles : undefined);
 
     setIsLoading(true);
-    const userInput = input;
     setInput(''); // Clear input immediately
     clearAllAttachments(); // Clear attachments immediately
     
@@ -401,9 +424,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     setCurrentSession(session.id);
     setCurrentSessionState(session);
 
-    // Clear current input and output when switching sessions
+    // Clear current input when switching sessions
     setInput('');
-    setOutput('');
     setSelectedTool(null);
     clearAllAttachments();
   };
@@ -676,10 +698,10 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           )}
         </div>
         
-        {/* 4 Model Selectors - Responsive Grid Layout */}
+        {/* Model Selectors - Simplified Layout */}
         <div className="space-y-2">
-          {/* Refresh Button */}
-          <div className="flex justify-end">
+          {/* Header with Refresh and Advanced Toggle */}
+          <div className="flex justify-between items-center">
             <button
               onClick={handleRefreshModels}
               disabled={loadingModels}
@@ -690,13 +712,20 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
+
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-xs font-medium text-blue-600 hover:text-blue-700 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+            >
+              {showAdvanced ? 'Simple' : 'Advanced'}
+            </button>
           </div>
 
-          {/* Model Selectors - Responsive Grid */}
+          {/* Always Visible: Text Model and Session */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
             {/* Text Model Selector */}
             <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">Text</label>
+              <label className="text-xs font-medium text-gray-600 w-12 sm:w-16 flex-shrink-0">Text</label>
               <select
                 value={selectedModels.text}
                 onChange={(e) => handleModelChange('text', e.target.value)}
@@ -712,74 +741,76 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
               </select>
             </div>
 
-            {/* Image Model Selector */}
+            {/* Session Selector */}
             <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">Image</label>
-              <select
-                value={selectedModels.image}
-                onChange={(e) => handleModelChange('image', e.target.value)}
-                disabled={loadingModels}
-                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                <option value="">Select image model</option>
-                {categorizedModels.image.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name || model.id} - {getModelPrice(model)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* File Model Selector */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">File</label>
-              <select
-                value={selectedModels.file}
-                onChange={(e) => handleModelChange('file', e.target.value)}
-                disabled={loadingModels}
-                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                <option value="">Select file model</option>
-                {categorizedModels.file.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name || model.id} - {getModelPrice(model)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Audio Model Selector */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <label className="text-xs font-medium text-gray-600 w-8 sm:w-10 flex-shrink-0">Audio</label>
-              <select
-                value={selectedModels.audio}
-                onChange={(e) => handleModelChange('audio', e.target.value)}
-                disabled={loadingModels}
-                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                <option value="">Select audio model</option>
-                {categorizedModels.audio.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name || model.id} - {getModelPrice(model)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Session Selector Row */}
-        <div className="px-2 sm:px-3 pb-2">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-gray-600 flex-shrink-0">Session:</span>
-            <div className="flex-1">
+              <label className="text-xs font-medium text-gray-600 w-12 sm:w-16 flex-shrink-0">Session</label>
               <SessionSelector
                 currentSession={currentSession}
                 onSessionChange={handleSessionChange}
               />
             </div>
           </div>
+
+          {/* Advanced Model Selectors - Only shown when toggled */}
+          {showAdvanced && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 pt-2 border-t border-gray-100">
+              {/* Image Model Selector */}
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <label className="text-xs font-medium text-gray-600 w-12 sm:w-16 flex-shrink-0">Image</label>
+                <select
+                  value={selectedModels.image}
+                  onChange={(e) => handleModelChange('image', e.target.value)}
+                  disabled={loadingModels}
+                  className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">Select image model</option>
+                  {categorizedModels.image.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name || model.id} - {getModelPrice(model)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* File Model Selector */}
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <label className="text-xs font-medium text-gray-600 w-12 sm:w-16 flex-shrink-0">File</label>
+                <select
+                  value={selectedModels.file}
+                  onChange={(e) => handleModelChange('file', e.target.value)}
+                  disabled={loadingModels}
+                  className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">Select file model</option>
+                  {categorizedModels.file.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name || model.id} - {getModelPrice(model)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Audio Model Selector */}
+              <div className="flex items-center space-x-1.5 sm:space-x-2 sm:col-span-2">
+                <label className="text-xs font-medium text-gray-600 w-12 sm:w-16 flex-shrink-0">Audio</label>
+                <select
+                  value={selectedModels.audio}
+                  onChange={(e) => handleModelChange('audio', e.target.value)}
+                  disabled={loadingModels}
+                  className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">Select audio model</option>
+                  {categorizedModels.audio.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name || model.id} - {getModelPrice(model)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
+
       </div>
 
       {/* Main Content - ChatGPT Style */}

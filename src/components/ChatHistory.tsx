@@ -35,6 +35,32 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false }
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const getReadableModelName = (modelId: string): string => {
+    // Extract readable name from model ID
+    const parts = modelId.split('/');
+    const modelName = parts[parts.length - 1];
+
+    // Convert common model names to more readable format
+    if (modelName.includes('gemini')) {
+      return 'Gemini';
+    } else if (modelName.includes('gpt-4')) {
+      return 'GPT-4';
+    } else if (modelName.includes('gpt-3.5')) {
+      return 'GPT-3.5';
+    } else if (modelName.includes('claude')) {
+      return 'Claude';
+    } else if (modelName.includes('llama')) {
+      return 'Llama';
+    } else {
+      // Fallback: capitalize first letter and remove dashes/underscores
+      return modelName
+        .replace(/[-_]/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+  };
+
   const renderAttachments = (attachments?: MessageContent[]) => {
     if (!attachments || attachments.length === 0) return null;
 
@@ -102,10 +128,10 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false }
             }`}>
               <div className="flex items-center space-x-2 text-xs opacity-70">
                 <span>{formatTimestamp(message.timestamp)}</span>
-                {message.model && (
+                {message.model && message.model !== 'system' && (
                   <>
                     <span>•</span>
-                    <span>{message.model.split('/').pop()}</span>
+                    <span>{getReadableModelName(message.model)}</span>
                   </>
                 )}
               </div>
