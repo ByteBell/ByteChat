@@ -19,12 +19,6 @@ type Tool = {
 
 const tools: Tool[] = [
   {
-    id: 'Grammar Fix',
-    name: 'Grammar Fix',
-    icon: '✏️',
-    description: 'Fix grammar and improve writing'
-  },
-  {
     id: 'Translate',
     name: 'Translate',
     icon: '🌐',
@@ -580,12 +574,12 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           <div className="flex items-center space-x-3">
             <img
               src={chrome.runtime.getURL("icons/ByteBellLogo.png")}
-              alt="BB Chat"
+              alt="Byte Chat"
               className="w-10 h-10 rounded-lg shadow-lg"
             />
             <div>
-              <h1 className="text-lg font-bold text-gray-900">BB Chat</h1>
-              <p className="text-xs text-gray-500">AI Writing Assistant</p>
+              <h1 className="text-lg font-bold text-gray-900">Byte Chat</h1>
+              <p className="text-xs text-gray-500">All-purpose context copilot for independent users</p>
             </div>
           </div>
           
@@ -611,7 +605,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           )}
         </div>
         
-        {/* 4 Model Selectors - All Visible */}
+        {/* 4 Model Selectors - Inline Layout */}
         <div className="space-y-3">
           {/* Refresh Button */}
           <div className="flex justify-end">
@@ -628,13 +622,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           </div>
 
           {/* Text Model Selector */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Text Model</label>
+          <div className="flex items-center space-x-3">
+            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">Text</label>
             <select
               value={selectedModels.text}
               onChange={(e) => handleModelChange('text', e.target.value)}
               disabled={loadingModels}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">Select text model</option>
               {categorizedModels.text.map((model) => (
@@ -646,13 +640,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           </div>
 
           {/* Image Model Selector */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Image Model</label>
+          <div className="flex items-center space-x-3">
+            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">Image</label>
             <select
               value={selectedModels.image}
               onChange={(e) => handleModelChange('image', e.target.value)}
               disabled={loadingModels}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">Select image model</option>
               {categorizedModels.image.map((model) => (
@@ -664,13 +658,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           </div>
 
           {/* File Model Selector */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">File Model</label>
+          <div className="flex items-center space-x-3">
+            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">File</label>
             <select
               value={selectedModels.file}
               onChange={(e) => handleModelChange('file', e.target.value)}
               disabled={loadingModels}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">Select file model</option>
               {categorizedModels.file.map((model) => (
@@ -682,13 +676,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           </div>
 
           {/* Audio Model Selector */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Audio Model</label>
+          <div className="flex items-center space-x-3">
+            <label className="text-xs font-medium text-gray-600 w-12 flex-shrink-0">Audio</label>
             <select
               value={selectedModels.audio}
               onChange={(e) => handleModelChange('audio', e.target.value)}
               disabled={loadingModels}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">Select audio model</option>
               {categorizedModels.audio.map((model) => (
@@ -732,7 +726,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
               </div>
             ) : (
               <div className="text-center text-gray-500 mt-8">
-                <h3 className="text-lg font-medium mb-2">Welcome to BB Chat</h3>
+                <h3 className="text-lg font-medium mb-2">Welcome to Byte Chat</h3>
                 <p className="text-sm">Start a conversation or choose a tool to get started</p>
               </div>
             )}

@@ -25,8 +25,6 @@ export const LANGUAGES = [
 ];
 
 export const SYSTEM_PROMPTS: Record<string, string> = {
-  "Grammar Fix":
-    "Convert the following into standard English and fix any grammatical errors:",
   "Translate": "Translate the following text between selected languages: ",
   "Summarize": "Provide a concise summary of the following text:",
     "Reply": `You are an expert social media manager and Twitter content creator. Generate a thoughtful, engaging, and contextually appropriate reply to the following tweet. Your reply should be:

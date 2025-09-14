@@ -45,11 +45,11 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet }) => {
           <div className="flex justify-center mb-4">
             <img
               src={chrome.runtime.getURL("icons/ByteBellLogo.png")}
-              alt="BB Chat"
+              alt="Byte Chat"
               className="w-16 h-16 rounded-xl shadow-lg"
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to BB Chat</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Byte Chat</h1>
           <p className="text-gray-600">Enter your OpenRouter API key to get started</p>
         </div>
 

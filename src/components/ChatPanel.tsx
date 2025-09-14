@@ -11,7 +11,7 @@ const ChatPanel: React.FC = () => {
     apiKey: "",
   });
 
-  const [systemID, setSystemID] = useState<string>("Grammar Fix");
+  const [systemID, setSystemID] = useState<string>("Translate");
   const [tone, setTone] = useState<string>("Formal");
   const [fromLang, setFromLang] = useState<string>("English");
   const [toLang, setToLang] = useState<string>("Hindi");
@@ -204,7 +204,6 @@ const ChatPanel: React.FC = () => {
   };
 
   const actionOptions = [
-    { value: "Grammar Fix", label: "Grammar Fix", icon: "📝" },
     { value: "Change the Tone", label: "Change Tone", icon: "🎭" },
     { value: "Translate", label: "Translate", icon: "🌍" },
     { value: "Summarize", label: "Summarize", icon: "📋" },

@@ -11,13 +11,6 @@ chrome.runtime.onInstalled.addListener(() => {
     contexts: ["selection"]
   });
 
-  // Grammar Fix submenu
-  chrome.contextMenus.create({
-    id: "tool-grammar-fix",
-    title: "✏️ Grammar Fix",
-    parentId: "xai-tools",
-    contexts: ["selection"]
-  });
 
   // Translate submenu
   chrome.contextMenus.create({
@@ -80,9 +73,6 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   // Map menu item IDs to tool names
   switch (menuItemId) {
-    case 'tool-grammar-fix':
-      toolName = 'Grammar Fix';
-      break;
     case 'tool-translate':
       toolName = 'Translate';
       break;
@@ -159,7 +149,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           case "Summarize":
             systemPrompt = "Provide a concise summary of the following text:";
             break;
-          case "Grammar Fix":
           default:
             systemPrompt =
               "Convert the following into standard English and fix any grammatical errors:";
