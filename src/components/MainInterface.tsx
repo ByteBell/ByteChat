@@ -117,17 +117,25 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     // If no sessions exist, currentSession will be null until first message
   };
 
-  // Close audio menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showAudioMenu && !(event.target as Element).closest('.audio-menu-container')) {
+      const target = event.target as Element;
+      
+      // Close audio menu if clicking outside
+      if (showAudioMenu && !target.closest('.audio-menu-container')) {
         setShowAudioMenu(false);
+      }
+      
+      // Close tools menu if clicking outside
+      if (showTools && !target.closest('.tools-dropdown') && !target.closest('[title="Select Tool"]')) {
+        setShowTools(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showAudioMenu]);
+  }, [showAudioMenu, showTools]);
 
   // Check for text sent from context menu
   const checkForPendingText = async () => {
@@ -1113,8 +1121,11 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
               <div className="flex items-center space-x-0.5 sm:space-x-1 overflow-x-auto">
                 {/* Tools Button */}
                 <button
-                  onMouseEnter={() => setShowTools(true)}
-                  onMouseLeave={() => setShowTools(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowTools(!showTools);
+                  }}
                   className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-10 flex-shrink-0"
                   title="Select Tool"
                 >
@@ -1333,9 +1344,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
             {/* Tools Dropdown */}
             {showTools && (
               <div
-                className="absolute bottom-12 left-3 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
-                onMouseEnter={() => setShowTools(true)}
-                onMouseLeave={() => setShowTools(false)}
+                className="absolute bottom-12 left-3 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50 tools-dropdown"
               >
                   <div className="p-3">
                     <div className="text-xs font-semibold text-gray-400 mb-3 px-2">SELECT TOOL</div>
