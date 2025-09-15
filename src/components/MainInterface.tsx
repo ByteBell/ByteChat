@@ -331,26 +331,30 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         console.log('Using tool:', selectedTool.name, 'with system prompt');
       }
 
-      // For now, we'll use the simple streaming function.
-      // If we need multimodal support with streaming, we'll need to extend callLLMStream
-      let textPrompt = userInput;
+      // Build multimodal content if attachments exist
+      let promptContent: string | MessageContent[];
 
-      // If audio is attached and no specific instruction, add transcription request
-      if (attachedFiles.some(file => file.type === 'input_audio') && !selectedTool) {
-        textPrompt = textPrompt || 'Please transcribe this audio.';
-        if (textPrompt && !textPrompt.toLowerCase().includes('transcribe')) {
-          textPrompt += '\n\nPlease also transcribe any audio provided.';
-        }
+      if (attachedFiles.length > 0) {
+        // Create multimodal content array
+        promptContent = [
+          // Add user text if provided
+          ...(userInput ? [{ type: 'text' as const, text: userInput }] : []),
+          // Add all attached files exactly as they are
+          ...attachedFiles
+        ];
+      } else {
+        // Simple text message
+        promptContent = userInput;
       }
 
       console.log('Starting streaming with system prompt:', systemPrompt);
-      console.log('User prompt:', textPrompt);
+      console.log('Final prompt content:', promptContent);
 
       // Stream the response
       await callLLMStream(
         settings,
         systemPrompt,
-        textPrompt,
+        promptContent,
         (chunk: string) => {
           console.log('Received chunk:', chunk);
           // Update both state and ref

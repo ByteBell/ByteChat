@@ -151,10 +151,12 @@ export async function execInPage(fn: () => any): Promise<any> {
 
 
 // Streaming function for all providers
+import { MessageContent } from './types';
+
 export async function callLLMStream(
   { provider, model, apiKey }: Settings,
   systemPrompt: string,
-  userPrompt: string,
+  userPrompt: string | MessageContent[],
   onChunk: (chunk: string) => void,
   existingAnswer: string = "" // For continuation
 ): Promise<void> {
@@ -450,20 +452,35 @@ export async function callLLMStream(
     }
 
     case "openrouter": {
+      // Build the user message content
+      let userMessage: any;
+
+      if (typeof userPrompt === 'string') {
+        // Simple text message
+        userMessage = { role: "user", content: userPrompt };
+      } else {
+        // Multimodal message with array of content
+        userMessage = { role: "user", content: userPrompt };
+      }
+
+      const requestBody = {
+        model,
+        messages: [
+          ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
+          userMessage
+        ],
+        stream: true,
+      };
+
+      console.log('🚀 FINAL REQUEST TO OPENROUTER:', JSON.stringify(requestBody, null, 2));
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          stream: true,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
