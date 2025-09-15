@@ -35,17 +35,14 @@
   },
   "permissions": [
     "activeTab",
-    "permissions",
     "scripting", 
     "storage",
     "tabs",
     "identity",
     "contextMenus",
     "sidePanel",
-    "<all_urls>",
     "tabCapture",
-    "desktopCapture",
-    "microphone"
+    "desktopCapture"
   ],
   "optional_host_permissions": [
   ],

@@ -119,37 +119,36 @@ export function clearStreamingState(): Promise<void> {
 }
 
 export async function execInPage(fn: () => any): Promise<any> {
-  return new Promise((resolve) => {
-    browserAPI.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-      const tab = tabs?.[0];
-      const tabId = tab?.id;
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = tabs?.[0];
+    const tabId = tab?.id;
 
-      /* ── guard #1: tab or scripting API unavailable ───────────────── */
-      if (!tabId || !browserAPI.scripting?.executeScript) {
-        console.warn("[execInPage] cannot inject script (no tab or scripting API)");
-        return resolve(undefined);
-      }
+    // ── guard #1: tab or scripting API unavailable ───────────────────
+    if (!tabId || !chrome.scripting?.executeScript) {
+      console.warn("[execInPage] cannot inject script (no tab or scripting API)");
+      return undefined;
+    }
 
-      /* ── guard #2: privileged / non-HTTP(S) pages ─────────────────── */
-      if (!/^https?:\/\//i.test(tab.url || "")) {
-        console.info(`[execInPage] skip injection on privileged URL: ${tab.url}`);
-        return resolve(undefined);
-      }
+    // ── guard #2: privileged / non-HTTP(S) pages ─────────────────────
+    if (!/^https?:\/\//i.test(tab.url || "")) {
+      console.info(`[execInPage] skip injection on privileged URL: ${tab.url}`);
+      return undefined;
+    }
 
-      /* ── safe to inject ───────────────────────────────────────────── */
-      try {
-        const [injectionResult] = await browserAPI.scripting.executeScript({
-          target: { tabId },
-          func: fn as unknown as () => void,
-        });
-        resolve(injectionResult?.result);
-      } catch (err) {
-        console.error("[execInPage] injection failed:", err);
-        resolve(undefined);
-      }
+    // ── safe to inject ────────────────────────────────────────────────
+    const [injectionResult] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: fn as unknown as () => void,
     });
-  });
+
+    return injectionResult?.result;
+  } catch (err) {
+    console.error("[execInPage] injection failed:", err);
+    return undefined;
+  }
 }
+
 
 // Streaming function for all providers
 export async function callLLMStream(

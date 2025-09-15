@@ -7,6 +7,12 @@
   body {
     font-family: 'Inter', sans-serif;
   }
+  html, body, #root {
+    min-width: 380px;     /* tweak to taste */
+    min-height: 560px;    /* gives the popup a real height */
+    height: auto;         /* avoid collapsing */
+    overflow: visible;    /* allow popovers to render fully */
+  }
 }
 
 @layer components {

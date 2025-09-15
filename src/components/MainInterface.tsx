@@ -560,19 +560,20 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     setAttachedFiles([]);
   };
 
-  // Check microphone permissions with detailed logging
+  // Check microphone permissions using getUserMedia instead of permissions API
   const checkMicrophonePermission = async (): Promise<string> => {
     try {
-      if (!navigator.permissions) {
-        console.log('Permissions API not available');
-        return 'unknown';
+      // Try to get user media to check permission
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop()); // Stop immediately
+        return 'granted';
       }
-      
-      const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-      console.log('Microphone permission status:', permission.state);
-      return permission.state;
-    } catch (error) {
-      console.error('Error checking microphone permission:', error);
+      return 'unknown';
+    } catch (error: any) {
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        return 'denied';
+      }
       return 'unknown';
     }
   };
@@ -935,7 +936,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           )}
 
           {/* Input Box with Tool Selector */}
-          <div className="relative">
+          <div className="relative overflow-visible">
             <textarea
               value={input}
               onChange={handleTextareaResize}
@@ -1140,7 +1141,12 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                   ) : (
                     // Audio Options Button
                     <button
-                      onClick={() => setShowAudioMenu(!showAudioMenu)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Audio button clicked! Current showAudioMenu:', showAudioMenu);
+                        setShowAudioMenu(!showAudioMenu);
+                      }}
                       className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
                       title="Audio Options"
                     >
@@ -1152,7 +1158,15 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
                   {/* Audio Options Dropdown */}
                   {showAudioMenu && !isRecording && (
-                    <div className="absolute bottom-10 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[160px]">
+                    <div
+                      className={
+                        // If we're in the sidebar iframe, keep it anchored to the button.
+                        new URLSearchParams(location.search).get('mode') === 'sidebar'
+                          ? "absolute bottom-full mb-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] min-w-[180px]"
+                          // In the browser-action popup, use fixed + ultra-high z-index so it never gets clipped.
+                          : "fixed bottom-24 right-4 bg-white border border-gray-200 rounded-lg shadow-lg z-[2147483647] min-w-[180px]"
+                      }
+                    >
                       <button
                         onClick={handleAudioRecord}
                         className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 rounded-t-lg"

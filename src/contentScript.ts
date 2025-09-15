@@ -27,7 +27,9 @@ function injectSidebar() {
   // Create iframe for the extension UI
   const iframe = document.createElement('iframe');
   iframe.src = chrome.runtime.getURL('panel.html') + '?mode=sidebar';
-    Object.assign(iframe.style, {
+  iframe.allow = 'microphone; clipboard-read; clipboard-write';
+
+  Object.assign(iframe.style, {
     width: '100%',
     height: '100%',
     border: '0',
