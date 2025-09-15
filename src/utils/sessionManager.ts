@@ -43,6 +43,24 @@ export function saveAllSessions(sessionStorage: SessionStorage): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionStorage));
   } catch (error) {
     console.error('Failed to save sessions:', error);
+    
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      // Try to free up space by removing old sessions
+      const storage = sessionStorage;
+      if (storage.sessions.length > 10) {
+        // Keep only the 10 most recent sessions
+        storage.sessions = storage.sessions.slice(0, 10);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+          alert('Storage full. Removed old chat sessions to make space.');
+          return;
+        } catch (retryError) {
+          console.error('Failed to save even after cleanup:', retryError);
+        }
+      }
+      
+      alert('Storage quota exceeded. Please:\n1. Clear browser storage\n2. Use smaller files\n3. Delete old chat sessions');
+    }
   }
 }
 
@@ -178,4 +196,56 @@ export function handleAppRefresh(): ChatSession {
   // Always create new session on refresh as per requirements
   const newSession = createNewSession();
   return newSession;
+}
+
+// Get storage usage info
+export function getStorageInfo(): { used: number; total: number; percentage: number } {
+  try {
+    const total = 5 * 1024 * 1024; // Approximate localStorage limit (5MB)
+    let used = 0;
+    
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        used += localStorage[key].length + key.length;
+      }
+    }
+    
+    return {
+      used,
+      total,
+      percentage: Math.round((used / total) * 100)
+    };
+  } catch (error) {
+    return { used: 0, total: 0, percentage: 0 };
+  }
+}
+
+// Clean up old sessions to free space
+export function cleanupOldSessions(keepCount: number = 5): boolean {
+  try {
+    const storage = loadAllSessions();
+    const originalCount = storage.sessions.length;
+    
+    if (originalCount <= keepCount) {
+      return false; // Nothing to clean
+    }
+    
+    // Keep only the most recent sessions
+    storage.sessions = storage.sessions
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, keepCount);
+    
+    // Update current session if it was deleted
+    if (storage.currentSessionId && !storage.sessions.find(s => s.id === storage.currentSessionId)) {
+      storage.currentSessionId = storage.sessions.length > 0 ? storage.sessions[0].id : null;
+    }
+    
+    saveAllSessions(storage);
+    
+    console.log(`Cleaned up ${originalCount - keepCount} old sessions`);
+    return true;
+  } catch (error) {
+    console.error('Failed to cleanup sessions:', error);
+    return false;
+  }
 }

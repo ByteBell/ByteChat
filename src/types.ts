@@ -31,8 +31,12 @@ export interface ImageContent {
 
 export interface FileContent {
   type: 'file';
-  filename: string;
-  file_data: string;
+  filename?: string; // Old format (deprecated)
+  file_data?: string; // Old format (deprecated)
+  file?: {  // New nested format for PDFs
+    filename: string;
+    file_data: string;
+  };
 }
 
 export interface AudioContent {

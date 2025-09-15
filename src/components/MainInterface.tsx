@@ -8,6 +8,7 @@ import { callLLMStream } from '../utils';
 import { Settings, ModelCapability, MessageContent, ChatSession } from '../types';
 import SessionSelector from './SessionSelector';
 import ChatHistory from './ChatHistory';
+import { encodeFileToBase64, getMimeTypeFromExtension, formatFileSize } from '../utils/fileEncoder';
 import {
   handleAppRefresh,
   getOrCreateCurrentSession,
@@ -194,7 +195,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       const categorized = categorizeModels(fetchedModels);
       setCategorizedModels(categorized);
       
-      // Set Gemini 2.5 Flash as default for all model types
+      // Set specific default models for each capability
       const newSelectedModels: Record<ModelCapability, string> = {
         text: '',
         image: '',
@@ -202,25 +203,63 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         audio: ''
       };
 
-      // Try to find Gemini 2.5 Flash in each category, otherwise use the best available
+      // Set default models based on your requirements
       for (const capability of (['text', 'image', 'file', 'audio'] as ModelCapability[])) {
         const modelsInCategory = categorized[capability];
 
-        // First try to find Gemini 2.5 Flash
-        const geminiModel = modelsInCategory.find(model =>
-          model.id.toLowerCase().includes('gemini-2.0-flash') ||
-          model.id.toLowerCase().includes('google/gemini-2.0-flash') ||
-          model.id.toLowerCase().includes('gemini-pro-vision') ||
-          model.id.toLowerCase().includes('google/gemini-pro-vision')
-        );
-
-        if (geminiModel) {
-          newSelectedModels[capability] = geminiModel.id;
-        } else {
-          // Fallback to best available model
-          const bestModel = await getBestModelForCapability(capability, categorized);
-          if (bestModel) {
-            newSelectedModels[capability] = bestModel;
+        if (capability === 'text') {
+          // Default to openai/gpt-5 for text
+          const gpt5Model = modelsInCategory.find(model => 
+            model.id === 'openai/gpt-5' || 
+            model.id === 'gpt-5'
+          );
+          
+          if (gpt5Model) {
+            newSelectedModels.text = gpt5Model.id;
+          } else {
+            // Fallback to GPT-4 or best available
+            const gpt4Model = modelsInCategory.find(model => 
+              model.id.includes('gpt-4') || 
+              model.id.includes('openai/gpt-4')
+            );
+            newSelectedModels.text = gpt4Model?.id || (await getBestModelForCapability(capability, categorized)) || '';
+          }
+        } else if (capability === 'image' || capability === 'file') {
+          // Default to google/gemini-2.5-flash-image-preview for images and files
+          const geminiImageModel = modelsInCategory.find(model =>
+            model.id === 'google/gemini-2.5-flash-image-preview' ||
+            model.id === 'gemini-2.5-flash-image-preview' ||
+            model.id === 'google/gemini-flash-1.5' ||
+            model.id.includes('gemini') && model.id.includes('flash')
+          );
+          
+          if (geminiImageModel) {
+            newSelectedModels[capability] = geminiImageModel.id;
+          } else {
+            // Fallback to any Gemini vision model
+            const anyGeminiModel = modelsInCategory.find(model =>
+              model.id.toLowerCase().includes('gemini')
+            );
+            newSelectedModels[capability] = anyGeminiModel?.id || (await getBestModelForCapability(capability, categorized)) || '';
+          }
+        } else if (capability === 'audio') {
+          // Default to google/gemini-2.5-flash-lite for audio
+          const geminiLiteModel = modelsInCategory.find(model =>
+            model.id === 'google/gemini-2.5-flash-lite' ||
+            model.id === 'gemini-2.5-flash-lite' ||
+            model.id === 'google/gemini-flash-1.5-8b' ||
+            model.id.includes('gemini') && model.id.includes('lite')
+          );
+          
+          if (geminiLiteModel) {
+            newSelectedModels.audio = geminiLiteModel.id;
+          } else {
+            // Fallback to any Gemini model or Whisper for audio
+            const audioModel = modelsInCategory.find(model =>
+              model.id.toLowerCase().includes('gemini') ||
+              model.id.toLowerCase().includes('whisper')
+            );
+            newSelectedModels.audio = audioModel?.id || (await getBestModelForCapability(capability, categorized)) || '';
           }
         }
       }
@@ -275,16 +314,33 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     let modelToUse = '';
     let capabilityNeeded: ModelCapability = 'text';
 
-    if (attachedFiles.some(file => file.type === 'image_url')) {
-      capabilityNeeded = 'image';
-      modelToUse = selectedModels.image;
-    } else if (attachedFiles.some(file => file.type === 'file')) {
-      capabilityNeeded = 'file';
-      modelToUse = selectedModels.file;
-    } else if (attachedFiles.some(file => file.type === 'input_audio')) {
+    // Check for different attachment types and select appropriate model
+    const hasPDF = attachedFiles.some(file => 
+      file.type === 'file' && 'file' in file && file.file?.filename.toLowerCase().endsWith('.pdf')
+    );
+    const hasCSV = attachedFiles.some(file => 
+      file.type === 'file' && 'file' in file && file.file?.filename.toLowerCase().endsWith('.csv')
+    );
+    const hasTextContent = attachedFiles.some(file => file.type === 'text');
+    
+    if (attachedFiles.some(file => file.type === 'input_audio')) {
+      // Audio takes precedence - use audio model (google/gemini-2.5-flash-lite)
       capabilityNeeded = 'audio';
       modelToUse = selectedModels.audio;
+    } else if (hasPDF || hasCSV) {
+      // PDFs and CSVs - use file model (google/gemini-2.5-flash-image-preview)
+      capabilityNeeded = 'file';
+      modelToUse = selectedModels.file;
+    } else if (hasTextContent) {
+      // Other documents converted to text - use text model (openai/gpt-5)
+      capabilityNeeded = 'text';
+      modelToUse = selectedModels.text || 'openai/gpt-4-turbo-preview'; // Fallback if gpt-5 not available
+    } else if (attachedFiles.some(file => file.type === 'image_url')) {
+      // Images - use image model (google/gemini-2.5-flash-image-preview)
+      capabilityNeeded = 'image';
+      modelToUse = selectedModels.image;
     } else {
+      // Plain text - use text model (openai/gpt-5)
       capabilityNeeded = 'text';
       modelToUse = selectedModels.text;
     }
@@ -350,7 +406,27 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       console.log('Starting streaming with system prompt:', systemPrompt);
       console.log('Final prompt content:', promptContent);
 
-      // Stream the response
+      // Check if we have PDFs or CSVs and need to add plugin configuration
+      const hasPDFOrCSV = attachedFiles.some(file => 
+        file.type === 'file' && 'file' in file && file.file && 
+        (file.file.filename.toLowerCase().endsWith('.pdf') || file.file.filename.toLowerCase().endsWith('.csv'))
+      );
+
+      // Prepare plugins for PDF/CSV processing if needed
+      const plugins = hasPDFOrCSV ? [
+        {
+          id: 'file-parser',
+          pdf: {
+            engine: 'mistral-ocr' // Use pdf-text engine (free option for well-structured PDFs)
+          }
+        }
+      ] : undefined;
+
+      if (plugins) {
+        console.log('📄 Using PDF processing with pdf-text engine (free)');
+      }
+
+      // Stream the response with optional plugins
       await callLLMStream(
         settings,
         systemPrompt,
@@ -360,7 +436,9 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
           // Update both state and ref
           streamingResponseRef.current += chunk;
           setStreamingResponse(streamingResponseRef.current);
-        }
+        },
+        '', // existingAnswer (empty for new requests)
+        plugins // Pass plugins for PDF processing
       );
 
       // After streaming is complete, add the full response to session
@@ -388,7 +466,33 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
     } catch (error) {
       console.error('Streaming request failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+
+      // Provide specific feedback for common file processing errors
+      if (errorMessage.includes('Failed to extract') && errorMessage.includes('image')) {
+        errorMessage = 'Image processing failed. Please try:\n1. Using a smaller image (under 5MB)\n2. Converting to JPG/PNG format\n3. Using a different model that supports vision\n4. Compressing the image before uploading';
+      } else if (errorMessage.includes('Internal Server Error') || errorMessage.includes('500')) {
+        if (attachedFiles.some(file => file.type === 'image_url' && 'image_url' in file)) {
+          errorMessage = 'Image processing failed on the server. Please try:\n1. Using a smaller image file\n2. Converting to a standard format (JPG/PNG)\n3. Selecting a different vision model';
+        } else if (attachedFiles.some(file => file.type === 'file')) {
+          errorMessage = 'The selected model may not support document processing. Please try:\n1. Using a different model (like GPT-4 Vision)\n2. Converting your document to text\n3. Using a smaller file size';
+        } else {
+          errorMessage = 'Server error occurred. Please try again or select a different model.';
+        }
+      } else if (errorMessage.includes('400') && attachedFiles.length > 0) {
+        const hasImages = attachedFiles.some(file => file.type === 'image_url');
+        const hasFiles = attachedFiles.some(file => file.type === 'file');
+
+        if (hasImages) {
+          errorMessage = 'Invalid request with images. Please try:\n1. Using smaller images (under 5MB)\n2. Using standard image formats (JPG, PNG)\n3. Selecting a model that supports vision\n4. Reducing the number of attached images';
+        } else if (hasFiles) {
+          errorMessage = 'Invalid request with files. Please try:\n1. Using smaller files\n2. Using supported file formats\n3. Selecting a different model';
+        } else {
+          errorMessage = 'Invalid request format. Please try again or contact support.';
+        }
+      } else if (errorMessage.includes('QuotaExceededError')) {
+        errorMessage = 'Storage quota exceeded. Please clear browser storage or use smaller files.';
+      }
 
       // Add error message to session
       addMessageToCurrentSession('assistant', `Error: ${errorMessage}`, modelToUse);
@@ -619,12 +723,33 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
+        // Validate file size (max 25MB for audio)
+        if (file.size > 25 * 1024 * 1024) {
+          alert('Audio file too large. Please use files smaller than 25MB.\n\nTip: You can compress audio files using online tools.');
+          return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('audio/')) {
+          alert('Invalid file type. Please select an audio file (MP3, WAV, etc.)');
+          return;
+        }
+
         const reader = new FileReader();
         reader.onload = (e) => {
-          const base64 = (e.target?.result as string)?.split(',')[1];
-          if (base64) {
-            console.log('Audio file uploaded:', file.name);
-            
+          try {
+            const dataUrl = e.target?.result as string;
+            if (!dataUrl || !dataUrl.includes(',')) {
+              throw new Error('Invalid audio data');
+            }
+
+            const base64 = dataUrl.split(',')[1];
+            if (!base64) {
+              throw new Error('Failed to extract audio data');
+            }
+
+            console.log('Audio file uploaded:', file.name, 'Size:', file.size);
+
             const audioContent: MessageContent = {
               type: 'input_audio',
               input_audio: {
@@ -632,10 +757,17 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                 format: file.type.includes('mp3') || file.type.includes('mpeg') ? 'mp3' : 'wav'
               }
             };
-            
+
             addFileAttachment(audioContent);
             console.log('Audio file attached for multimodal request');
+          } catch (error) {
+            console.error('Error processing audio file:', error);
+            alert('Failed to process audio file. Please try a different audio file.');
           }
+        };
+        reader.onerror = (error) => {
+          console.error('FileReader error for audio:', error);
+          alert('Failed to read audio file. Please try again.');
         };
         reader.readAsDataURL(file);
       }
@@ -847,12 +979,23 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                     className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
                   >
                     <span>
-                      {file.type === 'image_url' ? '🖼️' : 
-                       file.type === 'file' ? '📄' : 
-                       file.type === 'input_audio' ? '🎤' : '📎'}
+                      {file.type === 'file' && 'file' in file && file.file ? (
+                        file.file.filename.endsWith('.pdf') ? '📄' :
+                        file.file.filename.endsWith('.csv') ? '📊' :
+                        '📄'
+                      ) :
+                      file.type === 'text' ? '📝' :
+                      file.type === 'image_url' && 'image_url' in file ? '🖼️' : 
+                      file.type === 'input_audio' ? '🎤' : '📎'}
                     </span>
                     <span>
-                      {file.type === 'file' && 'filename' in file ? file.filename : file.type.replace('_', ' ')}
+                      {file.type === 'file' && 'file' in file && file.file ? file.file.filename : 
+                       file.type === 'text' && 'text' in file ? (
+                         file.text.startsWith('File: ') ? file.text.split('\n')[0].replace('File: ', '') : 'Text Content'
+                       ) :
+                       file.type === 'image_url' && 'image_url' in file ? 'Image' :
+                       file.type === 'input_audio' ? 'Audio Recording' :
+                       'File'}
                     </span>
                     
                     {/* Audio Play Button */}
@@ -981,151 +1124,131 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
                   </svg>
                 </button>
 
-                {/* Image Upload */}
+                {/* Universal File Upload Button */}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const input = document.createElement('input');
                     input.type = 'file';
-                    input.accept = 'image/*';
-                    input.onchange = (e) => {
+                    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.json,.yaml,.yml,.txt,.md,.rtf,.xml,.html,.epub,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,image/*';
+                    input.onchange = async (e) => {
                       const file = (e.target as HTMLInputElement).files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          const content = e.target?.result as string;
-                          console.log('Image file:', file.name, 'Size:', file.size);
+                        try {
+                          // Check file size based on type
+                          const maxSize = file.type.startsWith('image/') ? 10 * 1024 * 1024 : 5 * 1024 * 1024; // 10MB for images, 5MB for documents
+                          if (file.size > maxSize) {
+                            alert(`File too large. Please use files smaller than ${formatFileSize(maxSize)}.\n\nTip: You can compress files using online tools.`);
+                            return;
+                          }
 
-                          const imageContent: MessageContent = {
-                            type: 'image_url',
-                            image_url: {
-                              url: content
+                          // Handle images separately for better compatibility
+                          if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                              try {
+                                const content = e.target?.result as string;
+                                if (!content || !content.startsWith('data:')) {
+                                  throw new Error('Invalid image data');
+                                }
+
+                                const imageContent: MessageContent = {
+                                  type: 'image_url',
+                                  image_url: {
+                                    url: content
+                                  }
+                                };
+
+                                addFileAttachment(imageContent);
+                                console.log('Image attached:', file.name, 'Size:', formatFileSize(file.size));
+                              } catch (error) {
+                                console.error('Error processing image:', error);
+                                alert('Failed to process image. Please try a different file.');
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          } else {
+                            // Use the encoder for all other file types
+                            const encodedFile = await encodeFileToBase64(file);
+                            
+                            const mimeType = encodedFile.type || getMimeTypeFromExtension(file.name);
+                            console.log('File encoded:', file.name, 'Size:', formatFileSize(file.size), 'Type:', mimeType);
+
+                            // PDFs and CSVs use special file type with nested structure
+                            if (mimeType === 'application/pdf' || mimeType === 'text/csv') {
+                              // PDF and CSV use nested file object structure
+                              const fileContent: MessageContent = {
+                                type: 'file',
+                                file: {
+                                  filename: file.name,
+                                  file_data: `data:${mimeType};base64,${encodedFile.data}`
+                                }
+                              };
+
+                              addFileAttachment(fileContent);
+                              console.log('PDF/CSV attached with file structure:', file.name);
+                            } else if (mimeType.includes('word') || 
+                                mimeType.includes('document') ||
+                                mimeType.includes('excel') ||
+                                mimeType.includes('spreadsheet') ||
+                                mimeType === 'application/json' ||
+                                mimeType.includes('yaml') ||
+                                mimeType === 'text/plain' ||
+                                mimeType === 'text/markdown' ||
+                                mimeType === 'text/html' ||
+                                mimeType === 'application/xml' ||
+                                mimeType === 'text/xml') {
+                              
+                              // For other documents, decode the base64 and send as plain text
+                              try {
+                                // Decode base64 to get the actual text content
+                                const textContent = atob(encodedFile.data);
+                                
+                                // Add as plain text message
+                                const fileContent: MessageContent = {
+                                  type: 'text',
+                                  text: `File: ${file.name}\n\nContent:\n${textContent}`
+                                };
+
+                                addFileAttachment(fileContent);
+                                console.log('Document content extracted and added as text:', file.name);
+                              } catch (decodeError) {
+                                // If decoding fails, fall back to sending the data URL
+                                console.error('Failed to decode file as text:', decodeError);
+                                alert('Unable to read this file as text. Please try a different format.');
+                              }
+                            } else {
+                              // Use image_url for other types
+                              const fileDataUrl = `data:${mimeType};base64,${encodedFile.data}`;
+                              const fileContent: MessageContent = {
+                                type: 'image_url',
+                                image_url: {
+                                  url: fileDataUrl
+                                }
+                              };
+
+                              addFileAttachment(fileContent);
+                              console.log('File attached as image_url type');
                             }
-                          };
-
-                          addFileAttachment(imageContent);
-                          console.log('Image attached for multimodal request');
-                        };
-                        reader.readAsDataURL(file);
+                          }
+                        } catch (error) {
+                          console.error('Error processing file:', error);
+                          if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+                            alert('Storage quota exceeded. Please use a smaller file or clear browser storage.');
+                          } else if (error instanceof Error) {
+                            alert(error.message);
+                          } else {
+                            alert('Error processing file. Please try again.');
+                          }
+                        }
                       }
                     };
                     input.click();
                   }}
                   className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
-                  title="Upload Image (JPG, PNG, GIF)"
+                  title="Upload File (PDF, Word, Excel, CSV, JSON, YAML, Images, etc.)"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </button>
-
-                {/* Excel Upload */}
-                <button
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.xlsx,.xls,.csv';
-                    input.onchange = (e) => {
-                      const file = (e.target as HTMLInputElement).files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          const arrayBuffer = e.target?.result as ArrayBuffer;
-                          const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
-                          console.log('Excel file:', file.name, 'Size:', file.size);
-
-                          const fileContent: MessageContent = {
-                            type: 'file',
-                            filename: file.name,
-                            file_data: base64
-                          };
-
-                          addFileAttachment(fileContent);
-                          console.log('Excel/CSV attached for multimodal request');
-                        };
-                        reader.readAsArrayBuffer(file);
-                      }
-                    };
-                    input.click();
-                  }}
-                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
-                  title="Upload Excel/CSV Spreadsheet"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </button>
-
-                {/* PDF Upload */}
-                <button
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.pdf';
-                    input.onchange = (e) => {
-                      const file = (e.target as HTMLInputElement).files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          const arrayBuffer = e.target?.result as ArrayBuffer;
-                          const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
-                          console.log('PDF file:', file.name, 'Size:', file.size);
-
-                          const fileContent: MessageContent = {
-                            type: 'file',
-                            filename: file.name,
-                            file_data: base64
-                          };
-
-                          addFileAttachment(fileContent);
-                          console.log('PDF attached for multimodal request');
-                        };
-                        reader.readAsArrayBuffer(file);
-                      }
-                    };
-                    input.click();
-                  }}
-                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
-                  title="Upload PDF Document"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </button>
-
-                {/* Word Upload */}
-                <button
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.docx,.doc';
-                    input.onchange = (e) => {
-                      const file = (e.target as HTMLInputElement).files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          const arrayBuffer = e.target?.result as ArrayBuffer;
-                          const base64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
-                          console.log('Word file:', file.name, 'Size:', file.size);
-
-                          const fileContent: MessageContent = {
-                            type: 'file',
-                            filename: file.name,
-                            file_data: base64
-                          };
-
-                          addFileAttachment(fileContent);
-                          console.log('Word document attached for multimodal request');
-                        };
-                        reader.readAsArrayBuffer(file);
-                      }
-                    };
-                    input.click();
-                  }}
-                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
-                  title="Upload Word Document"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 </button>
 

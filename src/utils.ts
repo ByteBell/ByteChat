@@ -158,7 +158,8 @@ export async function callLLMStream(
   systemPrompt: string,
   userPrompt: string | MessageContent[],
   onChunk: (chunk: string) => void,
-  existingAnswer: string = "" // For continuation
+  existingAnswer: string = "", // For continuation
+  plugins?: any[] // Optional plugins parameter for OpenRouter
 ): Promise<void> {
   // Check if user is logged in - if so, route ALL requests through backend
   const user = await loadStoredUser();
@@ -463,7 +464,7 @@ export async function callLLMStream(
         userMessage = { role: "user", content: userPrompt };
       }
 
-      const requestBody = {
+      const requestBody: any = {
         model,
         messages: [
           ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
@@ -471,6 +472,12 @@ export async function callLLMStream(
         ],
         stream: true,
       };
+
+      // Add plugins if provided (for PDF processing, etc.)
+      if (plugins && plugins.length > 0) {
+        requestBody.plugins = plugins;
+        console.log('📄 PDF Processing: Adding plugins to request:', JSON.stringify(plugins, null, 2));
+      }
 
       console.log('🚀 FINAL REQUEST TO OPENROUTER:', JSON.stringify(requestBody, null, 2));
 
