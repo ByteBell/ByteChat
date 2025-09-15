@@ -52,5 +52,15 @@ export const SYSTEM_PROMPTS: Record<string, string> = {
 
   Be objective, thorough, and cite your sources. If you cannot verify certain claims, clearly state this limitation.
 
-  Content to fact-check:`
+  Content to fact-check:`,
+  "Fix Grammar": `Fix grammar without dashes and without changing too much content and provide what you changed with the explanation below the correct grammar sequence.
+
+  Format your response as:
+  CORRECTED TEXT:
+  [The grammatically correct version]
+
+  CHANGES MADE:
+  [List each change with explanation]
+
+  Text to fix:`
 };

@@ -53,6 +53,12 @@ const tools: Tool[] = [
     name: 'Fact Check',
     icon: '🔍',
     description: 'Verify information accuracy'
+  },
+  {
+    id: 'Fix Grammar',
+    name: 'Fix Grammar',
+    icon: '✍️',
+    description: 'Correct grammar and spelling'
   }
 ];
 
@@ -216,14 +222,14 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         const modelsInCategory = categorized[capability];
 
         if (capability === 'text') {
-          // Default to openai/gpt-5 for text
-          const gpt5Model = modelsInCategory.find(model => 
-            model.id === 'openai/gpt-5' || 
-            model.id === 'gpt-5'
+          // Default to x-ai/grok-3-mini for text
+          const grokModel = modelsInCategory.find(model => 
+            model.id === 'x-ai/grok-3-mini' || 
+            model.id === 'grok-3-mini'
           );
           
-          if (gpt5Model) {
-            newSelectedModels.text = gpt5Model.id;
+          if (grokModel) {
+            newSelectedModels.text = grokModel.id;
           } else {
             // Fallback to GPT-4 or best available
             const gpt4Model = modelsInCategory.find(model => 
@@ -340,9 +346,9 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       capabilityNeeded = 'file';
       modelToUse = selectedModels.file;
     } else if (hasTextContent) {
-      // Other documents converted to text - use text model (openai/gpt-5)
+      // Other documents converted to text - use text model (x-ai/grok-3-mini)
       capabilityNeeded = 'text';
-      modelToUse = selectedModels.text || 'openai/gpt-4-turbo-preview'; // Fallback if gpt-5 not available
+      modelToUse = selectedModels.text || 'x-ai/grok-3-mini'; // Fallback to grok-3-mini
     } else if (attachedFiles.some(file => file.type === 'image_url')) {
       // Images - use image model (google/gemini-2.5-flash-image-preview)
       capabilityNeeded = 'image';
