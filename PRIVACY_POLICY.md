@@ -1,6 +1,6 @@
 # Privacy Policy for ByteChat Extension
 
-**Last Updated: [Current Date]**
+**Last Updated: 16th September**
 
 ## Introduction
 
@@ -111,7 +111,7 @@ We may update this Privacy Policy periodically. We will notify you of significan
 
 For privacy-related questions or concerns:
 
-- **Email**: privacy@bytebell.ai
+- **Email**: admin@bytebell.ai
 - **Support**: saurav@bytebell.ai or chaitanya@bytebell.ai
 - **Website**: [Your website URL]
 - **Address**: [Your business address]

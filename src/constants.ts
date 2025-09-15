@@ -25,7 +25,7 @@ export const LANGUAGES = [
 ];
 
 export const SYSTEM_PROMPTS: Record<string, string> = {
-  "Translate": "Translate the following text between selected languages: ",
+  "Translate": "Translate the following text: ",
   "Summarize": "Provide a concise summary of the following text:",
     "Reply": `You are an expert social media manager and Twitter content creator. Generate a thoughtful, engaging, and contextually appropriate reply to the following tweet. Your reply should be:
             1. Authentic and conversational in tone

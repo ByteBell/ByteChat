@@ -29,6 +29,30 @@ type Tool = {
   description: string;
 };
 
+const languages = [
+  'Auto-detect',
+  'English',
+  'Spanish',
+  'French',
+  'German',
+  'Italian',
+  'Portuguese',
+  'Russian',
+  'Chinese (Simplified)',
+  'Chinese (Traditional)',
+  'Japanese',
+  'Korean',
+  'Arabic',
+  'Hindi',
+  'Dutch',
+  'Polish',
+  'Turkish',
+  'Swedish',
+  'Danish',
+  'Norwegian',
+  'Finnish'
+];
+
 const tools: Tool[] = [
   {
     id: 'Translate',
@@ -86,6 +110,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [playingAudioIndex, setPlayingAudioIndex] = useState<number | null>(null);
   const [recordingStatus, setRecordingStatus] = useState<string>('');
+  const [fromLanguage, setFromLanguage] = useState<string>('Auto-detect');
+  const [toLanguage, setToLanguage] = useState<string>('English');
 
   // Auto-resize textarea based on content
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -397,7 +423,12 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       // Prepare system prompt
       let systemPrompt = '';
       if (selectedTool) {
-        systemPrompt = SYSTEM_PROMPTS[selectedTool.id];
+        if (selectedTool.id === 'Translate') {
+          // Custom prompt for translation with language specifications
+          systemPrompt = `Translate the following text from ${fromLanguage} to ${toLanguage}. If the source language is set to "Auto-detect", first identify the language, then translate to ${toLanguage}. Provide only the translated text without any additional commentary or explanation.\n\nText to translate:`;
+        } else {
+          systemPrompt = SYSTEM_PROMPTS[selectedTool.id];
+        }
         console.log('Using tool:', selectedTool.name, 'with system prompt');
       }
 
@@ -957,18 +988,72 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
         <div className="border-t border-gray-200 p-3 sm:p-4 bg-white flex flex-col justify-center min-h-[120px] sm:min-h-[140px] flex-shrink-0">
           {/* Selected Tool Indicator */}
           {selectedTool && (
-            <div className="flex items-center justify-between mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <span className="text-lg">{selectedTool.icon}</span>
-                <span className="text-sm font-medium text-blue-700">{selectedTool.name}</span>
-                <span className="text-xs text-blue-600">• {selectedTool.description}</span>
+            <div className="mb-3">
+              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <span className="text-lg">{selectedTool.icon}</span>
+                  <span className="text-sm font-medium text-blue-700">{selectedTool.name}</span>
+                  <span className="text-xs text-blue-600">• {selectedTool.description}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedTool(null);
+                    setFromLanguage('Auto-detect');
+                    setToLanguage('English');
+                  }}
+                  className="text-blue-400 hover:text-blue-600"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => setSelectedTool(null)}
-                className="text-blue-400 hover:text-blue-600"
-              >
-                ✕
-              </button>
+              
+              {/* Language Selectors for Translate Tool */}
+              {selectedTool.id === 'Translate' && (
+                <div className="flex items-center space-x-2 mt-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-2 flex-1">
+                    <label className="text-xs font-medium text-gray-600">From:</label>
+                    <select
+                      value={fromLanguage}
+                      onChange={(e) => setFromLanguage(e.target.value)}
+                      className="flex-1 text-xs border border-gray-300 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                    >
+                      {languages.map((lang) => (
+                        <option key={lang} value={lang}>{lang}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      // Swap languages (except when from is Auto-detect)
+                      if (fromLanguage !== 'Auto-detect') {
+                        const temp = fromLanguage;
+                        setFromLanguage(toLanguage);
+                        setToLanguage(temp);
+                      }
+                    }}
+                    className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded"
+                    title="Swap languages"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </button>
+                  
+                  <div className="flex items-center space-x-2 flex-1">
+                    <label className="text-xs font-medium text-gray-600">To:</label>
+                    <select
+                      value={toLanguage}
+                      onChange={(e) => setToLanguage(e.target.value)}
+                      className="flex-1 text-xs border border-gray-300 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                    >
+                      {languages.filter(lang => lang !== 'Auto-detect').map((lang) => (
+                        <option key={lang} value={lang}>{lang}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
