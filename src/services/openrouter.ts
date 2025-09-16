@@ -103,19 +103,41 @@ export async function chatOpenRouter(args: OpenRouterArgs): Promise<OpenRouterRe
 }
 
 /** Check if the key works by calling the models endpoint */
-export async function validateOpenRouterKey(apiKey: string): Promise<boolean> {
+export async function validateOpenRouterKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
   try {
+    // Basic format validation
+    if (!apiKey || !apiKey.trim()) {
+      return { valid: false, error: 'API key cannot be empty' };
+    }
+    
+    if (!apiKey.startsWith('sk-or-')) {
+      return { valid: false, error: 'Invalid key format. OpenRouter keys should start with "sk-or-"' };
+    }
+
     const res = await fetch(`${OR_API}/models`, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
     });
-    if (!res.ok) return false;
+    
+    if (!res.ok) {
+      if (res.status === 401) {
+        return { valid: false, error: 'Invalid API key. Please check your key and try again.' };
+      } else if (res.status === 429) {
+        return { valid: false, error: 'Rate limited. Please wait a moment and try again.' };
+      } else if (res.status === 403) {
+        return { valid: false, error: 'Access forbidden. Your API key may not have the required permissions.' };
+      } else {
+        return { valid: false, error: `Failed to validate key (Error ${res.status}). Please try again.` };
+      }
+    }
+    
     await res.json();
-    return true;
-  } catch {
-    return false;
+    return { valid: true };
+  } catch (error) {
+    console.error('API key validation error:', error);
+    return { valid: false, error: 'Network error. Please check your connection and try again.' };
   }
 }
 

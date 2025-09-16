@@ -10,13 +10,13 @@
 
 ## 🎯 Mission
 
-ByteChat's mission is to **democratize AI access** by providing a free, open, and decentralized way to interact with cutting-edge AI models through OpenRouter. No subscriptions, no vendor lock-in - just pure AI power at your fingertips.
+ByteChat's mission is to **democratize AI access** by providing a free and open way to interact with cutting-edge AI models through OpenRouter. No subscriptions, no vendor lock-in - just pure AI power at your fingertips.
 
 ## 🌟 Why ByteChat?
 
 - **100% Free Access**: Use top-tier AI models like Llama, DeepSeek, Grok, and more without paying a cent
 - **No Subscriptions**: Forget about ChatGPT Plus, Claude Pro, or other expensive subscriptions
-- **Decentralized**: Not tied to any single AI provider - access multiple models through OpenRouter
+- **Multi-Model Access**: Access multiple AI providers through a single OpenRouter API
 - **Privacy-First**: Your API key, your data, your control
 - **Cross-Platform** (Coming Soon): Android and iOS apps in development
 
