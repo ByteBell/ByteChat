@@ -138,6 +138,29 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
     loadBalance();
     initializeSession();
     loadZoomPreference();
+
+    // Listen for storage changes (when context menu stores new pending text)
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.pending_text && changes.pending_text.newValue) {
+        console.log('[MainInterface] Detected new pending text from storage change');
+        checkForPendingText();
+      }
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    // Also check for pending text when window gains focus (side panel becomes visible)
+    const handleFocus = () => {
+      console.log('[MainInterface] Window focused, checking for pending text');
+      checkForPendingText();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [apiKey]);
 
   // Initialize session on app start
@@ -175,23 +198,35 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
   // Check for text sent from context menu
   const checkForPendingText = async () => {
     try {
+      console.log('[MainInterface] Checking for pending text...');
+
       const result = await chrome.storage.local.get([
-        'pending_text', 
-        'pending_tool', 
-        'pending_is_custom_prompt', 
+        'pending_text',
+        'pending_tool',
+        'pending_is_custom_prompt',
         'pending_timestamp'
       ]);
-      
+
+      console.log('[MainInterface] Storage result:', result);
+
       if (result.pending_text && result.pending_timestamp) {
         // Check if the pending text is recent (within 30 seconds)
-        const isRecent = Date.now() - result.pending_timestamp < 30000;
-        
+        const age = Date.now() - result.pending_timestamp;
+        const isRecent = age < 30000;
+
+        console.log('[MainInterface] Pending text found:', {
+          textLength: result.pending_text.length,
+          tool: result.pending_tool,
+          isCustomPrompt: result.pending_is_custom_prompt,
+          age: age,
+          isRecent: isRecent
+        });
+
         if (isRecent) {
-          console.log('[MainInterface] Found pending text:', result.pending_text);
-          
           // Set the text
           setInput(result.pending_text);
-          
+          console.log('[MainInterface] Set input text:', result.pending_text.substring(0, 100) + '...');
+
           // Handle custom prompt vs tool selection
           if (result.pending_is_custom_prompt) {
             // For custom prompt, clear any selected tool and show chat mode
@@ -205,17 +240,25 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
               setSelectedTool(tool);
               setShowTools(false);
               console.log('[MainInterface] Selected tool:', result.pending_tool);
+            } else {
+              console.error('[MainInterface] Tool not found:', result.pending_tool);
             }
           }
-          
+
           // Clear the pending data
           chrome.storage.local.remove([
-            'pending_text', 
-            'pending_tool', 
-            'pending_is_custom_prompt', 
+            'pending_text',
+            'pending_tool',
+            'pending_is_custom_prompt',
             'pending_timestamp'
           ]);
+
+          console.log('[MainInterface] Pending data cleared');
+        } else {
+          console.log('[MainInterface] Pending text too old, ignoring');
         }
+      } else {
+        console.log('[MainInterface] No pending text found');
       }
     } catch (error) {
       console.error('[MainInterface] Failed to check pending text:', error);

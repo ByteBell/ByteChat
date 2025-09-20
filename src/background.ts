@@ -2,80 +2,94 @@
 import { callLLM, loadStoredSettings } from "./utils";
 console.log("Background.ts loaded")
 
-// Create context menu on extension install/startup
-chrome.runtime.onInstalled.addListener(() => {
-  // Main parent menu
-  chrome.contextMenus.create({
-    id: "byte-chat-tools",
-    title: "Byte Chat Tools",
-    contexts: ["selection"]
-  });
+// Function to create context menus
+function createContextMenus() {
+  console.log('[Background] Creating context menus...');
 
+  // Clear existing menus first to avoid conflicts
+  chrome.contextMenus.removeAll(() => {
+    if (chrome.runtime.lastError) {
+      console.error('[Background] Error clearing existing menus:', chrome.runtime.lastError);
+    }
 
-  // Translate submenu
-  chrome.contextMenus.create({
-    id: "tool-translate",
-    title: "🌐 Translate",
-    parentId: "byte-chat-tools",
-    contexts: ["selection"]
-  });
+    // Main parent menu
+    chrome.contextMenus.create({
+      id: "byte-chat-tools",
+      title: "Byte Chat Tools",
+      contexts: ["selection"]
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('[Background] Error creating main menu:', chrome.runtime.lastError);
+        return;
+      }
+      console.log('[Background] Main context menu created successfully');
 
-  // Summarize submenu
-  chrome.contextMenus.create({
-    id: "tool-summarize",
-    title: "📝 Summarize",
-    parentId: "byte-chat-tools",
-    contexts: ["selection"]
-  });
+      // Create submenus
+      const submenus = [
+        { id: "tool-translate", title: "🌐 Translate" },
+        { id: "tool-summarize", title: "📝 Summarize" },
+        { id: "tool-reply", title: "💬 Reply" },
+        { id: "tool-fact-check", title: "🔍 Fact Check" },
+        { id: "tool-fix-grammar", title: "✍️ Fix Grammar" },
+        { id: "separator-1", title: "", type: "separator" },
+        { id: "custom-prompt", title: "💭 Custom Prompt" }
+      ];
 
-  // Reply submenu
-  chrome.contextMenus.create({
-    id: "tool-reply",
-    title: "💬 Reply",
-    parentId: "byte-chat-tools",
-    contexts: ["selection"]
-  });
+      submenus.forEach((menu) => {
+        const menuConfig: chrome.contextMenus.CreateProperties = {
+          id: menu.id,
+          parentId: "byte-chat-tools",
+          contexts: ["selection"]
+        };
 
-  // Fact Check submenu
-  chrome.contextMenus.create({
-    id: "tool-fact-check",
-    title: "🔍 Fact Check",
-    parentId: "byte-chat-tools",
-    contexts: ["selection"]
-  });
+        if (menu.type === "separator") {
+          menuConfig.type = "separator";
+        } else {
+          menuConfig.title = menu.title;
+        }
 
-  // Fix Grammar submenu
-  chrome.contextMenus.create({
-    id: "tool-fix-grammar",
-    title: "✍️ Fix Grammar",
-    parentId: "byte-chat-tools",
-    contexts: ["selection"]
+        chrome.contextMenus.create(menuConfig, () => {
+          if (chrome.runtime.lastError) {
+            console.error(`[Background] Error creating submenu ${menu.id}:`, chrome.runtime.lastError);
+          } else {
+            console.log(`[Background] Submenu ${menu.id} created successfully`);
+          }
+        });
+      });
+    });
   });
+}
 
-  // Separator
-  chrome.contextMenus.create({
-    id: "separator-1",
-    type: "separator",
-    parentId: "byte-chat-tools",
-    contexts: ["selection"]
-  });
-
-  // Custom Prompt option
-  chrome.contextMenus.create({
-    id: "custom-prompt",
-    title: "💭 Custom Prompt",
-    parentId: "byte-chat-tools",
-    contexts: ["selection"]
-  });
+// Create context menus on extension install
+chrome.runtime.onInstalled.addListener((details) => {
+  console.log('[Background] Extension installed/updated, reason:', details.reason);
+  createContextMenus();
 });
+
+// Create context menus on service worker startup (important for MV3)
+chrome.runtime.onStartup.addListener(() => {
+  console.log('[Background] Service worker started, recreating context menus');
+  createContextMenus();
+});
+
+// Also create menus immediately when background script loads
+console.log('[Background] Background script loaded, ensuring context menus exist');
+createContextMenus();
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (!info.selectionText || !tab?.id) return;
+  console.log('[Background] Context menu clicked:', {
+    menuItemId: info.menuItemId,
+    selectionText: info.selectionText?.substring(0, 100) + '...',
+    tabId: tab?.id
+  });
+
+  if (!info.selectionText || !tab?.id) {
+    console.error('[Background] Missing selection text or tab ID');
+    return;
+  }
 
   const menuItemId = info.menuItemId as string;
-  console.log(`Context menu clicked: ${menuItemId} with text:`, info.selectionText);
-
   let toolName = null;
   let isCustomPrompt = false;
 
@@ -100,19 +114,50 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       isCustomPrompt = true;
       break;
     default:
-      return; // Unknown menu item
+      console.error('[Background] Unknown menu item:', menuItemId);
+      return;
   }
 
-  // Store the selected text and tool selection for the side panel
-  await chrome.storage.local.set({
-    'pending_text': info.selectionText,
-    'pending_tool': toolName,
-    'pending_is_custom_prompt': isCustomPrompt,
-    'pending_timestamp': Date.now()
-  });
+  try {
+    // Store the selected text and tool selection for the side panel
+    const storageData = {
+      'pending_text': info.selectionText,
+      'pending_tool': toolName,
+      'pending_is_custom_prompt': isCustomPrompt,
+      'pending_timestamp': Date.now()
+    };
 
-  // Open the side panel
-  await chrome.sidePanel.open({ tabId: tab.id });
+    await chrome.storage.local.set(storageData);
+
+    console.log('[Background] Stored context menu data:', {
+      tool: toolName,
+      isCustomPrompt,
+      textLength: info.selectionText.length,
+      timestamp: storageData.pending_timestamp
+    });
+
+    // Verify storage was successful
+    const verification = await chrome.storage.local.get(['pending_text', 'pending_tool']);
+    console.log('[Background] Storage verification:', verification);
+
+    // Small delay to ensure storage is complete before opening panel
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Open the side panel
+    await chrome.sidePanel.open({ tabId: tab.id });
+    console.log('[Background] Side panel opened successfully');
+
+  } catch (error) {
+    console.error('[Background] Error handling context menu click:', error);
+
+    // Show error notification to user
+    chrome.notifications?.create({
+      type: 'basic',
+      iconUrl: 'icons/ByteBellLogo.png',
+      title: 'Byte Chat',
+      message: 'Failed to open side panel. Please try clicking the extension icon instead.'
+    });
+  }
 });
 
 // Handle extension icon click
