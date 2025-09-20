@@ -63,8 +63,8 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet, initialError }) 
   };
 
   return (
-    <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="flex items-center justify-center h-full bg-white p-6">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img
@@ -91,7 +91,7 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet, initialError }) 
                 setError(''); // Clear error when user types
               }}
               placeholder="sk-or-v1-..."
-              className={`w-full px-4 py-3 border ${error ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+              className={`w-full px-4 py-3 border ${error ? 'border-red-300' : 'border-gray-200'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all`}
               disabled={isValidating}
             />
             {error && (
@@ -112,7 +112,7 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet, initialError }) 
           <button
             type="submit"
             disabled={isValidating || !apiKey.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 flex items-center justify-center"
           >
             {isValidating ? (
               <>
@@ -132,7 +132,7 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet, initialError }) 
             href="https://openrouter.ai/keys"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
           >
             Get your free OpenRouter API key →
           </a>

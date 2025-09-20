@@ -54,7 +54,7 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
           }
         }
       }}
-      className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+      className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
     >
       <option value="">Select session</option>
       <option value="new">+ New Session</option>

@@ -40,7 +40,7 @@ const FeedbackPanel: React.FC = () => {
     return (
       <div className="h-full flex items-center justify-center bg-background p-4">
         <div className="card p-6 text-center space-y-4 max-w-sm animate-scale-in">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
@@ -49,8 +49,8 @@ const FeedbackPanel: React.FC = () => {
           <p className="text-muted-foreground">
             Your feedback has been submitted successfully. We appreciate your input!
           </p>
-          <div className="w-full bg-green-100 rounded-full h-1">
-            <div className="bg-green-500 h-1 rounded-full animate-pulse" style={{ width: '100%' }} />
+          <div className="w-full bg-emerald-100 rounded-full h-1">
+            <div className="bg-emerald-500 h-1 rounded-full animate-pulse" style={{ width: '100%' }} />
           </div>
         </div>
       </div>
@@ -61,16 +61,16 @@ const FeedbackPanel: React.FC = () => {
     <div className="h-full flex flex-col bg-background">
       <div className="p-4 space-y-4 flex-1 custom-scrollbar overflow-y-auto">
         {/* Header */}
-        <div className="card p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+        <div className="card p-4 bg-gradient-to-r from-gray-50 to-emerald-50 border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-purple-900">We Value Your Feedback</h2>
-              <p className="text-sm text-purple-700">Help us improve FixGrammer</p>
+              <h2 className="text-lg font-semibold text-emerald-900">We Value Your Feedback</h2>
+              <p className="text-sm text-emerald-700">Help us improve FixGrammer</p>
             </div>
           </div>
         </div>

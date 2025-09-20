@@ -119,16 +119,16 @@ const TwitterPanel: React.FC = () => {
     <div className="h-full flex flex-col bg-white">
       <div className="p-4 space-y-3">
         {/* Twitter Header */}
-        <div className="card p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+        <div className="card p-4 bg-gradient-to-r from-gray-50 to-emerald-50 border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-blue-900">Twitter Assistant</h2>
-              <p className="text-sm text-blue-700">Powered by Grok4 via OpenRouter</p>
+              <h2 className="text-lg font-semibold text-emerald-900">Twitter Assistant</h2>
+              <p className="text-sm text-emerald-700">Powered by Grok4 via OpenRouter</p>
             </div>
           </div>
         </div>
@@ -167,8 +167,8 @@ const TwitterPanel: React.FC = () => {
                   className={`
                     flex items-center space-x-3 p-4 rounded-lg border transition-all duration-200 text-left
                     ${actionType === option.value
-                      ? "bg-blue-600 text-white border-blue-600 shadow-md transform scale-102"
-                      : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200 hover:border-blue-500/50"
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-102"
+                      : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200 hover:border-emerald-500/50"
                     }
                   `}
                 >
@@ -188,13 +188,13 @@ const TwitterPanel: React.FC = () => {
           </div>
 
           {/* Grok4 Info */}
-          <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+          <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-gray-50 to-emerald-50 rounded-lg border border-gray-200">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">G4</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-purple-900">Using Grok4 AI</p>
-              <p className="text-xs text-purple-700">X's advanced AI model via OpenRouter</p>
+              <p className="text-sm font-medium text-emerald-900">Using Grok4 AI</p>
+              <p className="text-xs text-emerald-700">X's advanced AI model via OpenRouter</p>
             </div>
           </div>
         </div>
@@ -271,7 +271,7 @@ const TwitterPanel: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   </button>
-                  <div className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                  <div className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">
                     Grok4
                   </div>
                 </div>

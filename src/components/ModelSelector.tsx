@@ -261,7 +261,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
               <span>{models.length} models available</span>
               <span className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                 <span>Connected</span>
               </span>
             </div>

@@ -122,7 +122,7 @@ const SettingsPanel: React.FC = () => {
         <div className="card p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
                 {user ? user.name.charAt(0).toUpperCase() : "?"}
               </div>
               <div>
@@ -137,7 +137,7 @@ const SettingsPanel: React.FC = () => {
             <div className="flex items-center space-x-2">
               {user && (
                 <div className="badge badge-default">
-                  <span className="w-2 h-2 bg-green-400 rounded-full mr-1" />
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1" />
                   Active
                 </div>
               )}
@@ -170,38 +170,38 @@ const SettingsPanel: React.FC = () => {
 
         {/* Premium Features (for logged-in users) */}
         {user && (
-          <div className="card p-4 space-y-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <div className="card p-4 space-y-4 bg-gradient-to-r from-gray-50 to-emerald-50 border-gray-200">
             <div className="flex items-center space-x-2">
               <span className="text-2xl">💎</span>
               <div>
-                <h4 className="font-semibold text-blue-900">Premium Plan</h4>
-                <p className="text-sm text-blue-700">1M words per month included</p>
+                <h4 className="font-semibold text-emerald-900">Premium Plan</h4>
+                <p className="text-sm text-emerald-700">1M words per month included</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center space-x-2 text-blue-800">
+              <div className="flex items-center space-x-2 text-emerald-800">
                 <span>✓</span>
                 <span>Unlimited generations</span>
               </div>
-              <div className="flex items-center space-x-2 text-blue-800">
+              <div className="flex items-center space-x-2 text-emerald-800">
                 <span>✓</span>
                 <span>Priority support</span>
               </div>
-              <div className="flex items-center space-x-2 text-blue-800">
+              <div className="flex items-center space-x-2 text-emerald-800">
                 <span>✓</span>
                 <span>Advanced models</span>
               </div>
-              <div className="flex items-center space-x-2 text-blue-800">
+              <div className="flex items-center space-x-2 text-emerald-800">
                 <span>✓</span>
                 <span>No API key needed</span>
               </div>
             </div>
-            <div className="pt-2 border-t border-blue-200">
-              <p className="text-xs text-blue-600 mb-2">
+            <div className="pt-2 border-t border-gray-200">
+              <p className="text-xs text-emerald-600 mb-2">
                 Extra usage: $1.20 per 1M words
               </p>
               <button
-                className="w-full btn btn-secondary btn-sm bg-blue-600 text-white hover:bg-blue-700"
+                className="w-full btn btn-secondary btn-sm bg-emerald-600 text-white hover:bg-emerald-700"
                 onClick={() => alert("Purchase coming soon!")}
               >
                 <span>💳</span>
@@ -341,8 +341,8 @@ const SettingsPanel: React.FC = () => {
 
             {/* Success Message */}
             {saveOK && (
-              <div className="card p-3 bg-green-50 border-green-200 animate-scale-in">
-                <div className="flex items-center space-x-2 text-green-800">
+              <div className="card p-3 bg-emerald-50 border-emerald-200 animate-scale-in">
+                <div className="flex items-center space-x-2 text-emerald-800">
                   <span>✅</span>
                   <span className="font-medium">Settings saved successfully!</span>
                 </div>

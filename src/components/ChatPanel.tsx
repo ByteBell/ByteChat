@@ -222,10 +222,10 @@ const ChatPanel: React.FC = () => {
       {/* Status Cards */}
       <div className="p-4 space-y-3">
         {restoredSession && !wasInterrupted && (
-          <div className="card glass p-3 border-blue-200 bg-blue-50/50 animate-slide-up">
+          <div className="card glass p-3 border-gray-200 bg-gray-50 animate-slide-up">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-blue-800">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-emerald-800">
                 ✨ Previous session restored
               </span>
             </div>
@@ -233,10 +233,10 @@ const ChatPanel: React.FC = () => {
         )}
 
         {wasInterrupted && (
-          <div className="card glass p-3 border-green-200 bg-green-50/50 animate-slide-up">
+          <div className="card glass p-3 border-gray-200 bg-gray-50 animate-slide-up">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-green-800">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-emerald-800">
                 🔄 Continuing interrupted session...
               </span>
             </div>
@@ -258,8 +258,8 @@ const ChatPanel: React.FC = () => {
                   className={`
                     flex items-center space-x-2 p-3 rounded-lg border transition-all duration-200 text-left
                     ${systemID === option.value
-                      ? "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105"
-                      : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200 hover:border-blue-500/50"
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105"
+                      : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200 hover:border-emerald-500/50"
                     }
                   `}
                 >
@@ -305,7 +305,7 @@ const ChatPanel: React.FC = () => {
                 <span>🌍</span>
                 <span>Languages</span>
               </label>
-              <div className="flex items-center space-x-2 p-3 bg-gray-100/50 rounded-lg">
+              <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
                 <select
                   value={fromLang}
                   onChange={(e) => setFromLang(e.target.value)}
@@ -315,7 +315,7 @@ const ChatPanel: React.FC = () => {
                     <option key={lang} value={lang}>{lang}</option>
                   ))}
                 </select>
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -409,7 +409,7 @@ const ChatPanel: React.FC = () => {
                 readOnly
                 value={answer}
                 rows={4}
-                className="textarea bg-gray-50/50 custom-scrollbar resize-none"
+                className="textarea bg-gray-50 custom-scrollbar resize-none"
                 placeholder={loading ? "AI is thinking..." : "Your result will appear here..."}
               />
               {loading && (

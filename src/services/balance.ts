@@ -79,6 +79,12 @@ export async function getBalanceInfo(apiKey: string): Promise<BalanceInfo> {
     };
   } catch (error) {
     console.error('[Balance] Failed to get balance info:', error);
+
+    // If it's a 401 error, provide a specific error message
+    if (error instanceof Error && error.message.includes('401')) {
+      throw new Error('Invalid API key. Please check your key and try again.');
+    }
+
     throw error;
   }
 }

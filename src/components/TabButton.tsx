@@ -15,8 +15,8 @@ export const TabButton: React.FC<TabButtonProps> = ({
 }) => (
   <button
     id={id}
-    className={`px-3 py-1 rounded-t-md text-sm font-semibold
-         ${active ? "bg-brand text-white" : "bg-mint-light text-text"}`}
+    className={`px-3 py-1 rounded-t-md text-sm font-semibold border border-gray-200
+         ${active ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-gray-700 hover:bg-gray-50"}`}
     onClick={onClick}
   >
     {children}

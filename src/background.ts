@@ -2,40 +2,64 @@
 import { callLLM, loadStoredSettings } from "./utils";
 console.log("Background.ts loaded")
 
+// Guard to prevent multiple simultaneous menu creation
+let isCreatingMenus = false;
+
 // Function to create context menus
-function createContextMenus() {
+async function createContextMenus() {
+  if (isCreatingMenus) {
+    console.log('[Background] Context menu creation already in progress, skipping');
+    return;
+  }
+
+  isCreatingMenus = true;
   console.log('[Background] Creating context menus...');
 
-  // Clear existing menus first to avoid conflicts
-  chrome.contextMenus.removeAll(() => {
-    if (chrome.runtime.lastError) {
-      console.error('[Background] Error clearing existing menus:', chrome.runtime.lastError);
-    }
+  try {
+    // Clear existing menus first to avoid conflicts
+    await new Promise<void>((resolve, reject) => {
+      chrome.contextMenus.removeAll(() => {
+        if (chrome.runtime.lastError) {
+          console.error('[Background] Error clearing existing menus:', chrome.runtime.lastError);
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log('[Background] Existing menus cleared');
+          // Small delay to ensure Chrome processes the removal
+          setTimeout(resolve, 50);
+        }
+      });
+    });
 
-    // Main parent menu
-    chrome.contextMenus.create({
-      id: "byte-chat-tools",
-      title: "Byte Chat Tools",
-      contexts: ["selection"]
-    }, () => {
-      if (chrome.runtime.lastError) {
-        console.error('[Background] Error creating main menu:', chrome.runtime.lastError);
-        return;
-      }
-      console.log('[Background] Main context menu created successfully');
+    // Create main parent menu
+    await new Promise<void>((resolve, reject) => {
+      chrome.contextMenus.create({
+        id: "byte-chat-tools",
+        title: "Byte Chat Tools",
+        contexts: ["selection"]
+      }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('[Background] Error creating main menu:', chrome.runtime.lastError);
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log('[Background] Main context menu created successfully');
+          resolve();
+        }
+      });
+    });
 
-      // Create submenus
-      const submenus = [
-        { id: "tool-translate", title: "🌐 Translate" },
-        { id: "tool-summarize", title: "📝 Summarize" },
-        { id: "tool-reply", title: "💬 Reply" },
-        { id: "tool-fact-check", title: "🔍 Fact Check" },
-        { id: "tool-fix-grammar", title: "✍️ Fix Grammar" },
-        { id: "separator-1", title: "", type: "separator" },
-        { id: "custom-prompt", title: "💭 Custom Prompt" }
-      ];
+    // Create submenus sequentially
+    const submenus = [
+      { id: "tool-translate", title: "🌐 Translate" },
+      { id: "tool-summarize", title: "📝 Summarize" },
+      { id: "tool-reply", title: "💬 Reply" },
+      { id: "tool-fact-check", title: "🔍 Fact Check" },
+      { id: "tool-fix-grammar", title: "✍️ Fix Grammar" },
+      { id: "separator-1", title: "", type: "separator" },
+      { id: "custom-prompt", title: "💭 Custom Prompt" }
+    ];
 
-      submenus.forEach((menu) => {
+    for (const menu of submenus) {
+      await new Promise<void>((resolve, reject) => {
         const menuConfig: chrome.contextMenus.CreateProperties = {
           id: menu.id,
           parentId: "byte-chat-tools",
@@ -51,13 +75,21 @@ function createContextMenus() {
         chrome.contextMenus.create(menuConfig, () => {
           if (chrome.runtime.lastError) {
             console.error(`[Background] Error creating submenu ${menu.id}:`, chrome.runtime.lastError);
+            reject(chrome.runtime.lastError);
           } else {
             console.log(`[Background] Submenu ${menu.id} created successfully`);
+            resolve();
           }
         });
       });
-    });
-  });
+    }
+
+    console.log('[Background] All context menus created successfully');
+  } catch (error) {
+    console.error('[Background] Failed to create context menus:', error);
+  } finally {
+    isCreatingMenus = false;
+  }
 }
 
 // Create context menus on extension install
@@ -143,9 +175,21 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     // Small delay to ensure storage is complete before opening panel
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Open the side panel
-    await chrome.sidePanel.open({ tabId: tab.id });
-    console.log('[Background] Side panel opened successfully');
+    // Try to open the side panel
+    try {
+      await chrome.sidePanel.open({ tabId: tab.id });
+      console.log('[Background] Side panel opened successfully');
+    } catch (panelError) {
+      console.warn('[Background] Side panel requires user gesture, showing notification instead');
+
+      // Show notification instructing user to click extension icon
+      chrome.notifications?.create({
+        type: 'basic',
+        iconUrl: 'icons/ByteBellLogo.png',
+        title: 'Byte Chat - Text Selected',
+        message: 'Click the extension icon to process your selected text.'
+      });
+    }
 
   } catch (error) {
     console.error('[Background] Error handling context menu click:', error);
@@ -155,7 +199,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       type: 'basic',
       iconUrl: 'icons/ByteBellLogo.png',
       title: 'Byte Chat',
-      message: 'Failed to open side panel. Please try clicking the extension icon instead.'
+      message: 'Failed to process selection. Please try clicking the extension icon.'
     });
   }
 });

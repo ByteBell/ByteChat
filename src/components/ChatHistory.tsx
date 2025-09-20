@@ -70,7 +70,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
         {attachments.map((attachment, index) => (
           <div
             key={index}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+            className="flex items-center space-x-1 px-2 py-1 bg-gray-50 border border-gray-200 text-gray-700 rounded text-xs"
           >
             <span>
               {attachment.type === 'image_url' ? '🖼️' :
@@ -109,8 +109,8 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
           <div
             className={`max-w-[80%] rounded-2xl px-4 py-3 ${
               message.role === 'user'
-                ? 'bg-blue-600 text-white ml-12'
-                : 'bg-gray-100 text-gray-900 mr-12'
+                ? 'bg-transparent border border-gray-200 text-gray-900 ml-12'
+                : 'bg-gray-50 text-gray-900 mr-12'
             }`}
           >
             {/* Message Content */}
@@ -122,11 +122,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
             {renderAttachments(message.attachments)}
 
             {/* Message Footer */}
-            <div className={`flex items-center justify-between mt-2 pt-2 border-t ${
-              message.role === 'user'
-                ? 'border-blue-500/30'
-                : 'border-gray-200'
-            }`}>
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
               <div className="flex items-center space-x-2 text-xs opacity-70">
                 <span>{formatTimestamp(message.timestamp)}</span>
                 {message.model && message.model !== 'system' && (
@@ -140,11 +136,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
               {/* Copy Button */}
               <button
                 onClick={() => copyToClipboard(formatMessageContent(message.content))}
-                className={`text-xs px-2 py-1 rounded hover:bg-opacity-20 transition-colors ${
-                  message.role === 'user'
-                    ? 'text-blue-100 hover:bg-white'
-                    : 'text-gray-500 hover:bg-gray-600'
-                }`}
+                className="text-xs px-2 py-1 rounded hover:bg-gray-50 transition-colors text-gray-500"
                 title="Copy message"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,14 +151,14 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
       {/* Streaming Response */}
       {streamingResponse && (
         <div className="flex justify-start">
-          <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 text-gray-900 mr-12">
+          <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-50 text-gray-900 mr-12">
             <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
               {streamingResponse}
             </div>
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
               <div className="flex items-center space-x-2 text-xs opacity-70">
                 <div className="flex items-center space-x-1">
-                  <div className="animate-pulse w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="animate-pulse w-2 h-2 bg-emerald-500 rounded-full"></div>
                   <span>Streaming...</span>
                 </div>
               </div>
@@ -178,9 +170,9 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
       {/* Loading indicator */}
       {isLoading && !streamingResponse && (
         <div className="flex justify-start">
-          <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 text-gray-900 mr-12">
+          <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-50 text-gray-900 mr-12">
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
               <span className="text-sm">AI is thinking...</span>
             </div>
           </div>

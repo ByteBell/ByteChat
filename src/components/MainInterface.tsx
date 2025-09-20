@@ -955,7 +955,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   {balance.usageDisplay}
                 </div>
                 {balance.isFreeAccount && (
-                  <div className="text-xs text-blue-600 font-medium whitespace-nowrap">
+                  <div className="text-xs text-emerald-600 font-medium whitespace-nowrap">
                     🆓 Free Tier
                   </div>
                 )}
@@ -972,7 +972,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     onApiKeyChange();
                   }
                 }}
-                className="ml-2 p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0"
+                className="ml-2 p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors flex-shrink-0"
                 title="Change API Key"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -987,7 +987,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
         {/* Controls Row - Zoom, Advanced, Refresh */}
         <div className="flex items-center justify-between">
           {/* Zoom Controls */}
-          <div className="flex items-center space-x-1 bg-gray-50 rounded-lg p-1">
+          <div className="flex items-center space-x-1 bg-white border border-gray-200 rounded-lg p-1">
             <button
               onClick={handleZoomOut}
               disabled={zoomLevel <= 50}
@@ -1024,7 +1024,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
             <button
               onClick={handleRefreshModels}
               disabled={loadingModels}
-              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
               title="Refresh all models"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1034,7 +1034,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
 
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 px-2 py-1 rounded-md hover:bg-emerald-50 transition-colors"
             >
               {showAdvanced ? 'Simple' : 'Advanced'}
             </button>
@@ -1053,7 +1053,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                 value={selectedModels.text}
                 onChange={(e) => handleModelChange('text', e.target.value)}
                 disabled={loadingModels}
-                className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
               >
                 <option value="">Select text model</option>
                 {categorizedModels.text.map((model) => (
@@ -1084,7 +1084,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   value={selectedModels.image}
                   onChange={(e) => handleModelChange('image', e.target.value)}
                   disabled={loadingModels}
-                  className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
                 >
                   <option value="">Select image model</option>
                   {categorizedModels.image.map((model) => (
@@ -1102,7 +1102,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   value={selectedModels.file}
                   onChange={(e) => handleModelChange('file', e.target.value)}
                   disabled={loadingModels}
-                  className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
                 >
                   <option value="">Select file model</option>
                   {categorizedModels.file.map((model) => (
@@ -1120,7 +1120,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   value={selectedModels.audio}
                   onChange={(e) => handleModelChange('audio', e.target.value)}
                   disabled={loadingModels}
-                  className="flex-1 min-w-0 text-xs border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
                 >
                   <option value="">Select audio model</option>
                   {categorizedModels.audio.map((model) => (
@@ -1150,11 +1150,11 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
           {/* Selected Tool Indicator */}
           {selectedTool && (
             <div className="mb-3">
-              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{selectedTool.icon}</span>
-                  <span className="text-sm font-medium text-blue-700">{selectedTool.name}</span>
-                  <span className="text-xs text-blue-600">• {selectedTool.description}</span>
+                  <span className="text-sm font-medium text-gray-900">{selectedTool.name}</span>
+                  <span className="text-xs text-gray-600">• {selectedTool.description}</span>
                 </div>
                 <button
                   onClick={() => {
@@ -1162,7 +1162,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     setFromLanguage('Auto-detect');
                     setToLanguage('English');
                   }}
-                  className="text-blue-400 hover:text-blue-600"
+                  className="text-gray-400 hover:text-gray-600"
                 >
                   ✕
                 </button>
@@ -1176,7 +1176,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     <select
                       value={fromLanguage}
                       onChange={(e) => setFromLanguage(e.target.value)}
-                      className="flex-1 text-xs border border-gray-300 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                      className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
                     >
                       {languages.map((lang) => (
                         <option key={lang} value={lang}>{lang}</option>
@@ -1206,7 +1206,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     <select
                       value={toLanguage}
                       onChange={(e) => setToLanguage(e.target.value)}
-                      className="flex-1 text-xs border border-gray-300 rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-transparent bg-white"
+                      className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
                     >
                       {languages.filter(lang => lang !== 'Auto-detect').map((lang) => (
                         <option key={lang} value={lang}>{lang}</option>
@@ -1236,7 +1236,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                 {attachedFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
+                    className="flex items-center space-x-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs"
                   >
                     <span>
                       {file.type === 'file' && 'file' in file && file.file ? (
@@ -1319,7 +1319,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     
                     <button
                       onClick={() => removeFileAttachment(index)}
-                      className="text-blue-500 hover:text-blue-700 ml-1"
+                      className="text-emerald-500 hover:text-emerald-700 ml-1"
                     >
                       ✕
                     </button>
@@ -1360,7 +1360,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   ? `Enter text for ${selectedTool.name.toLowerCase()}... (Press Enter to send)`
                   : "Type your message here... (Press Enter to send, Shift+Enter for new line)"
               }
-              className="w-full min-h-[80px] max-h-[200px] px-1 pt-2 pb-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm leading-relaxed overflow-y-auto"
+              className="w-full min-h-[80px] max-h-[200px] px-1 pt-2 pb-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-sm leading-relaxed overflow-y-auto"
               style={{
                 fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}
@@ -1378,7 +1378,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     e.stopPropagation();
                     setShowTools(!showTools);
                   }}
-                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-10 flex-shrink-0"
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors z-10 flex-shrink-0"
                   title="Select Tool"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1507,7 +1507,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     };
                     input.click();
                   }}
-                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors z-10 flex-shrink-0"
                   title="Upload File (PDF, Word, Excel, CSV, JSON, YAML, Images, etc.)"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1537,7 +1537,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                         console.log('Audio button clicked! Current showAudioMenu:', showAudioMenu);
                         setShowAudioMenu(!showAudioMenu);
                       }}
-                      className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                      className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors z-10 flex-shrink-0"
                       title="Audio Options"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1574,20 +1574,44 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     </div>
                   )}
                 </div>
+
+                {/* Feedback Mail Icon */}
+                <button
+                  onClick={() => {
+                    const subject = encodeURIComponent('ByteChat Feedback - Earn 3 Months Premium');
+                    const body = encodeURIComponent('Hi Saurav,\n\nI would like to provide feedback about ByteChat:\n\n[Please share your feedback here]\n\nBest regards');
+                    window.open(`mailto:saurav@bytebell.ai?subject=${subject}&body=${body}`, '_blank');
+                  }}
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors flex-shrink-0 group relative"
+                  title="Provide feedback and earn 3 months free premium!"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    <div className="text-center">
+                      <div className="font-medium">💎 Earn 3 Months Premium!</div>
+                      <div className="text-gray-300 mt-1">Share feedback & get free premium access</div>
+                    </div>
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </button>
               </div>
 
               {/* Right Side - Send Button */}
               <button
                 onClick={handleSubmit}
                 disabled={isLoading || !input.trim()}
-                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
+                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white rounded-lg transition-colors flex-shrink-0"
                 title={isLoading ? "Processing..." : "Send message"}
               >
                 {isLoading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 )}
               </button>
@@ -1607,7 +1631,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                         setShowTools(false);
                       }}
                       className={`w-full text-left px-3 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors ${
-                        !selectedTool ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        !selectedTool ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
@@ -1627,7 +1651,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                           setShowTools(false);
                         }}
                         className={`w-full text-left px-3 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors ${
-                          selectedTool?.id === tool.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                          selectedTool?.id === tool.id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'
                         }`}
                       >
                         <div className="flex items-center space-x-3">
