@@ -338,9 +338,11 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
   const handleZoomIn = async () => {
     const newZoom = Math.min(zoomLevel + 10, 200); // Max 200%
+    console.log('[MainInterface] Zoom In clicked:', zoomLevel, '->', newZoom);
     setZoomLevel(newZoom);
     try {
       await chrome.storage.local.set({ zoomLevel: newZoom });
+      console.log('[MainInterface] Zoom saved to storage:', newZoom);
     } catch (error) {
       console.error('[MainInterface] Failed to save zoom preference:', error);
     }
@@ -348,18 +350,22 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
 
   const handleZoomOut = async () => {
     const newZoom = Math.max(zoomLevel - 10, 50); // Min 50%
+    console.log('[MainInterface] Zoom Out clicked:', zoomLevel, '->', newZoom);
     setZoomLevel(newZoom);
     try {
       await chrome.storage.local.set({ zoomLevel: newZoom });
+      console.log('[MainInterface] Zoom saved to storage:', newZoom);
     } catch (error) {
       console.error('[MainInterface] Failed to save zoom preference:', error);
     }
   };
 
   const resetZoom = async () => {
+    console.log('[MainInterface] Reset Zoom clicked:', zoomLevel, '-> 100');
     setZoomLevel(100);
     try {
       await chrome.storage.local.set({ zoomLevel: 100 });
+      console.log('[MainInterface] Zoom reset and saved to storage');
     } catch (error) {
       console.error('[MainInterface] Failed to save zoom preference:', error);
     }
@@ -863,7 +869,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white min-w-0 max-w-full" style={{ fontSize: `${zoomLevel}%` }}>
+    <div
+      className="flex flex-col h-full bg-white min-w-0 max-w-full"
+      style={{
+        zoom: `${zoomLevel}%`,
+        fontSize: `${Math.max(10, 14 * (zoomLevel / 100))}px`
+      }}
+    >
       {/* Header */}
       <div className="p-2 sm:p-3 border-b border-gray-200 flex-shrink-0">
         {/* Logo, Title, and Balance Row */}
