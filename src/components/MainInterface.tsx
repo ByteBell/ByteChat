@@ -164,10 +164,10 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
   }, [apiKey]);
 
   // Initialize session on app start
-  const initializeSession = () => {
+  const initializeSession = async () => {
     // Don't create a session immediately - wait until user sends first message
     // Just check if there are existing sessions to load
-    const sessions = getAllSessions();
+    const sessions = await getAllSessions();
     if (sessions.length > 0) {
       // Load the most recent session
       setCurrentSessionState(sessions[0]);
@@ -240,6 +240,12 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
               setSelectedTool(tool);
               setShowTools(false);
               console.log('[MainInterface] Selected tool:', result.pending_tool);
+
+              // If it's a translate tool, ensure target language is set to English by default
+              if (result.pending_tool === 'Translate') {
+                setToLanguage('English');
+                console.log('[MainInterface] Set target language to English (default)');
+              }
             } else {
               console.error('[MainInterface] Tool not found:', result.pending_tool);
             }
@@ -437,7 +443,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
     }
 
     // Ensure we have a current session
-    const session = getOrCreateCurrentSession(input.trim());
+    const session = await getOrCreateCurrentSession();
     if (!currentSession || currentSession.id !== session.id) {
       setCurrentSessionState(session);
     }
@@ -484,7 +490,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
         : `Please select a ${capabilityNeeded} model before submitting.`;
 
       addMessageToCurrentSession('assistant', errorMessage, 'system');
-      const updatedSession = getCurrentSession();
+      const updatedSession = await getCurrentSession();
       if (updatedSession) {
         setCurrentSessionState(updatedSession);
       }
@@ -584,14 +590,14 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
 
       if (finalResponse.trim()) {
         addMessageToCurrentSession('assistant', finalResponse, modelToUse);
-        const updatedSession = getCurrentSession();
+        const updatedSession = await getCurrentSession();
         if (updatedSession) {
           setCurrentSessionState(updatedSession);
         }
         console.log('Streaming response added to session successfully');
       } else {
         addMessageToCurrentSession('assistant', 'No response received', modelToUse);
-        const updatedSession = getCurrentSession();
+        const updatedSession = await getCurrentSession();
         if (updatedSession) {
           setCurrentSessionState(updatedSession);
         }
@@ -633,7 +639,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
 
       // Add error message to session
       addMessageToCurrentSession('assistant', `Error: ${errorMessage}`, modelToUse);
-      const updatedSession = getCurrentSession();
+      const updatedSession = await getCurrentSession();
       if (updatedSession) {
         setCurrentSessionState(updatedSession);
       }
@@ -645,8 +651,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
   };
 
   // Handle session change from dropdown
-  const handleSessionChange = (session: ChatSession) => {
-    setCurrentSession(session.id);
+  const handleSessionChange = async (session: ChatSession) => {
+    await setCurrentSession(session.id);
     setCurrentSessionState(session);
 
     // Clear current input when switching sessions
@@ -757,7 +763,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           console.log('User blocked or dismissed the microphone prompt');
-          alert('Microphone access denied!\n\nTo fix this:\n1. Look for a microphone icon in your browser address bar and click it\n2. Select "Allow" for microphone access\n3. Or go to chrome://extensions/ > BBChat  > Details > Site settings > Microphone > Allow\n 5. Reload the extension and try again');
+          alert('Microphone access denied!\n\nTo fix this:\n1. Look for a microphone icon in your browser address bar and click it\n2. Select "Allow" for microphone access\n3. Or go to chrome://extensions/ > Byte Chat > Details > Site settings > Microphone > Allow\n5. Reload the extension and try again');
         } else if (error.name === 'NotFoundError') {
           console.log('No microphone found');
           alert('No microphone found. Please:\n1. Connect a microphone to your computer\n2. Check your system audio settings\n3. Try using "Upload Audio" instead');
@@ -845,7 +851,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
     }
     
     if (permissionState === 'denied') {
-      alert('Microphone access is blocked. Please:\n1. Click the camera/microphone icon in your browser address bar\n2. Select "Allow" for microphone access\n3. Or go to chrome://extensions/ > BBChat > Details > Site settings > Microphone > Allow\n4. Reload the extension and try again');
+      alert('Microphone access is blocked. Please:\n1. Click the camera/microphone icon in your browser address bar\n2. Select "Allow" for microphone access\n3. Or go to chrome://extensions/ > Byte Chat > Details > Site settings > Microphone > Allow\n4. Reload the extension and try again');
       return;
     }
     

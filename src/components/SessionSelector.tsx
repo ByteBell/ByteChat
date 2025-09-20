@@ -20,18 +20,22 @@ const SessionSelector: React.FC<SessionSelectorProps> = ({
 
   // Load sessions on mount and when current session changes
   useEffect(() => {
-    const loadedSessions = getAllSessions();
-    setSessions(loadedSessions);
+    const loadSessions = async () => {
+      const loadedSessions = await getAllSessions();
+      setSessions(loadedSessions);
+    };
+    loadSessions();
   }, [currentSession]);
 
-  const handleSessionSelect = (session: ChatSession) => {
-    setCurrentSession(session.id);
+  const handleSessionSelect = async (session: ChatSession) => {
+    await setCurrentSession(session.id);
     onSessionChange(session);
   };
 
-  const handleNewSession = () => {
+  const handleNewSession = async () => {
     const newSession = createNewSession();
-    setSessions(getAllSessions()); // Refresh sessions list
+    const refreshedSessions = await getAllSessions(); // Refresh sessions list
+    setSessions(refreshedSessions);
     onSessionChange(newSession);
   };
 

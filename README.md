@@ -78,6 +78,12 @@ ByteChat's mission is to **democratize AI access** by providing a free and open 
 - Upload audio files
 - Automatic transcription with AI models
 
+#### 🖱️ **Context Menu Integration**
+- Right-click on any selected text
+- Access all tools directly from context menu
+- Automatic text transfer to side panel
+- Tool pre-selection for immediate use
+
 ### Advanced Features
 
 #### 🔄 **Smart Model Selection**
@@ -87,11 +93,20 @@ ByteChat's mission is to **democratize AI access** by providing a free and open 
 - **Audio**: google/gemini-2.5-flash-lite
 - **Other Documents**: Converted to text and processed with Grok
 
-#### 📊 **Balance Tracking**
+#### 📊 **Balance Tracking & Validation**
+- Real-time API key validation with balance checking
 - Monitor your OpenRouter credit usage
 - Color-coded indicators (green/yellow/red)
 - Free tier detection
 - Usage statistics
+- Secure key management with change option
+
+#### 🔧 **User Experience**
+- **Zoom Controls**: Adjust interface text size (50% - 200%)
+- **Responsive Design**: Works in popup and side panel modes
+- **Error Handling**: Comprehensive error messages and recovery
+- **Persistent Settings**: All preferences saved locally
+- **Real-time Streaming**: Live response generation
 
 ## 💰 Pricing Tiers
 
@@ -110,27 +125,46 @@ ByteChat's mission is to **democratize AI access** by providing a free and open 
 ## 🏗️ Project Architecture
 
 ```
-BB-chat/
+ByteChat/
 ├── src/
-│   ├── components/          # React components
-│   │   ├── MainInterface.tsx    # Main chat UI
-│   │   ├── ChatHistory.tsx      # Message display
-│   │   ├── SessionSelector.tsx  # Session management
-│   │   └── ...
-│   ├── services/            # API integrations
-│   │   ├── openrouter.ts       # OpenRouter API
-│   │   ├── api.ts              # General API calls
-│   │   └── ...
-│   ├── utils/               # Utility functions
-│   │   ├── fileEncoder.ts      # File processing
-│   │   ├── sessionManager.ts   # Session handling
-│   │   └── ...
-│   ├── background.ts        # Extension background script
-│   ├── contentScript.ts     # Page injection script
-│   └── types.ts            # TypeScript definitions
-├── public/                  # Static assets
-├── icons/                   # Extension icons
-└── manifest.json           # Chrome extension manifest
+│   ├── components/              # React components
+│   │   ├── MainInterface.tsx        # Main chat interface with tools and models
+│   │   ├── ApiKeySetup.tsx          # API key validation and setup
+│   │   ├── ChatHistory.tsx          # Message display and streaming
+│   │   ├── ChatPanel.tsx            # Chat panel component
+│   │   ├── SessionSelector.tsx      # Session management dropdown
+│   │   ├── ModelSelector.tsx        # Model selection component
+│   │   ├── SettingsPanel.tsx        # Settings configuration
+│   │   ├── TwitterPanel.tsx         # Social media integration
+│   │   ├── FeedbackPanel.tsx        # User feedback component
+│   │   ├── popup.tsx               # Extension popup entry point
+│   │   ├── Select.tsx              # Custom select component
+│   │   └── TabButton.tsx           # Tab navigation button
+│   ├── services/                # API integrations
+│   │   ├── openrouter.ts           # OpenRouter API integration
+│   │   ├── balance.ts              # Credit balance management
+│   │   ├── modelCategories.ts      # Model categorization logic
+│   │   ├── api.ts                  # General API utilities
+│   │   ├── claude.ts               # Claude API integration
+│   │   ├── openai.ts               # OpenAI API integration
+│   │   └── together.ts             # Together API integration
+│   ├── utils/                   # Utility functions
+│   │   ├── fileEncoder.ts          # File processing and encoding
+│   │   ├── sessionManager.ts       # Session state management
+│   │   └── utils.ts                # General utilities
+│   ├── types/                   # TypeScript definitions
+│   │   ├── types.ts                # Main type definitions
+│   │   └── extension-env.d.ts      # Extension environment types
+│   ├── background.ts            # Extension background service worker
+│   ├── contentScript.ts         # Content script for page injection
+│   ├── constants.ts             # Application constants
+│   └── index.tsx               # React app entry point
+├── public/                      # Static assets
+├── icons/                       # Extension icons and branding
+├── manifest.json                # Chrome extension manifest
+├── panel.html                   # Side panel HTML template
+├── webpack.config.js            # Build configuration
+└── tailwind.css                # Compiled Tailwind styles
 ```
 
 ### Tech Stack
@@ -197,33 +231,6 @@ npm run build
   - Screenshots (if applicable)
   - Browser version
 
-## 🗺️ Roadmap
-
-### Phase 1 (Completed) ✅
-- Chrome extension with core chat functionality
-- Multi-model support via OpenRouter
-- File upload capabilities
-- Session management
-- Built-in tools (translate, summarize, etc.)
-
-### Phase 2 (In Progress) 🚧
-- Gmail OAuth integration
-- Premium tier with 100k free tokens/month
-- Payment integration ($1 minimum recharge)
-- Enhanced file processing
-
-### Phase 3 (Planned) 📋
-- Android app (React Native)
-- iOS app
-- Desktop app (Electron)
-- Team collaboration features
-- API access for developers
-
-### Phase 4 (Future) 🔮
-- Self-hosting options
-- Local model support
-- Plugin system
-- Enterprise features
 
 ## 📜 License
 
