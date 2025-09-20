@@ -3,12 +3,13 @@ import { validateOpenRouterKey } from '../services/openrouter';
 
 interface ApiKeySetupProps {
   onApiKeySet: (apiKey: string) => void;
+  initialError?: string;
 }
 
-const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet }) => {
+const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet, initialError }) => {
   const [apiKey, setApiKey] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(initialError || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -3,10 +3,12 @@ import "../tailwind.css";
 import { loadStoredSettings, loadStoredUser, execInPage } from "../utils";
 import ApiKeySetup from "./ApiKeySetup";
 import MainInterface from "./MainInterface";
+import { validateOpenRouterKey } from "../services/openrouter";
 
 const Popup: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [keyValidationError, setKeyValidationError] = useState<string>('');
   const mode = new URLSearchParams(location.search).get('mode') || 'popup';
   const inIframe = window.top !== window;
   // Set styling based on mode
@@ -22,10 +24,28 @@ const Popup: React.FC = () => {
     document.body.style.margin = "0";
     document.body.style.padding = "0";
       
-    // Check for stored API key
-    chrome.storage.local.get(['openRouterApiKey'], (result) => {
+    // Check for stored API key and validate it
+    chrome.storage.local.get(['openRouterApiKey'], async (result) => {
       if (result.openRouterApiKey) {
-        setApiKey(result.openRouterApiKey);
+        console.log('[Popup] Found stored API key, validating...');
+        try {
+          const validation = await validateOpenRouterKey(result.openRouterApiKey);
+          if (validation.valid) {
+            console.log('[Popup] API key is valid');
+            setApiKey(result.openRouterApiKey);
+            setKeyValidationError('');
+          } else {
+            console.log('[Popup] API key is invalid:', validation.error);
+            setKeyValidationError(validation.error || 'Invalid API key. Please enter a new one.');
+            setApiKey(''); // Clear invalid key
+            // Remove invalid key from storage
+            chrome.storage.local.remove(['openRouterApiKey']);
+          }
+        } catch (error) {
+          console.error('[Popup] API key validation failed:', error);
+          setKeyValidationError('Unable to validate API key. Please check your connection and try again.');
+          setApiKey(''); // Clear key on validation error
+        }
       }
       setIsLoading(false);
     });
@@ -62,7 +82,7 @@ const Popup: React.FC = () => {
   return (
     <div className={`overflow-auto ${mode === 'popup' ? 'min-h-screen' : 'h-full'}`}>
       {!apiKey ? (
-        <ApiKeySetup onApiKeySet={handleApiKeySet} />
+        <ApiKeySetup onApiKeySet={handleApiKeySet} initialError={keyValidationError} />
       ) : (
         <MainInterface apiKey={apiKey} />
       )}

@@ -112,6 +112,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   const [recordingStatus, setRecordingStatus] = useState<string>('');
   const [fromLanguage, setFromLanguage] = useState<string>('Auto-detect');
   const [toLanguage, setToLanguage] = useState<string>('English');
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   // Auto-resize textarea based on content
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -135,6 +136,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
     checkForPendingText();
     loadBalance();
     initializeSession();
+    loadZoomPreference();
   }, [apiKey]);
 
   // Initialize session on app start
@@ -320,6 +322,46 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
       console.log('[MainInterface] Loaded balance:', balanceInfo);
     } catch (error) {
       console.error('[MainInterface] Failed to load balance:', error);
+    }
+  };
+
+  const loadZoomPreference = async () => {
+    try {
+      const result = await chrome.storage.local.get(['zoomLevel']);
+      if (result.zoomLevel && typeof result.zoomLevel === 'number') {
+        setZoomLevel(result.zoomLevel);
+      }
+    } catch (error) {
+      console.error('[MainInterface] Failed to load zoom preference:', error);
+    }
+  };
+
+  const handleZoomIn = async () => {
+    const newZoom = Math.min(zoomLevel + 10, 200); // Max 200%
+    setZoomLevel(newZoom);
+    try {
+      await chrome.storage.local.set({ zoomLevel: newZoom });
+    } catch (error) {
+      console.error('[MainInterface] Failed to save zoom preference:', error);
+    }
+  };
+
+  const handleZoomOut = async () => {
+    const newZoom = Math.max(zoomLevel - 10, 50); // Min 50%
+    setZoomLevel(newZoom);
+    try {
+      await chrome.storage.local.set({ zoomLevel: newZoom });
+    } catch (error) {
+      console.error('[MainInterface] Failed to save zoom preference:', error);
+    }
+  };
+
+  const resetZoom = async () => {
+    setZoomLevel(100);
+    try {
+      await chrome.storage.local.set({ zoomLevel: 100 });
+    } catch (error) {
+      console.error('[MainInterface] Failed to save zoom preference:', error);
     }
   };
 
@@ -821,12 +863,12 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white min-w-0 max-w-full">
+    <div className="flex flex-col h-full bg-white min-w-0 max-w-full" style={{ fontSize: `${zoomLevel}%` }}>
       {/* Header */}
       <div className="p-2 sm:p-3 border-b border-gray-200 flex-shrink-0">
-        {/* Logo and Title Row */}
+        {/* Logo, Title, and Balance Row */}
         <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
             <img
               src={chrome.runtime.getURL("icons/ByteBellLogo.png")}
               alt="Byte Chat"
@@ -836,34 +878,67 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
               <h1 className="text-sm sm:text-lg font-bold text-gray-900 truncate">Byte Chat</h1>
               <p className="text-xs text-gray-500 truncate hidden sm:block">All-purpose context copilot for independent users</p>
             </div>
-          </div>
-          
-          {/* Balance Display */}
-          {balance && (
-            <div className="space-y-1 flex-shrink-0 min-w-0">
-              <div className={`text-xs sm:text-sm font-medium truncate ${
-                balance.color === 'red' ? 'text-red-500' :
-                balance.color === 'yellow' ? 'text-yellow-600' :
-                'text-green-600'
-              }`}>
-                💰 {balance.display}
-              </div>
-              <div className="text-xs text-gray-500 truncate">
-                {balance.usageDisplay}
-              </div>
-              {balance.isFreeAccount && (
-                <div className="text-xs text-blue-600 font-medium">
-                  🆓 Free Tier
+
+            {/* Balance Display - Inline */}
+            {balance && (
+              <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
+                <div className={`text-xs sm:text-sm font-medium whitespace-nowrap ${
+                  balance.color === 'red' ? 'text-red-500' :
+                  balance.color === 'yellow' ? 'text-yellow-600' :
+                  'text-green-600'
+                }`}>
+                  💰 {balance.display}
                 </div>
-              )}
-            </div>
-          )}
+                <div className="text-xs text-gray-500 whitespace-nowrap">
+                  {balance.usageDisplay}
+                </div>
+                {balance.isFreeAccount && (
+                  <div className="text-xs text-blue-600 font-medium whitespace-nowrap">
+                    🆓 Free Tier
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-        
-        {/* Model Selectors - Simplified Layout */}
-        <div className="space-y-2">
-          {/* Header with Refresh and Advanced Toggle */}
-          <div className="flex justify-between items-center">
+
+        {/* Controls Row - Zoom, Advanced, Refresh */}
+        <div className="flex items-center justify-between">
+          {/* Zoom Controls */}
+          <div className="flex items-center space-x-1 bg-gray-50 rounded-lg p-1">
+            <button
+              onClick={handleZoomOut}
+              disabled={zoomLevel <= 50}
+              className="p-1 text-gray-600 hover:text-gray-800 disabled:text-gray-300 disabled:cursor-not-allowed rounded transition-colors"
+              title="Zoom Out"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+              </svg>
+            </button>
+
+            <button
+              onClick={resetZoom}
+              className="px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-800 rounded transition-colors min-w-[3rem]"
+              title="Reset Zoom"
+            >
+              {zoomLevel}%
+            </button>
+
+            <button
+              onClick={handleZoomIn}
+              disabled={zoomLevel >= 200}
+              className="p-1 text-gray-600 hover:text-gray-800 disabled:text-gray-300 disabled:cursor-not-allowed rounded transition-colors"
+              title="Zoom In"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Advanced and Refresh Controls */}
+          <div className="flex items-center space-x-2">
             <button
               onClick={handleRefreshModels}
               disabled={loadingModels}
@@ -882,6 +957,10 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey }) => {
               {showAdvanced ? 'Simple' : 'Advanced'}
             </button>
           </div>
+        </div>
+        
+        {/* Model Selectors - Simplified Layout */}
+        <div className="space-y-2">
 
           {/* Always Visible: Text Model and Session */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
