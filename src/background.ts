@@ -6,8 +6,8 @@ console.log("Background.ts loaded")
 chrome.runtime.onInstalled.addListener(() => {
   // Main parent menu
   chrome.contextMenus.create({
-    id: "xai-tools",
-    title: "xAI Tools",
+    id: "byte-chat-tools",
+    title: "Byte Chat Tools",
     contexts: ["selection"]
   });
 
@@ -16,7 +16,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "tool-translate",
     title: "🌐 Translate",
-    parentId: "xai-tools",
+    parentId: "byte-chat-tools",
     contexts: ["selection"]
   });
 
@@ -24,7 +24,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "tool-summarize",
     title: "📝 Summarize",
-    parentId: "xai-tools",
+    parentId: "byte-chat-tools",
     contexts: ["selection"]
   });
 
@@ -32,7 +32,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "tool-reply",
     title: "💬 Reply",
-    parentId: "xai-tools",
+    parentId: "byte-chat-tools",
     contexts: ["selection"]
   });
 
@@ -40,7 +40,15 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "tool-fact-check",
     title: "🔍 Fact Check",
-    parentId: "xai-tools",
+    parentId: "byte-chat-tools",
+    contexts: ["selection"]
+  });
+
+  // Fix Grammar submenu
+  chrome.contextMenus.create({
+    id: "tool-fix-grammar",
+    title: "✍️ Fix Grammar",
+    parentId: "byte-chat-tools",
     contexts: ["selection"]
   });
 
@@ -48,7 +56,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "separator-1",
     type: "separator",
-    parentId: "xai-tools",
+    parentId: "byte-chat-tools",
     contexts: ["selection"]
   });
 
@@ -56,7 +64,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "custom-prompt",
     title: "💭 Custom Prompt",
-    parentId: "xai-tools",
+    parentId: "byte-chat-tools",
     contexts: ["selection"]
   });
 });
@@ -85,6 +93,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     case 'tool-fact-check':
       toolName = 'Fact Check';
       break;
+    case 'tool-fix-grammar':
+      toolName = 'Fix Grammar';
+      break;
     case 'custom-prompt':
       isCustomPrompt = true;
       break;
@@ -107,7 +118,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
   console.log('Extension icon clicked!', tab);
-  
+
   if (!tab.id) {
     console.log('No tab ID available');
     return;

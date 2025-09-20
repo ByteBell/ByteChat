@@ -3,7 +3,7 @@ import "../tailwind.css";
 import { loadStoredSettings, loadStoredUser, execInPage } from "../utils";
 import ApiKeySetup from "./ApiKeySetup";
 import MainInterface from "./MainInterface";
-import { validateOpenRouterKey } from "../services/openrouter";
+import { getBalanceInfo } from "../services/balance";
 
 const Popup: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
@@ -29,22 +29,27 @@ const Popup: React.FC = () => {
       if (result.openRouterApiKey) {
         console.log('[Popup] Found stored API key, validating...');
         try {
-          const validation = await validateOpenRouterKey(result.openRouterApiKey);
-          if (validation.valid) {
-            console.log('[Popup] API key is valid');
-            setApiKey(result.openRouterApiKey);
-            setKeyValidationError('');
-          } else {
-            console.log('[Popup] API key is invalid:', validation.error);
-            setKeyValidationError(validation.error || 'Invalid API key. Please enter a new one.');
-            setApiKey(''); // Clear invalid key
-            // Remove invalid key from storage
-            chrome.storage.local.remove(['openRouterApiKey']);
-          }
+          // Validate by fetching balance (this ensures the key actually works)
+          const balanceInfo = await getBalanceInfo(result.openRouterApiKey);
+          console.log('[Popup] API key validation successful:', balanceInfo);
+          setApiKey(result.openRouterApiKey);
+          setKeyValidationError('');
         } catch (error) {
           console.error('[Popup] API key validation failed:', error);
-          setKeyValidationError('Unable to validate API key. Please check your connection and try again.');
-          setApiKey(''); // Clear key on validation error
+          if (error instanceof Error) {
+            if (error.message.includes('401') || error.message.includes('unauthorized')) {
+              setKeyValidationError('Invalid API key. Please enter a new one.');
+            } else if (error.message.includes('403') || error.message.includes('forbidden')) {
+              setKeyValidationError('API key access denied. Your key may not have the required permissions.');
+            } else {
+              setKeyValidationError('Unable to validate API key. Please check your connection and enter a new key.');
+            }
+          } else {
+            setKeyValidationError('Unable to validate API key. Please enter a new key.');
+          }
+          setApiKey(''); // Clear invalid key
+          // Remove invalid key from storage
+          chrome.storage.local.remove(['openRouterApiKey']);
         }
       }
       setIsLoading(false);
@@ -69,6 +74,12 @@ const Popup: React.FC = () => {
 
   const handleApiKeySet = (newApiKey: string) => {
     setApiKey(newApiKey);
+    setKeyValidationError(''); // Clear any previous validation errors
+  };
+
+  const handleApiKeyChange = () => {
+    setApiKey('');
+    setKeyValidationError('');
   };
 
   if (isLoading) {
@@ -84,7 +95,7 @@ const Popup: React.FC = () => {
       {!apiKey ? (
         <ApiKeySetup onApiKeySet={handleApiKeySet} initialError={keyValidationError} />
       ) : (
-        <MainInterface apiKey={apiKey} />
+        <MainInterface apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { validateOpenRouterKey } from '../services/openrouter';
+import { getBalanceInfo } from '../services/balance';
 
 interface ApiKeySetupProps {
   onApiKeySet: (apiKey: string) => void;
@@ -23,18 +24,39 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet, initialError }) 
     setError('');
 
     try {
+      // First validate the key format
       const result = await validateOpenRouterKey(apiKey.trim());
-      
-      if (result.valid) {
-        // Store in local storage
-        chrome.storage.local.set({ openRouterApiKey: apiKey.trim() });
-        onApiKeySet(apiKey.trim());
-      } else {
-        setError(result.error || 'Invalid API key. Please check and try again.');
+
+      if (!result.valid) {
+        setError(result.error || 'Invalid API key format. Please check and try again.');
+        return;
       }
+
+      // Then try to fetch balance to ensure the key actually works
+      const balanceInfo = await getBalanceInfo(apiKey.trim());
+      console.log('[ApiKeySetup] Balance validation successful:', balanceInfo);
+
+      // If we reach here, the key is valid and working
+      chrome.storage.local.set({ openRouterApiKey: apiKey.trim() });
+      onApiKeySet(apiKey.trim());
+
     } catch (error) {
-      console.error('Validation error:', error);
-      setError('Failed to validate API key. Please check your internet connection and try again.');
+      console.error('API key validation error:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('401') || error.message.includes('unauthorized')) {
+          setError('Invalid API key. Please check your key and try again.');
+        } else if (error.message.includes('403') || error.message.includes('forbidden')) {
+          setError('API key access denied. Your key may not have the required permissions.');
+        } else if (error.message.includes('429') || error.message.includes('rate')) {
+          setError('Rate limited. Please wait a moment and try again.');
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          setError('Network error. Please check your internet connection and try again.');
+        } else {
+          setError('Failed to validate API key. Please verify your key is correct and has proper permissions.');
+        }
+      } else {
+        setError('Failed to validate API key. Please check your connection and try again.');
+      }
     } finally {
       setIsValidating(false);
     }
