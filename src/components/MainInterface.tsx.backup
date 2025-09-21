@@ -115,9 +115,21 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
   const [toLanguage, setToLanguage] = useState<string>('English');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
-  // Handle textarea input change (fixed height to match icon stack)
+  // Auto-resize textarea based on content
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const textarea = e.target;
+    setInput(textarea.value);
+
+    // Reset height to calculate scrollHeight properly
+    textarea.style.height = '100px';
+
+    // Calculate new height based on content (max 10 lines = ~240px)
+    const lineHeight = 24; // ~1.5rem line height
+    const minHeight = 100;
+    const maxHeight = lineHeight * 10; // 10 lines
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+
+    textarea.style.height = `${newHeight}px`;
   };
 
   useEffect(() => {
@@ -1582,7 +1594,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   }}
                   placeholder={selectedTool ? "Enter text to process..." : "Ask anything..."}
                   disabled={isLoading}
-                  className="w-full h-[148px] max-h-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10 disabled:bg-gray-50"
+                  className="w-full min-h-[80px] max-h-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10 disabled:bg-gray-50"
+                  style={{ height: '100px' }}
                 />
 
                 {/* Submit Button - Positioned in bottom right of textarea */}
@@ -1595,8 +1608,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   {isLoading ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   ) : (
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                   )}
                 </button>
@@ -1609,22 +1622,22 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                 className="absolute bottom-12 left-3 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50 tools-dropdown"
               >
                   <div className="p-3">
-                    <div className="text-xs font-bold text-gray-600 mb-3 px-2">SELECT TOOL</div>
+                    <div className="text-xs font-semibold text-gray-400 mb-3 px-2">SELECT TOOL</div>
 
                     <button
                       onClick={() => {
                         setSelectedTool(null);
                         setShowTools(false);
                       }}
-                      className={`w-full text-left px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors ${
-                        !selectedTool ? 'bg-emerald-50 text-emerald-700' : 'text-gray-800'
+                      className={`w-full text-left px-3 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors ${
+                        !selectedTool ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
                         <span className="text-lg">💬</span>
                         <div>
-                          <div className="font-semibold text-sm">Chat</div>
-                          <div className="text-xs text-gray-600 mt-0.5">Ask anything directly</div>
+                          <div className="font-medium">Chat</div>
+                          <div className="text-xs text-gray-500 mt-0.5">Ask anything directly</div>
                         </div>
                       </div>
                     </button>
@@ -1636,15 +1649,15 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                           handleToolSelect(tool);
                           setShowTools(false);
                         }}
-                        className={`w-full text-left px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors ${
-                          selectedTool?.id === tool.id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-800'
+                        className={`w-full text-left px-3 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors ${
+                          selectedTool?.id === tool.id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'
                         }`}
                       >
                         <div className="flex items-center space-x-3">
                           <span className="text-lg">{tool.icon}</span>
                           <div>
-                            <div className="font-semibold text-sm">{tool.name}</div>
-                            <div className="text-xs text-gray-600 mt-0.5">{tool.description}</div>
+                            <div className="font-medium">{tool.name}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{tool.description}</div>
                           </div>
                         </div>
                       </button>
@@ -1655,6 +1668,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
