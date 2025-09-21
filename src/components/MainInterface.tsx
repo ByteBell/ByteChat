@@ -489,7 +489,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
         ? 'Please select an audio model that supports transcription (e.g., Whisper models) before submitting audio.'
         : `Please select a ${capabilityNeeded} model before submitting.`;
 
-      addMessageToCurrentSession('assistant', errorMessage, 'system');
+      await addMessageToCurrentSession('assistant', errorMessage, 'system');
       const updatedSession = await getCurrentSession();
       if (updatedSession) {
         setCurrentSessionState(updatedSession);
@@ -501,7 +501,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
     console.log('Selected model:', modelToUse, 'for capability:', capabilityNeeded);
 
     // Add user message to session
-    addMessageToCurrentSession('user', input, modelToUse, attachedFiles.length > 0 ? attachedFiles : undefined);
+    await addMessageToCurrentSession('user', input, modelToUse, attachedFiles.length > 0 ? attachedFiles : undefined);
     const userInput = input; // Store input before clearing
 
     setIsLoading(true);
@@ -575,10 +575,11 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
         systemPrompt,
         promptContent,
         (chunk: string) => {
-          console.log('Received chunk:', chunk);
+          console.log('Received chunk:', chunk.length, 'characters');
           // Update both state and ref
           streamingResponseRef.current += chunk;
           setStreamingResponse(streamingResponseRef.current);
+          console.log('Current response length:', streamingResponseRef.current.length);
         },
         '', // existingAnswer (empty for new requests)
         plugins // Pass plugins for PDF processing
@@ -589,14 +590,14 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
       console.log('Streaming completed, final response:', finalResponse);
 
       if (finalResponse.trim()) {
-        addMessageToCurrentSession('assistant', finalResponse, modelToUse);
+        await addMessageToCurrentSession('assistant', finalResponse, modelToUse);
         const updatedSession = await getCurrentSession();
         if (updatedSession) {
           setCurrentSessionState(updatedSession);
         }
         console.log('Streaming response added to session successfully');
       } else {
-        addMessageToCurrentSession('assistant', 'No response received', modelToUse);
+        await addMessageToCurrentSession('assistant', 'No response received', modelToUse);
         const updatedSession = await getCurrentSession();
         if (updatedSession) {
           setCurrentSessionState(updatedSession);
@@ -604,6 +605,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
       }
 
       // Clear streaming response after adding to session
+      console.log('Clearing streaming response after successful save');
       setStreamingResponse('');
       streamingResponseRef.current = '';
 
@@ -638,12 +640,16 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
       }
 
       // Add error message to session
-      addMessageToCurrentSession('assistant', `Error: ${errorMessage}`, modelToUse);
+      await addMessageToCurrentSession('assistant', `Error: ${errorMessage}`, modelToUse);
       const updatedSession = await getCurrentSession();
       if (updatedSession) {
         setCurrentSessionState(updatedSession);
       }
       console.log('Error added to session:', errorMessage);
+
+      // Clear streaming response on error too
+      setStreamingResponse('');
+      streamingResponseRef.current = '';
     } finally {
       setIsLoading(false);
       console.log('Streaming request completed');

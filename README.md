@@ -12,6 +12,12 @@
 
 ByteChat's mission is to **democratize AI access** by providing a free and open way to interact with cutting-edge AI models through OpenRouter. No subscriptions, no vendor lock-in - just pure AI power at your fingertips.
 
+## 🔍 The Problem We Solve
+
+Teams waste time because knowledge sits in many places and AI tools ignore that context. People reupload files and paste snippets into every new chat, so answers are generic, slow, and often wrong, which hurts onboarding, support, and daily execution.
+
+**ByteChat solves this with our context copilot approach** - an intelligent extension that understands your work environment and provides contextually aware AI assistance without the constant need to re-upload files or explain your setup repeatedly.
+
 ## 🌟 Why ByteChat?
 
 - **100% Free Access**: Use top-tier AI models like Llama, DeepSeek, Grok, and more without paying a cent
