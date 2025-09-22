@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SessionMessage, MessageContent } from '../types';
 
 interface ChatHistoryProps {
@@ -9,14 +9,45 @@ interface ChatHistoryProps {
 
 const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, streamingResponse = '' }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
 
   // Auto-scroll to bottom when new messages are added or streaming response updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingResponse]);
 
+  // Auto-expand only the latest assistant message
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Find the latest assistant message
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === 'assistant') {
+          setExpandedMessages(new Set([messages[i].id]));
+          break;
+        }
+      }
+    }
+  }, [messages]);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const toggleMessageExpansion = (messageId: string) => {
+    setExpandedMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      return newSet;
+    });
+  };
+
+  const truncateText = (text: string, maxLength: number = 150): string => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   const formatMessageContent = (content: string | MessageContent[]): string => {
@@ -115,8 +146,30 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
           >
             {/* Message Content */}
             <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-              {formatMessageContent(message.content)}
+              {(() => {
+                const content = formatMessageContent(message.content);
+                const isExpanded = expandedMessages.has(message.id);
+                const shouldTruncate = content.length > 150;
+
+                return shouldTruncate && !isExpanded ? truncateText(content) : content;
+              })()}
             </div>
+
+            {/* Expand/Collapse Button */}
+            {(() => {
+              const content = formatMessageContent(message.content);
+              const shouldShowToggle = content.length > 150;
+              const isExpanded = expandedMessages.has(message.id);
+
+              return shouldShowToggle ? (
+                <button
+                  onClick={() => toggleMessageExpansion(message.id)}
+                  className="mt-2 text-xs text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  {isExpanded ? 'Show less' : 'Show more'}
+                </button>
+              ) : null;
+            })()}
 
             {/* Attachments */}
             {renderAttachments(message.attachments)}
@@ -133,16 +186,41 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
                 )}
               </div>
 
-              {/* Copy Button */}
-              <button
-                onClick={() => copyToClipboard(formatMessageContent(message.content))}
-                className="text-xs px-2 py-1 rounded hover:bg-gray-50 transition-colors text-gray-500"
-                title="Copy message"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </button>
+              <div className="flex items-center space-x-1">
+                {/* Expand/Collapse Icon Button */}
+                {(() => {
+                  const content = formatMessageContent(message.content);
+                  const shouldShowToggle = content.length > 150;
+                  const isExpanded = expandedMessages.has(message.id);
+
+                  return shouldShowToggle ? (
+                    <button
+                      onClick={() => toggleMessageExpansion(message.id)}
+                      className="text-xs px-2 py-1 rounded hover:bg-gray-50 transition-colors text-gray-500"
+                      title={isExpanded ? "Minimize message" : "Expand message"}
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {isExpanded ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        )}
+                      </svg>
+                    </button>
+                  ) : null;
+                })()}
+
+                {/* Copy Button */}
+                <button
+                  onClick={() => copyToClipboard(formatMessageContent(message.content))}
+                  className="text-xs px-2 py-1 rounded hover:bg-gray-50 transition-colors text-gray-500"
+                  title="Copy message"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
