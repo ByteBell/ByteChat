@@ -1350,9 +1350,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                 className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex-shrink-0"
                 title="Select Tool"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                 </svg>
               </button>
 
@@ -1479,8 +1478,8 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   className="flex items-center justify-center w-8 h-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors z-10 flex-shrink-0"
                   title="Upload File (PDF, Word, Excel, CSV, JSON, YAML, Images, etc.)"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z"/>
                   </svg>
                 </button>
 
@@ -1509,8 +1508,9 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                       className="flex items-center justify-center w-8 h-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors z-10 flex-shrink-0"
                       title="Audio Options"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"/>
+                        <path d="M5.5 9.643a.75.75 0 00-1.5 0V10c0 3.06 2.29 5.585 5.25 5.954V17.5h-1.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-1.5v-1.546A6.001 6.001 0 0016 10v-.357a.75.75 0 00-1.5 0V10a4.5 4.5 0 01-9 0v-.357z"/>
                       </svg>
                     </button>
                   )}
@@ -1554,8 +1554,9 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors flex-shrink-0 group relative"
                   title="Provide feedback and earn 3 months free premium!"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z"/>
+                    <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z"/>
                   </svg>
 
                   {/* Tooltip */}
@@ -1616,14 +1617,14 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                         setSelectedTool(null);
                         setShowTools(false);
                       }}
-                      className={`w-full text-left px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors ${
+                      className={`w-full text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
                         !selectedTool ? 'bg-emerald-50 text-emerald-700' : 'text-gray-800'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <span className="text-lg">💬</span>
+                        <span className="text-base">💬</span>
                         <div>
-                          <div className="font-semibold text-sm">Chat</div>
+                          <div className="font-semibold text-xs">Chat</div>
                           <div className="text-xs text-gray-600 mt-0.5">Ask anything directly</div>
                         </div>
                       </div>
@@ -1636,15 +1637,15 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                           handleToolSelect(tool);
                           setShowTools(false);
                         }}
-                        className={`w-full text-left px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors ${
+                        className={`w-full text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
                           selectedTool?.id === tool.id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-800'
                         }`}
                       >
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg">{tool.icon}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-base">{tool.icon}</span>
                           <div>
-                            <div className="font-semibold text-sm">{tool.name}</div>
-                            <div className="text-xs text-gray-600 mt-0.5">{tool.description}</div>
+                            <div className="font-semibold text-xs">{tool.name}</div>
+                            <div className="text-xs text-gray-600 mt-0.5 leading-tight">{tool.description}</div>
                           </div>
                         </div>
                       </button>
