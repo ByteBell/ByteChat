@@ -69,7 +69,7 @@ const FeedbackPanel: React.FC = () => {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-emerald-900">We Value Your Feedback</h2>
+              <h2 className="text-lg font-semibold text-heading-h2">We Value Your Feedback</h2>
               <p className="text-sm text-emerald-700">Help us improve FixGrammer</p>
             </div>
           </div>

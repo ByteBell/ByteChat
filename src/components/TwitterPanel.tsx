@@ -127,7 +127,7 @@ const TwitterPanel: React.FC = () => {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-emerald-900">Twitter Assistant</h2>
+              <h2 className="text-lg font-semibold text-heading-h2">Twitter Assistant</h2>
               <p className="text-sm text-emerald-700">Powered by Grok4 via OpenRouter</p>
             </div>
           </div>

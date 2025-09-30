@@ -1,0 +1,132 @@
+/* Centralized CSS color utilities */
+
+/* CTA Colors */
+.bg-cta-gradient {
+  background: var(--color-cta-gradient);
+}
+
+.bg-cta-light {
+  background-color: var(--color-cta-light);
+}
+
+.bg-cta-default {
+  background-color: var(--color-cta-default);
+}
+
+/* Accent Colors */
+.text-accent {
+  color: var(--color-accent-default);
+}
+
+.bg-accent {
+  background-color: var(--color-accent-default);
+}
+
+.border-accent {
+  border-color: var(--color-accent-default);
+}
+
+.text-accent-hover:hover {
+  color: var(--color-accent-hover);
+}
+
+.bg-accent-light {
+  background-color: var(--color-accent-light);
+}
+
+/* Heading Colors */
+.text-heading-h2 {
+  color: var(--color-heading-h2);
+}
+
+/* Highlight Colors */
+.bg-highlight-gradient {
+  background: var(--color-highlight-gradient);
+}
+
+.text-highlight-purple {
+  color: var(--color-highlight-purple);
+}
+
+/* Text Colors */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-black {
+  color: var(--color-text-black);
+}
+
+.text-white {
+  color: var(--color-text-white);
+}
+
+/* Background Colors */
+.bg-primary {
+  background-color: var(--color-background-primary);
+}
+
+.bg-secondary {
+  background-color: var(--color-background-secondary);
+}
+
+.bg-muted {
+  background-color: var(--color-background-muted);
+}
+
+/* Border Colors */
+.border-default {
+  border-color: var(--color-border-default);
+}
+
+.border-light {
+  border-color: var(--color-border-light);
+}
+
+/* Status Colors */
+.text-success {
+  color: var(--color-status-success);
+}
+
+.text-error {
+  color: var(--color-status-error);
+}
+
+.text-warning {
+  color: var(--color-status-warning);
+}
+
+.text-info {
+  color: var(--color-status-info);
+}
+
+.bg-success {
+  background-color: var(--color-status-success);
+}
+
+.bg-error {
+  background-color: var(--color-status-error);
+}
+
+.bg-warning {
+  background-color: var(--color-status-warning);
+}
+
+.bg-info {
+  background-color: var(--color-status-info);
+}
+
+/* Focus states */
+.focus-accent:focus {
+  outline-color: var(--color-accent-default);
+  box-shadow: 0 0 0 2px var(--color-accent-default);
+}
+
+/* Hover states */
+.hover-accent:hover {
+  background-color: var(--color-accent-light);
+}

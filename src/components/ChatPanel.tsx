@@ -224,7 +224,7 @@ const ChatPanel: React.FC = () => {
         {restoredSession && !wasInterrupted && (
           <div className="card glass p-3 border-gray-200 bg-gray-50 animate-slide-up">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-accent500 rounded-full animate-pulse" />
               <span className="text-sm font-medium text-emerald-800">
                 ✨ Previous session restored
               </span>
@@ -235,7 +235,7 @@ const ChatPanel: React.FC = () => {
         {wasInterrupted && (
           <div className="card glass p-3 border-gray-200 bg-gray-50 animate-slide-up">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-accent500 rounded-full animate-pulse" />
               <span className="text-sm font-medium text-emerald-800">
                 🔄 Continuing interrupted session...
               </span>
@@ -258,8 +258,8 @@ const ChatPanel: React.FC = () => {
                   className={`
                     flex items-center space-x-2 p-3 rounded-lg border transition-all duration-200 text-left
                     ${systemID === option.value
-                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105"
-                      : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200 hover:border-emerald-500/50"
+                      ? "gradient-primary text-black border-accent shadow-md transform scale-105"
+                      : "bg-white hover:bg-gray-50 hover:text-gray-900 border-gray-200 hover:border-accent/50"
                     }
                   `}
                 >
@@ -315,7 +315,7 @@ const ChatPanel: React.FC = () => {
                     <option key={lang} value={lang}>{lang}</option>
                   ))}
                 </select>
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent600 text-white">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -355,11 +355,11 @@ const ChatPanel: React.FC = () => {
             <button
               disabled={loading}
               onClick={runChat}
-              className="btn btn-primary btn-md flex-1 disabled:opacity-50"
+              className="btn gradient-primary btn-md flex-1 disabled:opacity-50 text-black"
             >
               {loading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 spinner border-white" />
+                  <div className="w-4 h-4 spinner border-black" />
                   <span>Generating...</span>
                 </div>
               ) : (

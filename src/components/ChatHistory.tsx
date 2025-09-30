@@ -164,7 +164,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
               return shouldShowToggle ? (
                 <button
                   onClick={() => toggleMessageExpansion(message.id)}
-                  className="mt-2 text-xs text-emerald-600 hover:text-emerald-700 transition-colors"
+                  className="mt-2 text-xs text-accent hover:text-accent-hover transition-colors"
                 >
                   {isExpanded ? 'Show less' : 'Show more'}
                 </button>
@@ -236,7 +236,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
               <div className="flex items-center space-x-2 text-xs opacity-70">
                 <div className="flex items-center space-x-1">
-                  <div className="animate-pulse w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <div className="animate-pulse w-2 h-2 bg-accent rounded-full"></div>
                   <span>Streaming...</span>
                 </div>
               </div>
@@ -250,7 +250,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
         <div className="flex justify-start">
           <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-50 text-gray-900 mr-12">
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent"></div>
               <span className="text-sm">AI is thinking...</span>
             </div>
           </div>

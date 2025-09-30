@@ -8,6 +8,7 @@ import { callLLMStream } from '../utils';
 import { Settings, ModelCapability, MessageContent, ChatSession } from '../types';
 import SessionSelector from './SessionSelector';
 import ChatHistory from './ChatHistory';
+import Icon from './Icon';
 import { encodeFileToBase64, getMimeTypeFromExtension, formatFileSize } from '../utils/fileEncoder';
 import {
   handleAppRefresh,
@@ -58,31 +59,31 @@ const tools: Tool[] = [
   {
     id: 'Translate',
     name: 'Translate',
-    icon: '🌐',
+    icon: 'translate',
     description: 'Translate between languages'
   },
   {
     id: 'Summarize',
     name: 'Summarize',
-    icon: '📝',
+    icon: 'document-text',
     description: 'Create concise summaries'
   },
   {
     id: 'Reply',
     name: 'Reply',
-    icon: '💬',
+    icon: 'chat-bubble-left-right',
     description: 'Generate social media replies'
   },
   {
     id: 'Fact Check',
     name: 'Fact Check',
-    icon: '🔍',
+    icon: 'magnifying-glass',
     description: 'Verify information accuracy'
   },
   {
     id: 'Fix Grammar',
     name: 'Fix Grammar',
-    icon: '✍️',
+    icon: 'pencil-square',
     description: 'Correct grammar and spelling'
   }
 ];
@@ -925,15 +926,6 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
         {/* Logo, Title, and Balance Row */}
         <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-            <img
-              src={chrome.runtime.getURL("icons/ByteBellLogo.png")}
-              alt="Byte Chat"
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg shadow-lg flex-shrink-0"
-            />
-            <div className="min-w-0">
-              <h1 className="text-sm sm:text-lg font-bold text-gray-900 truncate">Byte Chat</h1>
-              <p className="text-xs text-gray-500 truncate hidden sm:block">All-purpose context copilot for independent users</p>
-            </div>
 
             {/* Balance Display - Inline */}
             {balance && (
@@ -949,7 +941,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   {balance.usageDisplay}
                 </div>
                 {balance.isFreeAccount && (
-                  <div className="text-xs text-emerald-600 font-medium whitespace-nowrap">
+                  <div className="text-xs text-accent font-medium whitespace-nowrap">
                     🆓 Free Tier
                   </div>
                 )}
@@ -1028,7 +1020,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
 
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 px-2 py-1 rounded-md hover:bg-emerald-50 transition-colors"
+              className="text-xs font-medium text-accent hover:text-accent px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
             >
               {showAdvanced ? 'Simple' : 'Advanced'}
             </button>
@@ -1047,7 +1039,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                 value={selectedModels.text}
                 onChange={(e) => handleModelChange('text', e.target.value)}
                 disabled={loadingModels}
-                className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
+                className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-accent focus:border-transparent bg-white"
               >
                 <option value="">Select text model</option>
                 {categorizedModels.text.map((model) => (
@@ -1078,7 +1070,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   value={selectedModels.image}
                   onChange={(e) => handleModelChange('image', e.target.value)}
                   disabled={loadingModels}
-                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-accent focus:border-transparent bg-white"
                 >
                   <option value="">Select image model</option>
                   {categorizedModels.image.map((model) => (
@@ -1096,7 +1088,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   value={selectedModels.file}
                   onChange={(e) => handleModelChange('file', e.target.value)}
                   disabled={loadingModels}
-                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-accent focus:border-transparent bg-white"
                 >
                   <option value="">Select file model</option>
                   {categorizedModels.file.map((model) => (
@@ -1114,7 +1106,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   value={selectedModels.audio}
                   onChange={(e) => handleModelChange('audio', e.target.value)}
                   disabled={loadingModels}
-                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 focus:ring-1 focus:ring-accent focus:border-transparent bg-white"
                 >
                   <option value="">Select audio model</option>
                   {categorizedModels.audio.map((model) => (
@@ -1170,7 +1162,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     <select
                       value={fromLanguage}
                       onChange={(e) => setFromLanguage(e.target.value)}
-                      className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
+                      className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-1 focus:ring-accent focus:border-transparent bg-white"
                     >
                       {languages.map((lang) => (
                         <option key={lang} value={lang}>{lang}</option>
@@ -1200,7 +1192,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     <select
                       value={toLanguage}
                       onChange={(e) => setToLanguage(e.target.value)}
-                      className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
+                      className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-1 focus:ring-accent focus:border-transparent bg-white"
                     >
                       {languages.filter(lang => lang !== 'Auto-detect').map((lang) => (
                         <option key={lang} value={lang}>{lang}</option>
@@ -1230,7 +1222,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                 {attachedFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center space-x-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs"
+                    className="flex items-center space-x-1 px-2 py-1 bg-accent100 text-accent rounded text-xs"
                   >
                     <span>
                       {file.type === 'file' && 'file' in file && file.file ? (
@@ -1313,7 +1305,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     
                     <button
                       onClick={() => removeFileAttachment(index)}
-                      className="text-emerald-500 hover:text-emerald-700 ml-1"
+                      className="text-accent hover:text-accent ml-1"
                     >
                       ✕
                     </button>
@@ -1347,7 +1339,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   e.stopPropagation();
                   setShowTools(!showTools);
                 }}
-                className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex-shrink-0"
+                className="flex items-center justify-center w-8 h-8 text-accent hover:text-accent hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
                 title="Select Tool"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1475,7 +1467,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     };
                     input.click();
                   }}
-                  className="flex items-center justify-center w-8 h-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                  className="flex items-center justify-center w-8 h-8 text-accent hover:text-accent hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
                   title="Upload File (PDF, Word, Excel, CSV, JSON, YAML, Images, etc.)"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1505,7 +1497,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                         console.log('Audio button clicked! Current showAudioMenu:', showAudioMenu);
                         setShowAudioMenu(!showAudioMenu);
                       }}
-                      className="flex items-center justify-center w-8 h-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors z-10 flex-shrink-0"
+                      className="flex items-center justify-center w-8 h-8 text-accent hover:text-accent hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
                       title="Audio Options"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1551,7 +1543,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                     const body = encodeURIComponent('Hi Saurav,\n\nI would like to provide feedback about ByteChat:\n\n[Please share your feedback here]\n\nBest regards');
                     window.open(`mailto:saurav@bytebell.ai?subject=${subject}&body=${body}`, '_blank');
                   }}
-                  className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors flex-shrink-0 group relative"
+                  className="flex items-center justify-center w-8 h-8 text-accent hover:text-accent hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0 group relative"
                   title="Provide feedback and earn 3 months free premium!"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1583,18 +1575,18 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                   }}
                   placeholder={selectedTool ? "Enter text to process..." : "Ask anything..."}
                   disabled={isLoading}
-                  className="w-full h-[148px] max-h-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10 disabled:bg-gray-50"
+                  className="w-full h-[148px] max-h-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-accent focus:border-transparent pr-10 disabled:bg-gray-50"
                 />
 
                 {/* Submit Button - Positioned in bottom right of textarea */}
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading || !input.trim()}
-                  className="absolute bottom-2 right-2 flex items-center justify-center w-8 h-8 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white rounded-lg transition-colors"
+                  className="absolute bottom-2 right-2 flex items-center justify-center w-8 h-8 gradient-primary hover:opacity-90 disabled:bg-gray-300 text-black rounded-lg transition-all"
                   title={isLoading ? "Processing..." : "Send message"}
                 >
                   {isLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
                   ) : (
                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -1618,11 +1610,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                         setShowTools(false);
                       }}
                       className={`w-full text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                        !selectedTool ? 'bg-emerald-50 text-emerald-700' : 'text-gray-800'
+                        !selectedTool ? 'bg-blue-50 text-accent' : 'text-gray-800'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <span className="text-base">💬</span>
+                        <div className="text-accent">
+                          <Icon name="chat" className="w-4 h-4" />
+                        </div>
                         <div>
                           <div className="font-semibold text-xs">Chat</div>
                           <div className="text-xs text-gray-600 mt-0.5">Ask anything directly</div>
@@ -1638,11 +1632,13 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange })
                           setShowTools(false);
                         }}
                         className={`w-full text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                          selectedTool?.id === tool.id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-800'
+                          selectedTool?.id === tool.id ? 'bg-blue-50 text-accent' : 'text-gray-800'
                         }`}
                       >
                         <div className="flex items-center space-x-2">
-                          <span className="text-base">{tool.icon}</span>
+                          <div className={selectedTool?.id === tool.id ? 'text-accent' : 'text-gray-600'}>
+                            <Icon name={tool.icon} className="w-4 h-4" />
+                          </div>
                           <div>
                             <div className="font-semibold text-xs">{tool.name}</div>
                             <div className="text-xs text-gray-600 mt-0.5 leading-tight">{tool.description}</div>

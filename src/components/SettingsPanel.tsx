@@ -174,24 +174,24 @@ const SettingsPanel: React.FC = () => {
             <div className="flex items-center space-x-2">
               <span className="text-2xl">💎</span>
               <div>
-                <h4 className="font-semibold text-emerald-900">Premium Plan</h4>
-                <p className="text-sm text-emerald-700">1M words per month included</p>
+                <h4 className="font-semibold text-heading-h2">Premium Plan</h4>
+                <p className="text-sm text-accent">1M words per month included</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center space-x-2 text-emerald-800">
+              <div className="flex items-center space-x-2 text-accent">
                 <span>✓</span>
                 <span>Unlimited generations</span>
               </div>
-              <div className="flex items-center space-x-2 text-emerald-800">
+              <div className="flex items-center space-x-2 text-accent">
                 <span>✓</span>
                 <span>Priority support</span>
               </div>
-              <div className="flex items-center space-x-2 text-emerald-800">
+              <div className="flex items-center space-x-2 text-accent">
                 <span>✓</span>
                 <span>Advanced models</span>
               </div>
-              <div className="flex items-center space-x-2 text-emerald-800">
+              <div className="flex items-center space-x-2 text-accent">
                 <span>✓</span>
                 <span>No API key needed</span>
               </div>
@@ -342,7 +342,7 @@ const SettingsPanel: React.FC = () => {
             {/* Success Message */}
             {saveOK && (
               <div className="card p-3 bg-emerald-50 border-emerald-200 animate-scale-in">
-                <div className="flex items-center space-x-2 text-emerald-800">
+                <div className="flex items-center space-x-2 text-accent">
                   <span>✅</span>
                   <span className="font-medium">Settings saved successfully!</span>
                 </div>
