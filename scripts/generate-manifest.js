@@ -1,4 +1,9 @@
-{
+// Script to generate manifest.json with environment variables
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config();
+
+const manifestTemplate = {
   "manifest_version": 3,
   "name": "Byte Chat",
   "version": "1.0.0",
@@ -25,13 +30,12 @@
     "128": "icons/new_logo_128.png"
   },
   "oauth2": {
-    "client_id": "402323343917-csfh4qfgrtooan8s4jeiuvuaedjmis1b.apps.googleusercontent.com",
+    "client_id": process.env.REACT_APP_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
     ]
   },
-
   "permissions": [
     "activeTab",
     "scripting",
@@ -44,7 +48,18 @@
     "desktopCapture"
   ],
   "optional_host_permissions": [],
-  "host_permissions": [
-    "<all_urls>"
-  ]
+  "host_permissions": ["<all_urls>"]
+};
+
+// Validate required environment variables
+if (!manifestTemplate.oauth2.client_id) {
+  console.error('Error: GOOGLE_CLIENT_ID or REACT_APP_GOOGLE_CLIENT_ID environment variable is required');
+  process.exit(1);
 }
+
+// Write the manifest file
+const manifestPath = path.join(__dirname, '..', 'manifest.json');
+fs.writeFileSync(manifestPath, JSON.stringify(manifestTemplate, null, 2));
+
+console.log('✅ manifest.json generated successfully with environment variables');
+console.log(`📍 Client ID: ${manifestTemplate.oauth2.client_id}`);

@@ -3,6 +3,8 @@ const path               = require('path');
 const HtmlWebpackPlugin  = require('html-webpack-plugin');
 const CopyPlugin         = require('copy-webpack-plugin');
 const ExtensionReloader  = require('webpack-ext-reloader');
+const webpack            = require('webpack');
+require('dotenv').config();
 
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
@@ -33,24 +35,33 @@ module.exports = {
   resolve: { extensions: ['.tsx', '.ts', '.js'] },
 
   plugins: [
-    /* ①  Generates dist/popup.html and injects the bundle */
+    /* ①  Inject environment variables into the bundle */
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+        'REACT_APP_GOOGLE_CLIENT_ID': JSON.stringify(process.env.REACT_APP_GOOGLE_CLIENT_ID),
+        'REACT_APP_BACKEND_URL': JSON.stringify(process.env.REACT_APP_BACKEND_URL),
+      }
+    }),
+
+    /* ②  Generates dist/popup.html and injects the bundle */
     new HtmlWebpackPlugin({
       template: 'public/popup.html',      // <- source file
       filename: 'popup.html',             // <- output file
       inject: 'body',
-      chunks: ['index']  
+      chunks: ['index']
     }),
 
-    /* ②  Copies everything that isn't bundled */
+    /* ③  Copies everything that isn't bundled */
     new CopyPlugin({
       patterns: [
         { from: 'manifest.json', to: '.' }, // KEEP THIS – copies the manifest
         { from: 'panel.html', to: '.' },    // Copy side panel HTML
-        { from: 'icons',         to: 'icons' }      
+        { from: 'icons',         to: 'icons' }
       ],
     }),
 
-    /* ③  Hot-reload in dev only */
+    /* ④  Hot-reload in dev only */
     process.env.NODE_ENV === 'development' &&
       new ExtensionReloader({
         reloadPage: true,

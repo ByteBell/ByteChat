@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "popup.js",
   "scripts": {
+    "generate-manifest": "node scripts/generate-manifest.js",
+    "prebuild": "npm run generate-manifest",
+    "prestart": "npm run generate-manifest",
     "start": "webpack --watch --progress --config webpack.config.js",
     "dev": "cross-env NODE_ENV=development webpack --watch",
     "build": "cross-env NODE_ENV=production webpack"
@@ -12,6 +15,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "together-ai": "^0.15.0"

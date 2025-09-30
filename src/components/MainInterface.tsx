@@ -9,6 +9,7 @@ import { Settings, ModelCapability, MessageContent, ChatSession } from '../types
 import SessionSelector from './SessionSelector';
 import ChatHistory from './ChatHistory';
 import Icon from './Icon';
+import { GoogleUser } from '../services/googleAuth';
 import { encodeFileToBase64, getMimeTypeFromExtension, formatFileSize } from '../utils/fileEncoder';
 import {
   handleAppRefresh,
@@ -21,6 +22,8 @@ import {
 
 interface MainInterfaceProps {
   apiKey: string;
+  googleUser?: GoogleUser | null;
+  authMethod?: 'apikey' | 'google';
   onApiKeyChange?: () => void;
 }
 
@@ -88,7 +91,7 @@ const tools: Tool[] = [
   }
 ];
 
-const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, onApiKeyChange }) => {
+const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authMethod, onApiKeyChange }) => {
   const [allModels, setAllModels] = useState<OpenRouterModel[]>([]);
   const [categorizedModels, setCategorizedModels] = useState<ModelsByCategory>({
     text: [], image: [], file: [], audio: []

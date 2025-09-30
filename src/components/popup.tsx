@@ -4,11 +4,14 @@ import { loadStoredSettings, loadStoredUser, execInPage } from "../utils";
 import ApiKeySetup from "./ApiKeySetup";
 import MainInterface from "./MainInterface";
 import { getBalanceInfo } from "../services/balance";
+import { googleAuthService, GoogleUser } from "../services/googleAuth";
 
 const Popup: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [keyValidationError, setKeyValidationError] = useState<string>('');
+  const [googleUser, setGoogleUser] = useState<GoogleUser | null>(null);
+  const [authMethod, setAuthMethod] = useState<'apikey' | 'google' | null>(null);
   const mode = new URLSearchParams(location.search).get('mode') || 'popup';
   const inIframe = window.top !== window;
   // Set styling based on mode
@@ -24,36 +27,71 @@ const Popup: React.FC = () => {
     document.body.style.margin = "0";
     document.body.style.padding = "0";
       
-    // Check for stored API key and validate it
-    chrome.storage.local.get(['openRouterApiKey'], async (result) => {
-      if (result.openRouterApiKey) {
-        console.log('[Popup] Found stored API key, validating...');
-        try {
-          // Validate by fetching balance (this ensures the key actually works)
-          const balanceInfo = await getBalanceInfo(result.openRouterApiKey);
-          console.log('[Popup] API key validation successful:', balanceInfo);
-          setApiKey(result.openRouterApiKey);
-          setKeyValidationError('');
-        } catch (error) {
-          console.error('[Popup] API key validation failed:', error);
-          if (error instanceof Error) {
-            if (error.message.includes('401') || error.message.includes('unauthorized')) {
-              setKeyValidationError('Invalid API key. Please enter a new one.');
-            } else if (error.message.includes('403') || error.message.includes('forbidden')) {
-              setKeyValidationError('API key access denied. Your key may not have the required permissions.');
-            } else {
-              setKeyValidationError('Unable to validate API key. Please check your connection and enter a new key.');
+    // Check for stored authentication (API key or Google)
+    const checkAuthentication = async () => {
+      console.log('[Popup] Starting authentication check...');
+      try {
+        // First check for Google authentication
+        console.log('[Popup] Checking for Google authentication...');
+        const googleAuthData = await googleAuthService.getStoredAuthData();
+        if (googleAuthData) {
+          console.log('[Popup] Found Google authentication, verifying...');
+          const isSignedIn = await googleAuthService.isSignedIn();
+          if (isSignedIn) {
+            console.log('[Popup] Google authentication valid, setting up user...');
+            setGoogleUser(googleAuthData.user);
+            setAuthMethod('google');
+            setIsLoading(false);
+            return;
+          } else {
+            console.log('[Popup] Google authentication invalid, continuing to API key check...');
+          }
+        } else {
+          console.log('[Popup] No Google authentication found, checking API key...');
+        }
+
+        // Then check for API key
+        chrome.storage.local.get(['openRouterApiKey'], async (result) => {
+          console.log('[Popup] Chrome storage result:', !!result.openRouterApiKey);
+          if (result.openRouterApiKey) {
+            console.log('[Popup] Found stored API key, validating...');
+            try {
+              // Validate by fetching balance (this ensures the key actually works)
+              const balanceInfo = await getBalanceInfo(result.openRouterApiKey);
+              console.log('[Popup] API key validation successful:', balanceInfo);
+              setApiKey(result.openRouterApiKey);
+              setAuthMethod('apikey');
+              setKeyValidationError('');
+            } catch (error) {
+              console.error('[Popup] API key validation failed:', error);
+              if (error instanceof Error) {
+                if (error.message.includes('401') || error.message.includes('unauthorized')) {
+                  setKeyValidationError('Invalid API key. Please enter a new one.');
+                } else if (error.message.includes('403') || error.message.includes('forbidden')) {
+                  setKeyValidationError('API key access denied. Your key may not have the required permissions.');
+                } else {
+                  setKeyValidationError('Unable to validate API key. Please check your connection and enter a new key.');
+                }
+              } else {
+                setKeyValidationError('Unable to validate API key. Please enter a new key.');
+              }
+              setApiKey(''); // Clear invalid key
+              // Remove invalid key from storage
+              chrome.storage.local.remove(['openRouterApiKey']);
             }
           } else {
-            setKeyValidationError('Unable to validate API key. Please enter a new key.');
+            console.log('[Popup] No API key found in storage');
           }
-          setApiKey(''); // Clear invalid key
-          // Remove invalid key from storage
-          chrome.storage.local.remove(['openRouterApiKey']);
-        }
+          console.log('[Popup] Setting loading to false');
+          setIsLoading(false);
+        });
+      } catch (error) {
+        console.error('[Popup] Authentication check failed:', error);
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    checkAuthentication();
 
     // Preload settings/user if needed by panels
     loadStoredSettings();
@@ -74,15 +112,33 @@ const Popup: React.FC = () => {
 
   const handleApiKeySet = (newApiKey: string) => {
     setApiKey(newApiKey);
-    setKeyValidationError(''); // Clear any previous validation errors
+    setAuthMethod('apikey');
+    setKeyValidationError('');
+  };
+
+  const handleGoogleAuth = (user: GoogleUser) => {
+    setGoogleUser(user);
+    setAuthMethod('google');
+    setKeyValidationError('');
   };
 
   const handleApiKeyChange = () => {
     setApiKey('');
+    setGoogleUser(null);
+    setAuthMethod(null);
     setKeyValidationError('');
+    // Clear stored auth data
+    chrome.storage.local.remove(['openRouterApiKey']);
+    googleAuthService.signOut();
   };
 
   if (isLoading) {
+    console.log('[Popup] Still loading... Current state:', {
+      apiKey: !!apiKey,
+      googleUser: !!googleUser,
+      authMethod,
+      isLoading
+    });
     return (
       <div className={`flex items-center justify-center bg-white ${mode === 'popup' ? 'h-screen' : 'h-full'}`}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
@@ -92,10 +148,19 @@ const Popup: React.FC = () => {
 
   return (
     <div className={`overflow-auto ${mode === 'popup' ? 'min-h-screen' : 'h-full'}`}>
-      {!apiKey ? (
-        <ApiKeySetup onApiKeySet={handleApiKeySet} initialError={keyValidationError} />
+      {!authMethod ? (
+        <ApiKeySetup
+          onApiKeySet={handleApiKeySet}
+          onGoogleAuth={handleGoogleAuth}
+          initialError={keyValidationError}
+        />
       ) : (
-        <MainInterface apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
+        <MainInterface
+          apiKey={apiKey}
+          googleUser={googleUser}
+          authMethod={authMethod}
+          onApiKeyChange={handleApiKeyChange}
+        />
       )}
     </div>
   );
