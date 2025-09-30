@@ -70,9 +70,9 @@ const TwitterPanel: React.FC = () => {
     
     try {
       const user = await loadStoredUser();
-      
+
       // For Twitter features, we need OpenRouter specifically
-      if (!user?.token && (!settings.apiKey || settings.provider !== "openrouter")) {
+      if (!user?.access_token && (!settings.apiKey || settings.provider !== "openrouter")) {
         setError("⚠️ Twitter features require OpenRouter. Please configure OpenRouter with your API key in Settings.");
         return;
       }

@@ -31,7 +31,6 @@
       "https://www.googleapis.com/auth/userinfo.profile"
     ]
   },
-
   "permissions": [
     "activeTab",
     "scripting",

@@ -31,23 +31,24 @@ const Popup: React.FC = () => {
     const checkAuthentication = async () => {
       console.log('[Popup] Starting authentication check...');
       try {
-        // First check for Google authentication
+        // First check for Google authentication using the new user storage
         console.log('[Popup] Checking for Google authentication...');
-        const googleAuthData = await googleAuthService.getStoredAuthData();
-        if (googleAuthData) {
-          console.log('[Popup] Found Google authentication, verifying...');
-          const isSignedIn = await googleAuthService.isSignedIn();
-          if (isSignedIn) {
-            console.log('[Popup] Google authentication valid, setting up user...');
-            setGoogleUser(googleAuthData.user);
-            setAuthMethod('google');
-            setIsLoading(false);
-            return;
-          } else {
-            console.log('[Popup] Google authentication invalid, continuing to API key check...');
-          }
+        const storedUser = await loadStoredUser();
+        if (storedUser?.access_token) {
+          console.log('[Popup] Found stored user with access token:', storedUser.email);
+          // Create GoogleUser from stored User
+          const googleUserData: GoogleUser = {
+            email: storedUser.email,
+            name: storedUser.name,
+            picture: storedUser.picture,
+            id: storedUser.email
+          };
+          setGoogleUser(googleUserData);
+          setAuthMethod('google');
+          setIsLoading(false);
+          return;
         } else {
-          console.log('[Popup] No Google authentication found, checking API key...');
+          console.log('[Popup] No stored user found, checking API key...');
         }
 
         // Then check for API key

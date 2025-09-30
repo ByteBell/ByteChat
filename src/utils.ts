@@ -163,19 +163,29 @@ export async function callLLMStream(
 ): Promise<void> {
   // Check if user is logged in - if so, route ALL requests through backend
   const user = await loadStoredUser();
-  if (user?.token) {
-    // For logged-in users, send only the question to backend (OpenRouter only)
+  if (user?.access_token) {
+    // For logged-in users, send request to backend with proper format
     console.log("Sending request to backend for logged-in user");
-    console.log("Existing answer length:", existingAnswer.length);
-    
+    console.log("User tokens left:", user.tokens_left);
+
+    // Build messages array
+    const messages: any[] = [];
+    if (systemPrompt) {
+      messages.push({ role: "system", content: systemPrompt });
+    }
+    messages.push({ role: "user", content: userPrompt });
+
     const response = await fetch("http://localhost:8000/api/chat/stream", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${user.token}`,
       },
       body: JSON.stringify({
-        question: `${systemPrompt}\n\n${userPrompt}`,
+        access_token: user.access_token,
+        messages: messages,
+        model: model || undefined, // Use provided model or backend default
+        temperature: 0.7,
+        stream: true
       }),
     });
 
@@ -202,42 +212,58 @@ export async function callLLMStream(
         }
 
         buffer += decoder.decode(value, { stream: true });
-        
+
         // Process complete lines
         while (buffer.includes('\n')) {
           const lineEnd = buffer.indexOf('\n');
           const line = buffer.slice(0, lineEnd).trim();
           buffer = buffer.slice(lineEnd + 1);
-          
+
           if (line === '') continue;
-          
-          console.log("Processing line:", line);
-          
+
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim();
             if (data === '[DONE]') {
               console.log("Received [DONE], ending stream");
+
+              // Reload user data to update token count
+              const updatedUser = await loadStoredUser();
+              if (updatedUser) {
+                console.log("✅ Tokens left after request:", updatedUser.tokens_left);
+              }
               return;
             }
-            
+
             if (data === '') continue; // Skip empty data lines
-            
+
             try {
               const parsed = JSON.parse(data);
-              console.log("Parsed data:", parsed);
-              
+
+              // Handle token update message
+              if (parsed.type === 'token_update') {
+                console.log("💰 Token update:", parsed);
+                // Update user's tokens_left in storage
+                const currentUser = await loadStoredUser();
+                if (currentUser) {
+                  currentUser.tokens_left = parsed.tokens_left;
+                  currentUser.tokens_used += parsed.tokens_used;
+                  await setUser(currentUser);
+                  console.log("✅ Updated user tokens in storage:", currentUser.tokens_left);
+                }
+                continue; // Skip to next iteration
+              }
+
               // Handle error responses
               if (parsed.error) {
                 console.error("API Error:", parsed.error);
-                throw new Error(`API Error: ${parsed.error.message}`);
+                throw new Error(`API Error: ${parsed.error}`);
               }
-              
+
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
-                console.log("Streaming content:", content);
                 fullAnswer += content;
                 onChunk(content);
-                
+
                 // Save the updated answer to storage for continuation
                 await updateStreamingAnswer(fullAnswer);
               }

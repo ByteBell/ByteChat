@@ -4,12 +4,12 @@ import { categorizeModels, getAllModelPreferences, getBestModelForCapability, sa
 import { getCachedBalanceInfo, type BalanceInfo } from '../services/balance';
 import { SYSTEM_PROMPTS } from '../constants';
 import { sendChatRequest } from '../services/api';
-import { callLLMStream } from '../utils';
-import { Settings, ModelCapability, MessageContent, ChatSession } from '../types';
+import { callLLMStream, loadStoredUser } from '../utils';
+import { Settings, ModelCapability, MessageContent, ChatSession, User } from '../types';
 import SessionSelector from './SessionSelector';
 import ChatHistory from './ChatHistory';
 import Icon from './Icon';
-import { GoogleUser } from '../services/googleAuth';
+import { GoogleUser, googleAuthService } from '../services/googleAuth';
 import { encodeFileToBase64, getMimeTypeFromExtension, formatFileSize } from '../utils/fileEncoder';
 import {
   handleAppRefresh,
@@ -118,10 +118,30 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
   const [fromLanguage, setFromLanguage] = useState<string>('Auto-detect');
   const [toLanguage, setToLanguage] = useState<string>('English');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Handle textarea input change (fixed height to match icon stack)
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+  };
+
+  // Load user on mount
+  const loadUser = async () => {
+    const user = await loadStoredUser();
+    setCurrentUser(user);
+    console.log('[MainInterface] Loaded user:', user);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await googleAuthService.signOut();
+      setCurrentUser(null);
+      console.log('[MainInterface] User logged out');
+      window.location.reload();
+    } catch (error) {
+      console.error('[MainInterface] Logout failed:', error);
+    }
   };
 
   useEffect(() => {
@@ -130,12 +150,18 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
     loadBalance();
     initializeSession();
     loadZoomPreference();
+    loadUser();
 
-    // Listen for storage changes (when context menu stores new pending text)
+    // Listen for storage changes (when context menu stores new pending text or user updates)
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
       if (changes.pending_text && changes.pending_text.newValue) {
         console.log('[MainInterface] Detected new pending text from storage change');
         checkForPendingText();
+      }
+      // Reload user when user data changes (e.g., token updates)
+      if (changes.user && changes.user.newValue) {
+        console.log('[MainInterface] User data updated, reloading...');
+        loadUser();
       }
     };
 
@@ -930,8 +956,30 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
         <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
 
-            {/* Balance Display - Inline */}
-            {balance && (
+            {/* User Token Display (Gmail users) or Balance Display (API key users) */}
+            {currentUser ? (
+              <div className="flex items-center space-x-3 flex-shrink-0 ml-3">
+                <div className="flex flex-col">
+                  <div className="text-sm font-medium text-blue-600">
+                    👤 {currentUser.name}
+                  </div>
+                  <div className={`text-sm font-semibold ${
+                    currentUser.tokens_left < 100000 ? 'text-red-500' :
+                    currentUser.tokens_left < 500000 ? 'text-yellow-600' :
+                    'text-green-600'
+                  }`}>
+                    🎫 {currentUser.tokens_left.toLocaleString()} tokens left
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs text-red-500 hover:text-red-700 font-medium"
+                  title="Logout"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : balance && (
               <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
                 <div className={`text-xs sm:text-sm font-medium whitespace-nowrap ${
                   balance.color === 'red' ? 'text-red-500' :
@@ -1353,6 +1401,10 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
               {/* Universal File Upload Button */}
               <button
                 onClick={async () => {
+                  if (currentUser) {
+                    alert('📎 File upload coming soon for Gmail users!');
+                    return;
+                  }
                   const input = document.createElement('input');
                   input.type = 'file';
                   input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.json,.yaml,.yml,.txt,.md,.rtf,.xml,.html,.epub,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,image/*';
@@ -1497,11 +1549,15 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        if (currentUser) {
+                          alert('🎤 Audio recording coming soon for Gmail users!');
+                          return;
+                        }
                         console.log('Audio button clicked! Current showAudioMenu:', showAudioMenu);
                         setShowAudioMenu(!showAudioMenu);
                       }}
                       className="flex items-center justify-center w-8 h-8 text-accent hover:text-accent hover:bg-blue-50 rounded-lg transition-colors z-10 flex-shrink-0"
-                      title="Audio Options"
+                      title={currentUser ? "Audio coming soon" : "Audio Options"}
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"/>

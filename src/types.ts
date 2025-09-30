@@ -10,10 +10,14 @@ export interface Settings {
 }
 
 export interface User {
-  name: string;
+  id: number;
   email: string;
-  token: string;
-  expires: string;
+  name: string;
+  picture?: string;
+  total_tokens: number;
+  tokens_used: number;
+  tokens_left: number;
+  access_token: string; // OAuth access token
 }
 
 // Multimodal content types for OpenRouter API

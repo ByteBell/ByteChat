@@ -85,7 +85,7 @@ const ChatPanel: React.FC = () => {
   const continueStreamingFromStorage = async (savedState: any) => {
     try {
       const user = await loadStoredUser();
-      if (!user?.token && !settings.apiKey) {
+      if (!user?.access_token && !settings.apiKey) {
         setAnswer(prev => prev + "\n❌ Cannot continue - authentication required");
         setWasInterrupted(false);
         return;
@@ -161,8 +161,8 @@ const ChatPanel: React.FC = () => {
     }
     
     const user = await loadStoredUser();
-    
-    if (!user?.token && !settings.apiKey) {
+
+    if (!user?.access_token && !settings.apiKey) {
       setAnswer("⚠️ Add your API key in Settings or login to use the service.");
       return;
     }

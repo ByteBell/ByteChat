@@ -1,5 +1,7 @@
 // Google Authentication service for Chrome Extension
 import { BACKEND_URL, GOOGLE_CLIENT_ID, validateEnvironment } from '../config/env';
+import { User } from '../types';
+import { setUser, loadStoredUser, removeUser } from '../utils';
 
 export interface GoogleUser {
   email: string;
@@ -82,7 +84,19 @@ class GoogleAuthService {
 
       const userData = await response.json();
 
-      const user: GoogleUser = {
+      // Create User object matching backend response
+      const user: User = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        picture: userData.picture,
+        total_tokens: userData.total_tokens,
+        tokens_used: userData.tokens_used,
+        tokens_left: userData.tokens_left,
+        access_token: token
+      };
+
+      const googleUser: GoogleUser = {
         email: userData.email,
         name: userData.name,
         picture: userData.picture,
@@ -94,10 +108,10 @@ class GoogleAuthService {
         expires_in: 3600 // Default 1 hour
       };
 
-      // Store auth data
-      await this.storeAuthData(user, tokens);
+      // Store user data using utils functions
+      await setUser(user);
 
-      return { user, tokens };
+      return { user: googleUser, tokens };
     } catch (error) {
       console.error('Google sign-in failed:', error);
       throw error;
@@ -182,6 +196,10 @@ class GoogleAuthService {
    * Sign out - clear stored auth data
    */
   async signOut(): Promise<void> {
+    // Remove user using utils function
+    await removeUser();
+
+    // Also clear googleUser, googleTokens for backward compatibility
     return new Promise((resolve) => {
       chrome.storage.local.remove(['googleUser', 'googleTokens', 'authMethod', 'authTimestamp'], () => {
         resolve();
