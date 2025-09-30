@@ -1141,7 +1141,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
             <div className="mb-3">
               <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <span className="text-lg">{selectedTool.icon}</span>
+                  <Icon name={selectedTool.icon} className="w-5 h-5 text-accent" />
                   <span className="text-sm font-medium text-gray-900">{selectedTool.name}</span>
                   <span className="text-xs text-gray-600">• {selectedTool.description}</span>
                 </div>
@@ -1395,7 +1395,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
                           } else {
                             // Use the encoder for all other file types
                             const encodedFile = await encodeFileToBase64(file);
-                            
+
                             const mimeType = encodedFile.type || getMimeTypeFromExtension(file.name);
                             console.log('File encoded:', file.name, 'Size:', formatFileSize(file.size), 'Type:', mimeType);
 
@@ -1412,7 +1412,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
 
                               addFileAttachment(fileContent);
                               console.log('PDF/CSV attached with file structure:', file.name);
-                            } else if (mimeType.includes('word') || 
+                            } else if (mimeType.includes('word') ||
                                 mimeType.includes('document') ||
                                 mimeType.includes('excel') ||
                                 mimeType.includes('spreadsheet') ||
@@ -1423,12 +1423,12 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
                                 mimeType === 'text/html' ||
                                 mimeType === 'application/xml' ||
                                 mimeType === 'text/xml') {
-                              
+
                               // For other documents, decode the base64 and send as plain text
                               try {
                                 // Decode base64 to get the actual text content
                                 const textContent = atob(encodedFile.data);
-                                
+
                                 // Add as plain text message
                                 const fileContent: MessageContent = {
                                   type: 'text',
@@ -1563,10 +1563,10 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                   </div>
                 </button>
-              </div>
+            </div>
 
-              {/* Text Input Area - Right Side */}
-              <div className="flex-1 relative">
+            {/* Text Input Area - Right Side */}
+            <div className="flex-1 relative">
                 <textarea
                   value={input}
                   onChange={handleTextareaResize}
