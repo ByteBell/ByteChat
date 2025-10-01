@@ -149,7 +149,7 @@ export async function execInPage(fn: () => any): Promise<any> {
   }
 }
 
-// Get full page content
+// Get full page content with better structure and size limits
 export async function getPageContent(): Promise<{
   html: string;
   text: string;
@@ -157,9 +157,97 @@ export async function getPageContent(): Promise<{
   url: string;
 } | null> {
   return execInPage(() => {
+    // Get the main content area or body
+    const mainContent = document.querySelector('main') ||
+                       document.querySelector('[role="main"]') ||
+                       document.querySelector('article') ||
+                       document.body;
+
+    // Extract text with better structure preservation
+    function getStructuredText(element: Element): string {
+      let text = '';
+
+      // Process each child node
+      Array.from(element.children).forEach((child) => {
+        const tagName = child.tagName.toLowerCase();
+
+        // Skip hidden elements, scripts, styles
+        const style = window.getComputedStyle(child);
+        if (style.display === 'none' || style.visibility === 'hidden' ||
+            tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
+          return;
+        }
+
+        // Add spacing for block elements
+        if (['div', 'p', 'section', 'article', 'header', 'footer', 'nav', 'aside'].includes(tagName)) {
+          const childText = child.textContent?.trim();
+          if (childText) {
+            text += childText + '\n\n';
+          }
+        }
+        // Headers
+        else if (tagName.match(/^h[1-6]$/)) {
+          const headerText = child.textContent?.trim();
+          if (headerText) {
+            text += `\n## ${headerText}\n`;
+          }
+        }
+        // Lists
+        else if (tagName === 'li') {
+          const liText = child.textContent?.trim();
+          if (liText) {
+            text += `• ${liText}\n`;
+          }
+        }
+        // Links with context
+        else if (tagName === 'a') {
+          const linkText = child.textContent?.trim();
+          const href = child.getAttribute('href');
+          if (linkText) {
+            text += href ? `[${linkText}](${href}) ` : linkText + ' ';
+          }
+        }
+        // Tables
+        else if (tagName === 'table') {
+          text += '\n[Table Content]\n';
+          const rows = child.querySelectorAll('tr');
+          rows.forEach((row, idx) => {
+            const cells = row.querySelectorAll('td, th');
+            const rowText = Array.from(cells).map(c => c.textContent?.trim()).filter(t => t).join(' | ');
+            if (rowText) {
+              text += rowText + '\n';
+            }
+          });
+          text += '\n';
+        }
+        // Other inline elements
+        else {
+          const inlineText = child.textContent?.trim();
+          if (inlineText) {
+            text += inlineText + ' ';
+          }
+        }
+      });
+
+      return text;
+    }
+
+    let extractedText = getStructuredText(mainContent);
+
+    // Fallback to innerText if structured extraction didn't work
+    if (!extractedText || extractedText.length < 100) {
+      extractedText = mainContent.textContent || '';
+    }
+
+    // Limit to first 50,000 characters to prevent truncation issues
+    const MAX_LENGTH = 50000;
+    if (extractedText.length > MAX_LENGTH) {
+      extractedText = extractedText.substring(0, MAX_LENGTH) + '\n\n[Content truncated - showing first 50,000 characters]';
+    }
+
     return {
       html: document.documentElement.outerHTML,
-      text: document.body.innerText,
+      text: extractedText.trim(),
       title: document.title,
       url: window.location.href
     };
