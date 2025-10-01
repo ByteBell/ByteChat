@@ -93,7 +93,7 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySet, onGoogleAuth, in
 
   return (
     <div className="flex items-center justify-center h-full bg-white p-6">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 w-full max-w-md">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 w-full max-w-full mx-auto" style={{maxWidth: '500px'}}>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Byte Chat</h1>

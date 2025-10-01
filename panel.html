@@ -10,38 +10,29 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         html, body {
+            width: 100% !important;
             height: 100vh !important;
             max-height: 100vh !important;
             overflow: hidden !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: white;
-            min-width: 300px;
         }
 
         #root {
+            width: 100% !important;
             height: 100vh !important;
             max-height: 100vh !important;
             overflow: hidden !important;
-            min-width: 300px;
-            max-width: 100vw;
         }
 
         #root > div {
+            width: 100% !important;
             height: 100vh !important;
             max-height: 100vh !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
-            min-width: 300px;
-            max-width: 100vw;
-        }
-
-        /* Responsive breakpoints for side panel */
-        @media (max-width: 400px) {
-            html, body, #root, #root > div {
-                min-width: 280px;
-            }
         }
         
         .loading {
