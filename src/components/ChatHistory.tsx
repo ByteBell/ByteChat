@@ -138,10 +138,10 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ messages, isLoading = false, 
           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+            className={`max-w-[85%] rounded-2xl px-4 py-3 ${
               message.role === 'user'
-                ? 'bg-transparent border border-gray-200 text-gray-900 ml-12'
-                : 'bg-gray-50 text-gray-900 mr-12'
+                ? 'bg-transparent border border-gray-200 text-gray-900'
+                : 'bg-gray-50 text-gray-900'
             }`}
           >
             {/* Message Content */}

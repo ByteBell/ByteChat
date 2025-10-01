@@ -37,6 +37,14 @@ class GoogleAuthService {
    */
   async signInWithGoogle(): Promise<{ user: GoogleUser; tokens: AuthTokens }> {
     try {
+      // First, try to remove any cached token to force a fresh one
+      try {
+        await chrome.identity.clearAllCachedAuthTokens();
+        console.log('Cleared cached auth tokens');
+      } catch (e) {
+        console.warn('Could not clear cached tokens:', e);
+      }
+
       // Get manifest data for OAuth configuration
       const manifest = chrome.runtime.getManifest() as any;
       const clientId = manifest.oauth2?.client_id;
@@ -48,7 +56,8 @@ class GoogleAuthService {
         `client_id=${clientId}` +
         `&response_type=token` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&scope=${encodeURIComponent(scopes)}`;
+        `&scope=${encodeURIComponent(scopes)}` +
+        `&prompt=consent`; // Force consent to get fresh token
 
       // Use launchWebAuthFlow for OAuth implicit grant flow
       const responseUrl = await chrome.identity.launchWebAuthFlow({
@@ -67,6 +76,8 @@ class GoogleAuthService {
       if (!token) {
         throw new Error('No access token found in OAuth response');
       }
+
+      console.log('Got fresh access token from OAuth flow');
 
       // Call our backend to verify token and get user info
       const response = await fetch(`${this.BACKEND_URL}/api/auth/google`, {

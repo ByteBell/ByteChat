@@ -68,11 +68,33 @@ class GmailAuth:
     def verify_access_token(self, access_token: str) -> Optional[dict]:
         """Verify access token and get user info"""
         try:
-            credentials = Credentials(token=access_token)
+            import requests
 
-            # Build the service to get user info
-            service = build('oauth2', 'v2', credentials=credentials)
-            user_info = service.userinfo().get().execute()
+            print(f"Verifying token (first 20 chars): {access_token[:20]}...")
+            print(f"Token length: {len(access_token)}")
+
+            # Use Google's userinfo endpoint directly without credentials object
+            response = requests.get(
+                'https://www.googleapis.com/oauth2/v2/userinfo',
+                headers={'Authorization': f'Bearer {access_token}'}
+            )
+
+            print(f"Response status: {response.status_code}")
+
+            if response.status_code != 200:
+                print(f"Token verification failed: {response.status_code} - {response.text}")
+
+                # Try tokeninfo endpoint as alternative
+                print("Trying tokeninfo endpoint...")
+                token_info_response = requests.get(
+                    f'https://oauth2.googleapis.com/tokeninfo?access_token={access_token}'
+                )
+                print(f"Tokeninfo response: {token_info_response.status_code} - {token_info_response.text}")
+
+                return None
+
+            user_info = response.json()
+            print(f"Successfully verified token for user: {user_info.get('email')}")
 
             return {
                 'email': user_info.get('email'),
@@ -82,6 +104,8 @@ class GmailAuth:
             }
         except Exception as e:
             print(f"Token verification failed: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def get_gmail_service(self, access_token: str, refresh_token: str = None):

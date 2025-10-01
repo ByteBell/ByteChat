@@ -185,9 +185,16 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
         checkForPendingText();
       }
       // Reload user when user data changes (e.g., token updates)
-      if (changes.user && changes.user.newValue) {
-        console.log('[MainInterface] User data updated, reloading...');
-        loadUser();
+      if (changes.user) {
+        if (changes.user.newValue) {
+          console.log('[MainInterface] User data updated, reloading...');
+          loadUser();
+        } else {
+          // User was removed (logged out or auth failed)
+          console.log('[MainInterface] User removed, redirecting to login...');
+          setCurrentUser(null);
+          window.location.reload();
+        }
       }
     };
 
@@ -980,7 +987,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
 
   return (
     <div
-      className="flex flex-col h-full bg-white min-w-0 max-w-full"
+      className="flex flex-col h-full w-full bg-white"
       style={{
         zoom: `${zoomLevel}%`,
         fontSize: `${Math.max(10, 14 * (zoomLevel / 100))}px`

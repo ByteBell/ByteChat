@@ -209,6 +209,14 @@ export async function callLLMStream(
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Backend error:", errorText);
+
+      // If it's an authentication error, clear user data and force re-login
+      if (response.status === 401 || response.status === 403 || errorText.includes('Token verification failed')) {
+        console.log("Authentication failed, clearing user data and forcing re-login");
+        await removeUser();
+        throw new Error(`Authentication failed. Please log in again.`);
+      }
+
       throw new Error(`Backend error: ${errorText}`);
     }
 

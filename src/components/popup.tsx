@@ -148,7 +148,7 @@ const Popup: React.FC = () => {
   }
 
   return (
-    <div className={`overflow-auto ${mode === 'popup' ? 'min-h-screen' : 'h-full'}`}>
+    <div className={`w-full overflow-auto ${mode === 'popup' ? 'min-h-screen' : 'h-full'}`}>
       {!authMethod ? (
         <ApiKeySetup
           onApiKeySet={handleApiKeySet}
