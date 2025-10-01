@@ -4,7 +4,16 @@ const HtmlWebpackPlugin  = require('html-webpack-plugin');
 const CopyPlugin         = require('copy-webpack-plugin');
 const ExtensionReloader  = require('webpack-ext-reloader');
 const webpack            = require('webpack');
-require('dotenv').config();
+const dotenv             = require('dotenv');
+
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: envFile });
+
+console.log(`\n🔧 Webpack Config:`);
+console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+console.log(`   Env file: ${envFile}`);
+console.log(`   Backend URL: ${process.env.REACT_APP_BACKEND_URL}\n`);
 
 module.exports = {
   mode: process.env.NODE_ENV || 'development',

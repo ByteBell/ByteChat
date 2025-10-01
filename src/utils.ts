@@ -149,6 +149,23 @@ export async function execInPage(fn: () => any): Promise<any> {
   }
 }
 
+// Get full page content
+export async function getPageContent(): Promise<{
+  html: string;
+  text: string;
+  title: string;
+  url: string;
+} | null> {
+  return execInPage(() => {
+    return {
+      html: document.documentElement.outerHTML,
+      text: document.body.innerText,
+      title: document.title,
+      url: window.location.href
+    };
+  });
+}
+
 
 // Streaming function for all providers
 import { MessageContent } from './types';

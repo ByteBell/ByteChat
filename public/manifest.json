@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Byte Chat",
   "version": "1.0.0",
-  "description": "All-purpose context copilot for independent users.",
+  "description": "AI-powered chat assistant with multi-modal support. Login with Google for 1M free tokens or use your own API key. Features: text/image/file/audio, smart tools (translate, summarize, grammar fix), session history, real-time streaming, and support for OpenAI, Anthropic, OpenRouter, and Together AI.",
   "background": {
     "service_worker": "background.js",
     "type": "module"

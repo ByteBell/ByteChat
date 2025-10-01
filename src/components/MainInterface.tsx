@@ -4,7 +4,7 @@ import { categorizeModels, getAllModelPreferences, getBestModelForCapability, sa
 import { getCachedBalanceInfo, type BalanceInfo } from '../services/balance';
 import { SYSTEM_PROMPTS } from '../constants';
 import { sendChatRequest } from '../services/api';
-import { callLLMStream, loadStoredUser } from '../utils';
+import { callLLMStream, loadStoredUser, getPageContent } from '../utils';
 import { Settings, ModelCapability, MessageContent, ChatSession, User } from '../types';
 import SessionSelector from './SessionSelector';
 import ChatHistory from './ChatHistory';
@@ -60,6 +60,12 @@ const languages = [
 
 const tools: Tool[] = [
   {
+    id: 'Fix Grammar',
+    name: 'Fix Grammar',
+    icon: 'pencil-square',
+    description: 'Correct grammar and spelling'
+  },
+  {
     id: 'Translate',
     name: 'Translate',
     icon: 'translate',
@@ -72,22 +78,16 @@ const tools: Tool[] = [
     description: 'Create concise summaries'
   },
   {
-    id: 'Reply',
-    name: 'Reply',
-    icon: 'chat-bubble-left-right',
-    description: 'Generate social media replies'
-  },
-  {
     id: 'Fact Check',
     name: 'Fact Check',
     icon: 'magnifying-glass',
     description: 'Verify information accuracy'
   },
   {
-    id: 'Fix Grammar',
-    name: 'Fix Grammar',
-    icon: 'pencil-square',
-    description: 'Correct grammar and spelling'
+    id: 'Reply',
+    name: 'Reply',
+    icon: 'chat-bubble-left-right',
+    description: 'Generate social media replies'
   }
 ];
 
@@ -119,10 +119,36 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
   const [toLanguage, setToLanguage] = useState<string>('English');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [includePageContent, setIncludePageContent] = useState<boolean>(false);
+  const [pageContent, setPageContent] = useState<string>('');
 
   // Handle textarea input change (fixed height to match icon stack)
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+  };
+
+  // Handle page content toggle
+  const handlePageContentToggle = async () => {
+    const newValue = !includePageContent;
+    setIncludePageContent(newValue);
+
+    if (newValue) {
+      // User turned ON - read page content
+      const content = await getPageContent();
+      if (content) {
+        const contentString = `Page Title: ${content.title}\nURL: ${content.url}\n\nPage Content:\n${content.text}`;
+        setPageContent(contentString);
+        console.log('📄 Page content captured:');
+        console.log(contentString);
+      } else {
+        setIncludePageContent(false);
+        alert('Cannot access this page (Chrome internal page or restricted URL)');
+      }
+    } else {
+      // User turned OFF - clear page content
+      setPageContent('');
+      console.log('📄 Page content cleared');
+    }
   };
 
   // Load user on mount
@@ -167,6 +193,15 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
 
     chrome.storage.onChanged.addListener(handleStorageChange);
 
+    // Listen for tab changes - reset page content when user switches tabs
+    const handleTabChange = () => {
+      console.log('[MainInterface] Tab changed, resetting page content');
+      setIncludePageContent(false);
+      setPageContent('');
+    };
+
+    chrome.tabs.onActivated.addListener(handleTabChange);
+
     // Also check for pending text when window gains focus (side panel becomes visible)
     const handleFocus = () => {
       console.log('[MainInterface] Window focused, checking for pending text');
@@ -177,6 +212,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
 
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
+      chrome.tabs.onActivated.removeListener(handleTabChange);
       window.removeEventListener('focus', handleFocus);
     };
   }, [apiKey]);
@@ -1380,11 +1416,38 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
           )}
 
           {/* Input Box with Vertical Icon Stack */}
-          <div className="flex items-start gap-2">
-            {/* Vertical Icon Stack - Left Side */}
-            <div className="flex flex-col space-y-1 pt-2 flex-shrink-0">
-              {/* Tools Button */}
+          <div className="flex flex-col gap-2">
+            {/* Include Page Content Toggle - Above Everything */}
+            <div className="flex items-center justify-between px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-medium text-gray-700">📄 Include page content</span>
+                {includePageContent && (
+                  <span className="text-xs text-green-600 font-medium">✓ Active</span>
+                )}
+              </div>
+
+              {/* Toggle Switch */}
               <button
+                onClick={handlePageContentToggle}
+                className={`relative inline-flex items-center h-5 w-10 rounded-full transition-colors focus:outline-none ${
+                  includePageContent ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+                title={includePageContent ? 'Page content included' : 'Click to include page content'}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    includePageContent ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Icon Stack + Textarea Row */}
+            <div className="flex items-stretch gap-2">
+              {/* Vertical Icon Stack - Left Side */}
+              <div className="flex flex-col space-y-1 flex-shrink-0 justify-between h-[148px]">
+                {/* Tools Button */}
+                <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1654,6 +1717,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
                 </button>
               </div>
             </div>
+            </div>
 
             {/* Tools Dropdown */}
             {showTools && (
@@ -1662,26 +1726,6 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
               >
                   <div className="p-3">
                     <div className="text-xs font-bold text-gray-600 mb-3 px-2">SELECT TOOL</div>
-
-                    <button
-                      onClick={() => {
-                        setSelectedTool(null);
-                        setShowTools(false);
-                      }}
-                      className={`w-full text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                        !selectedTool ? 'bg-blue-50 text-accent' : 'text-gray-800'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="text-accent">
-                          <Icon name="chat" className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-xs">Chat</div>
-                          <div className="text-xs text-gray-600 mt-0.5">Ask anything directly</div>
-                        </div>
-                      </div>
-                    </button>
 
                     {tools.map((tool) => (
                       <button

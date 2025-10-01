@@ -8,7 +8,8 @@
     "prestart": "npm run generate-manifest",
     "start": "webpack --watch --progress --config webpack.config.js",
     "dev": "cross-env NODE_ENV=development webpack --watch",
-    "build": "cross-env NODE_ENV=production webpack"
+    "build": "cross-env NODE_ENV=production webpack",
+    "build:prod": "cross-env NODE_ENV=production npm run build"
   },
   "keywords": [],
   "author": "",
