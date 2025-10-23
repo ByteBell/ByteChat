@@ -149,12 +149,61 @@ export async function execInPage(fn: () => any): Promise<any> {
   }
 }
 
+// Auto-expand all expandable content on page (for Gmail, Twitter, etc.)
+export async function expandAllContent(): Promise<{success: boolean; expandedCount: number}> {
+  return execInPage(() => {
+    let expandedCount = 0;
+
+    // Common selectors for expand buttons across different sites
+    const expandSelectors = [
+      '[aria-label*="expand" i]',
+      '[aria-label*="show more" i]',
+      '[title*="expand" i]',
+      '[title*="show more" i]',
+      'button:has(svg):has-text("expand")',
+      '.expand-button',
+      '.show-more',
+      '[data-tooltip*="expand" i]',
+      // Gmail specific
+      '[aria-label="Show trimmed content"]',
+      '[data-tooltip="Show trimmed content"]',
+      'span[role="link"]:has-text("…")',
+      // Generic "..." or "more" buttons
+      'button:has-text("...")',
+      'button:has-text("more")',
+      'a:has-text("Show more")',
+      'div[role="button"]:has-text("...")'
+    ];
+
+    expandSelectors.forEach(selector => {
+      try {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+          if (el instanceof HTMLElement) {
+            // Check if element is visible
+            const style = window.getComputedStyle(el);
+            if (style.display !== 'none' && style.visibility !== 'hidden') {
+              el.click();
+              expandedCount++;
+            }
+          }
+        });
+      } catch (e) {
+        // Selector might not work, continue
+      }
+    });
+
+    return { success: expandedCount > 0, expandedCount };
+  }) || { success: false, expandedCount: 0 };
+}
+
 // Get full page content with better structure and size limits
 export async function getPageContent(): Promise<{
   html: string;
   text: string;
   title: string;
   url: string;
+  lineCount: number;
 } | null> {
   return execInPage(() => {
     // Get the main content area or body
@@ -245,11 +294,17 @@ export async function getPageContent(): Promise<{
       extractedText = extractedText.substring(0, MAX_LENGTH) + '\n\n[Content truncated - showing first 50,000 characters]';
     }
 
+    // Count meaningful lines (non-empty lines)
+    const lines = extractedText.trim().split('\n');
+    const meaningfulLines = lines.filter(line => line.trim().length > 0);
+    const lineCount = meaningfulLines.length;
+
     return {
       html: document.documentElement.outerHTML,
       text: extractedText.trim(),
       title: document.title,
-      url: window.location.href
+      url: window.location.href,
+      lineCount: lineCount
     };
   });
 }

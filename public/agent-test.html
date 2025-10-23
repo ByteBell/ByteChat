@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Agent Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+    h1 {
+      margin: 0 0 10px 0;
+    }
+    .subtitle {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    .form-section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    .instructions {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .instructions h3 {
+      margin-top: 0;
+      color: #1976d2;
+    }
+    .instructions code {
+      background: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    .required {
+      color: #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🤖 Browser Agent Test Page</h1>
+    <p class="subtitle">Use this page to test the ByteChat browser automation agent</p>
+  </div>
+
+  <div class="instructions">
+    <h3>📝 How to test:</h3>
+    <ol>
+      <li>Open the ByteChat extension (should have an "Agent" or "Browser Agent" tab)</li>
+      <li>Try these commands:
+        <ul>
+          <li><code>"Fill this form"</code> - Agent will ask you for the data</li>
+          <li><code>"Fill form with name=John Doe, email=john@test.com, message=Hello"</code> - Agent fills automatically</li>
+          <li><code>"Click the submit button"</code> - Agent clicks submit</li>
+        </ul>
+      </li>
+      <li>Watch as the agent fills the form in real-time!</li>
+    </ol>
+  </div>
+
+  <div class="form-section">
+    <h2>Contact Form</h2>
+    <form id="contactForm">
+      <div class="form-group">
+        <label for="name">Name <span class="required">*</span></label>
+        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email <span class="required">*</span></label>
+        <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone (Optional)</label>
+        <input type="tel" id="phone" name="phone" placeholder="+1 (555) 123-4567">
+      </div>
+
+      <div class="form-group">
+        <label for="subject">Subject</label>
+        <select id="subject" name="subject">
+          <option value="">Select a subject</option>
+          <option value="general">General Inquiry</option>
+          <option value="support">Support Request</option>
+          <option value="feedback">Feedback</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="message">Message <span class="required">*</span></label>
+        <textarea id="message" name="message" placeholder="Type your message here..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="newsletter" id="newsletter">
+          Subscribe to newsletter
+        </label>
+      </div>
+
+      <button type="submit">Submit Form</button>
+    </form>
+  </div>
+
+  <script>
+    // Handle form submission
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      alert('✅ Form submitted successfully!\n\nData:\n' + JSON.stringify(data, null, 2));
+      console.log('Form data:', data);
+    });
+  </script>
+</body>
+</html>

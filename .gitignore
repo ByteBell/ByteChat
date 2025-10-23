@@ -22,3 +22,4 @@ __pycache__
 package-lock.json
 users.db
 *.zip
+package-lock.json

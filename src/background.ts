@@ -1,6 +1,35 @@
 // src/background.ts
-import { callLLM, loadStoredSettings } from "./utils";
+import { callLLM, loadStoredSettings, loadStoredUser } from "./utils";
+import { googleAuthService } from "./services/googleAuth";
 console.log("Background.ts loaded")
+
+// Restore user session on browser startup
+async function restoreUserSession() {
+  try {
+    console.log('[Background] Attempting to restore user session...');
+    const user = await loadStoredUser();
+
+    if (user && user.access_token) {
+      console.log('[Background] User session found:', {
+        email: user.email,
+        tokens_left: user.tokens_left
+      });
+
+      // Verify the token is still valid
+      try {
+        await googleAuthService.verifyToken(user.access_token);
+        console.log('[Background] ✅ User session restored successfully');
+      } catch (error) {
+        console.warn('[Background] User token is invalid, clearing session:', error);
+        await googleAuthService.signOut();
+      }
+    } else {
+      console.log('[Background] No user session to restore');
+    }
+  } catch (error) {
+    console.error('[Background] Error restoring user session:', error);
+  }
+}
 
 // Guard to prevent multiple simultaneous menu creation
 let isCreatingMenus = false;
@@ -99,13 +128,15 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 // Create context menus on service worker startup (important for MV3)
-chrome.runtime.onStartup.addListener(() => {
-  console.log('[Background] Service worker started, recreating context menus');
+chrome.runtime.onStartup.addListener(async () => {
+  console.log('[Background] Service worker started, recreating context menus and restoring session');
+  await restoreUserSession();
   createContextMenus();
 });
 
-// Also create menus immediately when background script loads
-console.log('[Background] Background script loaded, ensuring context menus exist');
+// Also create menus and restore session immediately when background script loads
+console.log('[Background] Background script loaded, ensuring context menus exist and session restored');
+restoreUserSession();
 createContextMenus();
 
 // Handle context menu clicks

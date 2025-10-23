@@ -16,6 +16,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bytechat-browser-agent": "file:../bytechat-browser-agent",
+    "prompt-library": "file:../prompt-library",
     "dotenv": "^17.2.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

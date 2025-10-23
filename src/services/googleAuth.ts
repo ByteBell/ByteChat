@@ -37,13 +37,8 @@ class GoogleAuthService {
    */
   async signInWithGoogle(): Promise<{ user: GoogleUser; tokens: AuthTokens }> {
     try {
-      // First, try to remove any cached token to force a fresh one
-      try {
-        await chrome.identity.clearAllCachedAuthTokens();
-        console.log('Cleared cached auth tokens');
-      } catch (e) {
-        console.warn('Could not clear cached tokens:', e);
-      }
+      // Note: We no longer clear all cached tokens to preserve user sessions
+      // Only clear tokens if explicitly signing out or re-authenticating
 
       // Get manifest data for OAuth configuration
       const manifest = chrome.runtime.getManifest() as any;
@@ -56,8 +51,7 @@ class GoogleAuthService {
         `client_id=${clientId}` +
         `&response_type=token` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&scope=${encodeURIComponent(scopes)}` +
-        `&prompt=consent`; // Force consent to get fresh token
+        `&scope=${encodeURIComponent(scopes)}`; // Removed prompt=consent to allow cached sessions
 
       // Use launchWebAuthFlow for OAuth implicit grant flow
       const responseUrl = await chrome.identity.launchWebAuthFlow({

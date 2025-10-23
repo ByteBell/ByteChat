@@ -1,4 +1,10 @@
+// Import browser agent components for DOM automation
+import { DomLocator, DOMActionMessage, DOMActionResult } from 'bytechat-browser-agent';
+
 console.log('xAI Content script loaded');
+
+// Initialize DomLocator for browser automation
+const domLocator = new DomLocator();
 
 // Prevent multiple injections
 if (document.getElementById('xai-sidebar-host')) {
@@ -221,17 +227,17 @@ function injectSidebar() {
       toggleSidebar();
       sendResponse({ success: true });
     }
-    
+
     if (request.action === 'showReloadNotification') {
       showReloadNotification();
       sendResponse({ success: true });
     }
-    
+
     if (request.action === 'getSelectedText') {
       const selectedText = window.getSelection()?.toString().trim() || '';
       sendResponse({ selectedText });
     }
-    
+
     if (request.action === 'insertText') {
       const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
@@ -240,10 +246,10 @@ function injectSidebar() {
       }
       sendResponse({ success: true });
     }
-    
+
     if (request.action === 'openWithText') {
       console.log('Opening sidebar with text:', request.text);
-      
+
       // Store the text and tool selection for the sidebar
       chrome.storage.local.set({
         'pending_text': request.text,
@@ -251,14 +257,370 @@ function injectSidebar() {
         'pending_is_custom_prompt': request.isCustomPrompt || false,
         'pending_timestamp': Date.now()
       });
-      
+
       // Show the sidebar
       showSidebar();
       sendResponse({ success: true });
     }
+
+    // Handle DOM automation actions
+    if (request.action === 'domAction') {
+      handleDomAction(request as DOMActionMessage)
+        .then(sendResponse)
+        .catch((error) => {
+          sendResponse({
+            success: false,
+            message: 'DOM action failed',
+            error: error.message
+          });
+        });
+      return true; // Keep channel open for async response
+    }
   });
 
   console.log('xAI sidebar injected successfully');
+}
+
+// ============================================================================
+// DOM Action Handlers for Browser Automation
+// ============================================================================
+
+/**
+ * Utility function to wait/sleep
+ */
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Execute click action on element
+ */
+function executeClick(element: Element): DOMActionResult {
+  try {
+    (element as HTMLElement).click();
+    return {
+      success: true,
+      message: `Clicked ${domLocator.describeElement(element)}`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: 'Click failed',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Execute type action on input element
+ */
+function executeType(element: Element, value?: string): DOMActionResult {
+  try {
+    if (!value) {
+      return {
+        success: false,
+        message: 'No value provided for type action',
+        error: 'Missing value parameter'
+      };
+    }
+
+    const input = element as HTMLInputElement | HTMLTextAreaElement;
+
+    // Focus the element
+    input.focus();
+
+    // Clear existing value
+    input.value = '';
+
+    // Set new value
+    input.value = value;
+
+    // Dispatch events for React/Vue/Angular compatibility
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    return {
+      success: true,
+      message: `Typed "${value}" into ${domLocator.describeElement(element)}`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: 'Type action failed',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Extract table data from HTML table element
+ */
+function extractTableData(table: HTMLTableElement): any[] {
+  const rows: any[] = [];
+  const headers: string[] = [];
+
+  // Extract headers
+  const headerRow = table.querySelector('thead tr, tr:first-child');
+  if (headerRow) {
+    headerRow.querySelectorAll('th, td').forEach(cell => {
+      headers.push(cell.textContent?.trim() || '');
+    });
+  }
+
+  // Extract data rows
+  const dataRows = table.querySelectorAll('tbody tr, tr');
+  dataRows.forEach((row, idx) => {
+    if (idx === 0 && headerRow && headerRow.parentElement?.tagName === 'THEAD') {
+      return; // Skip header row if it's in thead
+    }
+
+    const rowData: any = {};
+    row.querySelectorAll('td, th').forEach((cell, cellIdx) => {
+      const key = headers[cellIdx] || `col_${cellIdx}`;
+      rowData[key] = cell.textContent?.trim();
+    });
+    rows.push(rowData);
+  });
+
+  return rows;
+}
+
+/**
+ * Extract form data from HTML form element
+ */
+function extractFormData(form: HTMLFormElement): any {
+  const formData = new FormData(form);
+  const data: any = {};
+
+  formData.forEach((value, key) => {
+    data[key] = value;
+  });
+
+  return data;
+}
+
+/**
+ * Execute extract action on element
+ */
+function executeExtract(element: Element): DOMActionResult {
+  try {
+    // Extract basic data
+    let data: any = {
+      text: element.textContent?.trim(),
+      html: element.innerHTML,
+      attributes: {}
+    };
+
+    // Extract all attributes
+    Array.from(element.attributes).forEach(attr => {
+      data.attributes[attr.name] = attr.value;
+    });
+
+    // Special handling for tables
+    if (element.tagName === 'TABLE') {
+      data.table = extractTableData(element as HTMLTableElement);
+    }
+
+    // Special handling for forms
+    if (element.tagName === 'FORM') {
+      data.form = extractFormData(element as HTMLFormElement);
+    }
+
+    // Special handling for lists
+    if (element.tagName === 'UL' || element.tagName === 'OL') {
+      data.listItems = Array.from(element.querySelectorAll('li')).map(li => li.textContent?.trim());
+    }
+
+    return {
+      success: true,
+      message: `Extracted data from ${domLocator.describeElement(element)}`,
+      data
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: 'Extract action failed',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Execute hover action on element
+ */
+function executeHover(element: Element): DOMActionResult {
+  try {
+    const mouseoverEvent = new MouseEvent('mouseover', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    });
+
+    const mouseenterEvent = new MouseEvent('mouseenter', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    });
+
+    element.dispatchEvent(mouseoverEvent);
+    element.dispatchEvent(mouseenterEvent);
+
+    return {
+      success: true,
+      message: `Hovered over ${domLocator.describeElement(element)}`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: 'Hover action failed',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Execute checkbox check/uncheck action
+ */
+function executeCheckbox(element: Element, checked: boolean): DOMActionResult {
+  try {
+    const checkbox = element as HTMLInputElement;
+
+    if (checkbox.type !== 'checkbox' && checkbox.getAttribute('role') !== 'checkbox') {
+      return {
+        success: false,
+        message: 'Element is not a checkbox',
+        error: 'Invalid element type'
+      };
+    }
+
+    checkbox.checked = checked;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    checkbox.dispatchEvent(new Event('input', { bubbles: true }));
+
+    return {
+      success: true,
+      message: `${checked ? 'Checked' : 'Unchecked'} ${domLocator.describeElement(element)}`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: 'Checkbox action failed',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Execute scroll action
+ */
+function executeScroll(value?: string): DOMActionResult {
+  try {
+    switch (value) {
+      case 'top':
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        break;
+
+      case 'bottom':
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        break;
+
+      default:
+        // Scroll by pixel value
+        const pixels = parseInt(value || '0');
+        if (isNaN(pixels)) {
+          return {
+            success: false,
+            message: 'Invalid scroll value',
+            error: 'Scroll value must be "top", "bottom", or a number'
+          };
+        }
+        window.scrollBy({ top: pixels, behavior: 'smooth' });
+    }
+
+    return {
+      success: true,
+      message: `Scrolled to ${value || 'position'}`
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: 'Scroll action failed',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Main handler for DOM automation actions
+ */
+async function handleDomAction(message: DOMActionMessage): Promise<DOMActionResult> {
+  console.log('[ContentScript] Handling DOM action:', message.type);
+
+  try {
+    const { type, target, value } = message;
+
+    // Find element using DomLocator (except for scroll which doesn't need target)
+    if (type !== 'scroll' && target) {
+      const element = await domLocator.findElement(target);
+
+      if (!element) {
+        return {
+          success: false,
+          message: `Element not found`,
+          error: 'No element matched any locator strategy'
+        };
+      }
+
+      // Scroll element into view before action
+      domLocator.scrollIntoView(element);
+      await wait(300); // Brief wait for scroll animation
+
+      // Execute the appropriate action
+      switch (type) {
+        case 'click':
+          return executeClick(element);
+
+        case 'type':
+          return executeType(element, value);
+
+        case 'extract':
+          return executeExtract(element);
+
+        case 'hover':
+          return executeHover(element);
+
+        case 'check':
+        case 'uncheck':
+          return executeCheckbox(element, type === 'check');
+
+        default:
+          return {
+            success: false,
+            message: `Unknown action type: ${type}`,
+            error: 'Invalid action'
+          };
+      }
+    }
+
+    // Handle scroll (no target needed)
+    if (type === 'scroll') {
+      return executeScroll(value);
+    }
+
+    return {
+      success: false,
+      message: 'Invalid action configuration',
+      error: 'No target specified for action that requires target'
+    };
+
+  } catch (error: any) {
+    console.error('[ContentScript] DOM action failed:', error);
+    return {
+      success: false,
+      message: 'Action execution failed',
+      error: error.message || String(error)
+    };
+  }
 }
 
 // Store selected text automatically

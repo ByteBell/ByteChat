@@ -4,13 +4,16 @@ import { categorizeModels, getAllModelPreferences, getBestModelForCapability, sa
 import { getCachedBalanceInfo, type BalanceInfo } from '../services/balance';
 import { SYSTEM_PROMPTS } from '../constants';
 import { sendChatRequest } from '../services/api';
-import { callLLMStream, loadStoredUser, getPageContent } from '../utils';
+import { callLLMStream, loadStoredUser, getPageContent, expandAllContent } from '../utils';
 import { Settings, ModelCapability, MessageContent, ChatSession, User } from '../types';
 import SessionSelector from './SessionSelector';
 import ChatHistory from './ChatHistory';
 import Icon from './Icon';
 import { GoogleUser, googleAuthService } from '../services/googleAuth';
 import { encodeFileToBase64, getMimeTypeFromExtension, formatFileSize } from '../utils/fileEncoder';
+import { CustomPrompt, PromptInput } from 'prompt-library';
+import { usePromptLibrary } from '../hooks/usePromptLibrary';
+import { PromptManager } from './PromptManager';
 import {
   handleAppRefresh,
   getOrCreateCurrentSession,
@@ -121,6 +124,20 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [includePageContent, setIncludePageContent] = useState<boolean>(false);
   const [pageContent, setPageContent] = useState<string>('');
+  const [pageContentLines, setPageContentLines] = useState<number>(0);
+  const [showExpandNotification, setShowExpandNotification] = useState(false);
+
+  // Prompt library state
+  const {
+    prompts,
+    createPrompt,
+    updatePrompt,
+    deletePrompt,
+    error: promptError
+  } = usePromptLibrary();
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const [editingPrompt, setEditingPrompt] = useState<CustomPrompt | null>(null);
 
   // Handle textarea input change (fixed height to match icon stack)
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -133,11 +150,25 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
     setIncludePageContent(newValue);
 
     if (newValue) {
+      // First, try to auto-expand content
+      const expandResult = await expandAllContent();
+
+      if (expandResult.expandedCount > 0) {
+        console.log(`✅ Auto-expanded ${expandResult.expandedCount} elements`);
+        // Wait a bit for content to load after expansion
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        // Show notification to manually expand
+        setShowExpandNotification(true);
+        setTimeout(() => setShowExpandNotification(false), 4000);
+      }
+
       // User turned ON - read page content
       const content = await getPageContent();
       if (content) {
         const contentString = `Page Title: ${content.title}\nURL: ${content.url}\n\nPage Content:\n${content.text}`;
         setPageContent(contentString);
+        setPageContentLines(content.lineCount);
         console.log('📄 Page content captured:');
         console.log(contentString);
       } else {
@@ -147,6 +178,7 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
     } else {
       // User turned OFF - clear page content
       setPageContent('');
+      setPageContentLines(0);
       console.log('📄 Page content cleared');
     }
   };
@@ -494,8 +526,51 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
 
   const handleToolSelect = (tool: Tool) => {
     setSelectedTool(tool);
+    setSelectedPromptId(null); // Clear custom prompt when tool is selected
     setShowTools(false);
     setInput('');
+  };
+
+  // Prompt management handlers
+  const handlePromptSelect = (promptId: string | null) => {
+    setSelectedPromptId(promptId);
+    setSelectedTool(null); // Clear tool when prompt is selected
+    setShowTools(false);
+  };
+
+  const handlePromptSave = (input: { name: string; prompt: string }) => {
+    let result;
+    if (editingPrompt) {
+      result = updatePrompt(editingPrompt.id, input);
+    } else {
+      result = createPrompt(input);
+    }
+
+    if (result.success) {
+      setIsPromptModalOpen(false);
+      setEditingPrompt(null);
+    }
+  };
+
+  const handlePromptDelete = (id: string) => {
+    const result = deletePrompt(id);
+    if (result.success) {
+      setIsPromptModalOpen(false);
+      setEditingPrompt(null);
+      if (selectedPromptId === id) {
+        setSelectedPromptId(null);
+      }
+    }
+  };
+
+  const handleNewPrompt = () => {
+    setEditingPrompt(null);
+    setIsPromptModalOpen(true);
+  };
+
+  const handleEditPrompt = (prompt: CustomPrompt) => {
+    setEditingPrompt(prompt);
+    setIsPromptModalOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -581,7 +656,18 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
 
       // Prepare system prompt
       let systemPrompt = '';
-      if (selectedTool) {
+
+      // Check for custom prompt first
+      if (selectedPromptId) {
+        const customPrompt = prompts.find(p => p.id === selectedPromptId);
+        if (customPrompt) {
+          systemPrompt = customPrompt.prompt;
+          console.log('Using custom prompt:', customPrompt.name);
+        }
+      }
+
+      // If no custom prompt, check for tool-based system prompt
+      if (!systemPrompt && selectedTool) {
         if (selectedTool.id === 'Translate') {
           // Custom prompt for translation with language specifications
           systemPrompt = `Translate the following text from ${fromLanguage} to ${toLanguage}. If the source language is set to "Auto-detect", first identify the language, then translate to ${toLanguage}. Provide only the translated text without any additional commentary or explanation.\n\nText to translate:`;
@@ -594,21 +680,33 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
       // Build multimodal content if attachments exist
       let promptContent: string | MessageContent[];
 
+      // Prepare the final user input with page content if included
+      let finalUserInput = userInput;
+      if (includePageContent && pageContent) {
+        finalUserInput = `${pageContent}\n\n---\n\nUser Question: ${userInput}`;
+        console.log('✅ Including page content with user question');
+        console.log('📄 Page content length:', pageContent.length, 'characters');
+        console.log('📄 Page content lines:', pageContentLines);
+      }
+
       if (attachedFiles.length > 0) {
         // Create multimodal content array
         promptContent = [
-          // Add user text if provided
-          ...(userInput ? [{ type: 'text' as const, text: userInput }] : []),
+          // Add user text if provided (with page content if enabled)
+          ...(finalUserInput ? [{ type: 'text' as const, text: finalUserInput }] : []),
           // Add all attached files exactly as they are
           ...attachedFiles
         ];
       } else {
-        // Simple text message
-        promptContent = userInput;
+        // Simple text message (with page content if enabled)
+        promptContent = finalUserInput;
       }
 
       console.log('Starting streaming with system prompt:', systemPrompt);
-      console.log('Final prompt content:', promptContent);
+      console.log('Final prompt content length:', typeof promptContent === 'string' ? promptContent.length : 'multimodal');
+      if (typeof promptContent === 'string') {
+        console.log('First 500 chars of prompt:', promptContent.substring(0, 500));
+      }
 
       // Check if we have PDFs or CSVs and need to add plugin configuration
       const hasPDFOrCSV = attachedFiles.some(file => 
@@ -1294,6 +1392,27 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
             </div>
           )}
 
+          {/* Selected Custom Prompt Indicator */}
+          {selectedPromptId && !selectedTool && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <span className="text-purple-600">✨</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {prompts.find((p: CustomPrompt) => p.id === selectedPromptId)?.name || 'Custom Prompt'}
+                  </span>
+                  <span className="text-xs text-gray-600">• Custom prompt active</span>
+                </div>
+                <button
+                  onClick={() => setSelectedPromptId(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Attached Files Display */}
           {attachedFiles.length > 0 && (
             <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -1698,7 +1817,11 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
                       handleSubmit();
                     }
                   }}
-                  placeholder={selectedTool ? "Enter text to process..." : "Ask anything..."}
+                  placeholder={
+                    includePageContent && pageContentLines > 0
+                      ? `📄 ${pageContentLines} lines added to context\n\n${selectedTool ? "Enter text to process..." : "Ask anything..."}`
+                      : selectedTool ? "Enter text to process..." : "Ask anything..."
+                  }
                   disabled={isLoading}
                   className="w-full h-[148px] max-h-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-accent focus:border-transparent pr-10 disabled:bg-gray-50"
                 />
@@ -1722,10 +1845,20 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
             </div>
             </div>
 
+            {/* Expand Notification Popup */}
+            {showExpandNotification && (
+              <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg shadow-lg z-[9999] flex items-center space-x-2 animate-fade-in">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-medium">Please expand all elements on this page for better content capture</span>
+              </div>
+            )}
+
             {/* Tools Dropdown */}
             {showTools && (
               <div
-                className="absolute bottom-12 left-3 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50 tools-dropdown"
+                className="absolute bottom-12 left-3 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50 tools-dropdown max-h-96 overflow-y-auto"
               >
                   <div className="p-3">
                     <div className="text-xs font-bold text-gray-600 mb-3 px-2">SELECT TOOL</div>
@@ -1752,9 +1885,82 @@ const MainInterface: React.FC<MainInterfaceProps> = ({ apiKey, googleUser, authM
                         </div>
                       </button>
                     ))}
+
+                    {/* Custom Prompts Section */}
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="text-xs font-bold text-gray-600 mb-2 px-2">CUSTOM PROMPTS</div>
+
+                      {/* None option */}
+                      <button
+                        onClick={() => {
+                          handlePromptSelect(null);
+                          setShowTools(false);
+                        }}
+                        className={`w-full text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                          !selectedPromptId ? 'bg-blue-50 text-accent' : 'text-gray-800'
+                        }`}
+                      >
+                        <div className="font-semibold text-xs">None (Default)</div>
+                      </button>
+
+                      {/* List of custom prompts */}
+                      {prompts.map((prompt) => (
+                        <div key={prompt.id} className="flex items-center">
+                          <button
+                            onClick={() => {
+                              handlePromptSelect(prompt.id);
+                              setShowTools(false);
+                            }}
+                            className={`flex-1 text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                              selectedPromptId === prompt.id ? 'bg-blue-50 text-accent' : 'text-gray-800'
+                            }`}
+                          >
+                            <div className="font-semibold text-xs">{prompt.name}</div>
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleEditPrompt(prompt);
+                              setShowTools(false);
+                            }}
+                            className="p-2 text-gray-400 hover:text-gray-600"
+                            title="Edit prompt"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Create new prompt button */}
+                      <button
+                        onClick={() => {
+                          handleNewPrompt();
+                          setShowTools(false);
+                        }}
+                        className="w-full text-left px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors text-blue-600 hover:text-blue-700 font-semibold"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs">+ Create New Prompt</span>
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
+
+            {/* Prompt Manager Modal */}
+            <PromptManager
+              isOpen={isPromptModalOpen}
+              onClose={() => {
+                setIsPromptModalOpen(false);
+                setEditingPrompt(null);
+              }}
+              onSave={handlePromptSave}
+              onDelete={handlePromptDelete}
+              editingPrompt={editingPrompt}
+              errorMessage={promptError}
+            />
           </div>
         </div>
       </div>

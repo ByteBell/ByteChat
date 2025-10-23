@@ -20,15 +20,43 @@ export async function loadAllSessions(): Promise<SessionStorage> {
   try {
     const result = await chrome.storage.local.get([STORAGE_KEY]);
     if (!result[STORAGE_KEY]) {
+      console.log('[SessionManager] No existing sessions found, initializing empty storage');
       return {
         sessions: [],
         currentSessionId: null,
         lastSessionId: null
       };
     }
-    return result[STORAGE_KEY];
+
+    // Validate and sanitize loaded data
+    const data = result[STORAGE_KEY];
+    if (!data.sessions || !Array.isArray(data.sessions)) {
+      console.warn('[SessionManager] Invalid sessions data structure, resetting');
+      return {
+        sessions: [],
+        currentSessionId: null,
+        lastSessionId: null
+      };
+    }
+
+    console.log(`[SessionManager] ✅ Loaded ${data.sessions.length} sessions from storage`);
+    return data;
   } catch (error) {
-    console.error('Failed to load sessions:', error);
+    console.error('[SessionManager] ❌ Failed to load sessions:', error);
+
+    // Try to recover from sync storage as fallback
+    try {
+      console.log('[SessionManager] Attempting recovery from sync storage...');
+      const syncResult = await chrome.storage.sync.get([STORAGE_KEY]);
+      if (syncResult[STORAGE_KEY]) {
+        console.log('[SessionManager] ✅ Recovered sessions from sync storage');
+        return syncResult[STORAGE_KEY];
+      }
+    } catch (syncError) {
+      console.error('[SessionManager] Sync storage recovery failed:', syncError);
+    }
+
+    // Return empty storage as last resort
     return {
       sessions: [],
       currentSessionId: null,
@@ -40,9 +68,26 @@ export async function loadAllSessions(): Promise<SessionStorage> {
 // Save all sessions to chrome extension storage
 export async function saveAllSessions(sessionStorage: SessionStorage): Promise<void> {
   try {
+    // Save to local storage (primary)
     await chrome.storage.local.set({ [STORAGE_KEY]: sessionStorage });
+    console.log(`[SessionManager] ✅ Saved ${sessionStorage.sessions.length} sessions to local storage`);
+
+    // Also backup to sync storage (for recovery and cross-device sync)
+    try {
+      // Sync storage has lower limits, so only save essential data
+      const syncData = {
+        sessions: sessionStorage.sessions.slice(0, 5), // Only save 5 most recent
+        currentSessionId: sessionStorage.currentSessionId,
+        lastSessionId: sessionStorage.lastSessionId
+      };
+      await chrome.storage.sync.set({ [STORAGE_KEY]: syncData });
+      console.log('[SessionManager] ✅ Backup to sync storage successful');
+    } catch (syncError) {
+      // Sync storage failure is not critical
+      console.warn('[SessionManager] Sync storage backup failed (non-critical):', syncError);
+    }
   } catch (error) {
-    console.error('Failed to save sessions:', error);
+    console.error('[SessionManager] ❌ Failed to save sessions:', error);
 
     if (error instanceof Error && error.message.includes('QUOTA_BYTES')) {
       // Try to free up space by removing old sessions
@@ -52,15 +97,20 @@ export async function saveAllSessions(sessionStorage: SessionStorage): Promise<v
         storage.sessions = storage.sessions.slice(0, 10);
         try {
           await chrome.storage.local.set({ [STORAGE_KEY]: storage });
+          console.warn('[SessionManager] Storage full - removed old sessions');
           alert('Storage full. Removed old chat sessions to make space.');
           return;
         } catch (retryError) {
-          console.error('Failed to save even after cleanup:', retryError);
+          console.error('[SessionManager] Failed to save even after cleanup:', retryError);
         }
       }
 
       alert('Storage quota exceeded. Please:\n1. Clear browser storage\n2. Use smaller files\n3. Delete old chat sessions');
+      throw error;
     }
+
+    // Re-throw other errors
+    throw error;
   }
 }
 
